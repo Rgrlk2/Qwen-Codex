@@ -1,246 +1,319 @@
 # DESIGN_SYSTEM — Escritorio Vendedores Lab.IA
 
-> **Fuente:** `docs/referencia/escritorio-referencia.html`, incluida sin modificar.
-> Todos los valores de este documento están **transcriptos de esa referencia**. No hay un solo color, tipografía, espaciado ni curva de animación inventado.
-> Implementación de los tokens: `packages/ui/src/tokens.css` — **dueño: Sesión 1**. Ninguna otra sesión escribe valores literales.
+> **Versión 2.0.** Identidad **Lab.IA**. ⛔ Se descarta la identidad dorada con serif de la referencia operativa.
+> **De la referencia se reutiliza la arquitectura operativa, no la identidad visual.**
 
 ---
 
 ## 0. Qué se hereda y qué no
 
-| Se hereda de la referencia | No se hereda |
+| Se hereda de la referencia operativa | ⛔ NO se hereda |
 |---|---|
-| Paleta, tipografías, escala, espaciados, curvas de animación | **El monograma EBA** — es la marca de otra persona (ver `ASSET_SOURCES.md`) |
-| Estructura: lateral en escritorio, barra inferior en celular | Los nombres de las vistas de la referencia |
-| Patrones de componente: tarjeta, indicador, lista, pestañas, segmentos, zona de carga, compositor | El dominio (real estate) y sus datos |
-| Los cuatro estados obligatorios: cargando / vacío / error / con datos | El chip "Datos de ejemplo" **sólo se retira cuando hay datos reales** |
-| Accesibilidad: foco visible, saltar al contenido, `aria-live`, área táctil mínima | — |
-
-⚠️ **Decisión abierta.** La paleta de la referencia (azul profundo + oro) es la que se adopta como base de trabajo por ser el insumo entregado. Si la identidad visual de Lab.IA exige otra paleta, **el cambio es un reemplazo de tokens en un solo archivo** y no toca ninguna vista. No se anticipa ese cambio inventando colores de marca. Ver `ASSET_SOURCES.md` §3.
+| Estructura de navegación: lateral en escritorio, barra inferior en celular | La paleta dorada y azul profundo |
+| Patrones de componente: tarjeta, indicador, lista, pestañas, chips, diálogo, aviso | La tipografía serif (Newsreader) |
+| Los cuatro estados: cargando / vacío / error / con datos | El monograma y toda marca de terceros |
+| Criterios de accesibilidad: foco visible, saltar al contenido, `aria-live`, 44 px | El dominio y sus datos |
+| Ruteo por hash y módulos de vista sin framework | El registro de voz dorado/editorial |
 
 ---
 
-## 1. Tokens de color
+## 1. Identidad Lab.IA
 
-Transcripción literal de la referencia.
+Fuente: skills de marca del usuario (`headerproductos`, `masivoslabia`, `rgrlk-brand-guardian`).
+
+| Elemento | Definición |
+|---|---|
+| **Fondo** | Dark / **navy** |
+| **Acentos** | **Azul** y **cyan** |
+| **Tipografía** | **Inter** |
+| **Sistema** | dark · navy · cyan · azul · glass · profundidad · premium |
+| **Logos** | Archivos oficiales. ⛔ No redibujar, no recolorear, no deformar. `object-fit: contain`. |
+| **Imágenes** | ⛔ Ninguna inventada. |
+
+### 1.1 Valor documentado
+
+El header Lab.IA usa fondo **`rgba(3, 10, 28, .94)`**, borde cian sutil y desenfoque de 18 px. De ahí sale la base navy del Escritorio: **`#030A1C`**.
+
+### 1.2 Valores que faltan y cómo se resuelven
+
+Los hex exactos de azul y cyan viven en el design-system oficial de Lab.IA (`masivoslabia/references/design-system.md`). ⛔ **No se inventan.**
+
+**Mecanismo:** `packages/ui/src/marca-labia.css` es el archivo donde se copian los valores oficiales. `tokens.css` los consume con respaldo a la familia navy:
 
 ```css
-:root{
-  /* Fondos */
-  --bg:         #040D19;
-  --bg-2:       #071322;
-  --superficie: #0B1727;
-  --superficie-2:#10203A;
+--azul:  var(--labia-azul,  #16305C);   /* respaldo navy mientras falta el oficial */
+--cian:  var(--labia-cian,  #1E4C74);
+```
+
+Mientras `marca-labia.css` esté sin completar, la interfaz se ve **monocromática navy**: funciona, es legible, y **se nota que le falta la marca**. Es deliberado — un respaldo que pareciera la marca real sería peor que uno que no lo parece.
+
+`--marca-pendiente` vale `1` hasta que se carguen los valores oficiales; QA lo verifica (`QA_CHECKLIST.md` §7).
+
+---
+
+## 2. Tokens
+
+```css
+:root {
+  /* Fondos — navy */
+  --bg:            #030A1C;   /* documentado: rgba(3,10,28,.94) */
+  --bg-2:          #071328;
+  --superficie:    #0B1A33;
+  --superficie-2:  #112445;
+  --glass:         rgba(11, 26, 51, .72);
 
   /* Líneas */
-  --linea:      rgba(226,235,245,.12);
-  --linea-2:    rgba(226,235,245,.22);
+  --linea:    rgba(226, 235, 245, .12);
+  --linea-2:  rgba(226, 235, 245, .22);
+  --linea-cian: var(--labia-cian-linea, rgba(126, 200, 227, .28));
 
   /* Texto */
-  --texto:      #F4F1EA;
-  --texto-2:    #C6CCD5;
-  --texto-3:    #96A0AD;
-  --mudo:       #7C8694;
+  --texto:    #EAF2FB;
+  --texto-2:  #B8C7DA;
+  --texto-3:  #8497AF;
+  --mudo:     #6B7E96;
 
-  /* Acento */
-  --oro:        #E1B864;
-  --oro-claro:  #EFD293;
-  --oro-linea:  #C79A46;
-  --oro-suave:  rgba(225,184,100,.12);
+  /* Acentos — de marca-labia.css */
+  --azul:        var(--labia-azul,       #16305C);
+  --azul-claro:  var(--labia-azul-claro, #1D4374);
+  --cian:        var(--labia-cian,       #1E4C74);
+  --cian-claro:  var(--labia-cian-claro, #2A6B9E);
+  --acento-suave: var(--labia-acento-suave, rgba(30, 76, 116, .18));
 
   /* Estado */
-  --ok:             #8FD3A6;
-  --peligro:        #F0857A;
-  --peligro-suave:  rgba(240,133,122,.12);
+  --ok:            #6FCF97;
+  --peligro:       #F0857A;
+  --peligro-suave: rgba(240, 133, 122, .12);
+  --aviso:         #F2C94C;
+
+  /* Tipografía */
+  --fuente: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fuente-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Estructura */
+  --lateral: 248px;
+  --inferior: 64px;
+
+  /* Movimiento */
+  --suave: cubic-bezier(.16, .8, .24, 1);
+
+  /* Bandera de marca: 1 = faltan los valores oficiales */
+  --marca-pendiente: 1;
 }
 ```
 
-### 1.1 Uso semántico
+### 2.1 Uso semántico
 
-| Token | Para qué | Nunca para |
+| Token | Para qué | ⛔ Nunca para |
 |---|---|---|
-| `--bg` | Fondo de la aplicación, celdas de indicador | Texto |
-| `--superficie` | Tarjetas, campos, mensajes recibidos | Fondo de pantalla |
-| `--oro` | Acento, ruta activa, acción principal, cifras destacadas, horas | Fondos amplios |
-| `--texto` / `--texto-2` / `--texto-3` / `--mudo` | Jerarquía descendente de texto | Bordes |
-| `--peligro` | Vencidos, errores, acciones destructivas | Cualquier estado neutro |
-| `--ok` | Confirmación | Acción principal (ésa es `--oro`) |
+| `--bg` | Fondo de la aplicación | Texto |
+| `--superficie`, `--glass` | Tarjetas, campos, barras | Fondo de pantalla completo |
+| `--cian` | Acento principal: ruta activa, foco, cifras destacadas, las dos acciones protagonistas | Fondos amplios |
+| `--azul` | Acento secundario, superficies elevadas, bordes activos | Texto pequeño |
+| `--texto` → `--mudo` | Jerarquía descendente | Bordes |
+| `--peligro` | Vencidos, errores, acciones destructivas | Estados neutros |
+| `--ok` | Confirmación | Acción principal (ésa es `--cian`) |
 
-### 1.2 Reglas
+### 2.2 Reglas
 
 | # | Regla |
 |---|---|
-| CO1 | **Ningún color literal en código de vista.** Sólo tokens. |
-| CO2 | No se agregan tokens de color sin acuerdo de Sesión 1 y registro en este documento. |
-| CO3 | El color **nunca** es el único portador de información: todo estado lleva además texto o ícono (ver `QA_CHECKLIST.md` §4). |
-| CO4 | Contraste mínimo AA: 4.5:1 en texto normal, 3:1 en texto grande y en bordes de control. |
+| CO1 | ⛔ **Ningún color literal en CSS de vista.** Sólo tokens. |
+| CO2 | ⛔ Ningún token de color nuevo sin acuerdo de Sesión 1. |
+| CO3 | El color **nunca** es el único portador de información: todo estado lleva texto o ícono. |
+| CO4 | Contraste mínimo AA: 4.5:1 texto normal, 3:1 texto grande y bordes de control. |
+| CO5 | ⛔ Sin neón excesivo. El sistema es premium y sobrio, no fluorescente. |
 
 ---
 
-## 2. Tipografía
+## 3. Tipografía — Inter
 
 ```css
---fuente-titulo: Newsreader, Georgia, serif;
---fuente-texto:  Archivo, system-ui, -apple-system, sans-serif;
---fuente-mono:   ui-monospace, SFMono-Regular, Menlo, monospace;
+--fuente: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 ```
 
-Fuentes de Google Fonts, cargadas como en la referencia:
-`Newsreader` (300, 400, 500, eje óptico 6–72) · `Archivo` (400, 500, 600). Ambas con `display=swap` y con la pila de respaldo completa: **si la fuente no carga, la pantalla sigue siendo legible**.
+Cortes: **400, 500, 600, 700**. Carga con `display=swap` y pila de respaldo completa: si Inter no carga, la pantalla sigue siendo legible.
 
-| Uso | Familia | Notas |
+⛔ **Sin serif.** Ni para títulos, ni para cifras, ni para citas.
+
+| Elemento | Tamaño | Peso |
 |---|---|---|
-| `h1`, `h2`, `h3`, cifras de indicador, título de estado vacío | `--fuente-titulo` | peso 400, `letter-spacing:-.015em`, `line-height:1.1` |
-| Cuerpo, controles, listas | `--fuente-texto` | base 17px, `line-height:1.6` |
-| Horas, índices de pantalla, numeraciones | `--fuente-mono` | 13px, `letter-spacing:.1em–.16em` |
+| Título de vista | `clamp(28px, 3.5vw, 44px)` | 600 |
+| Cifra grande (las cuatro de Inicio) | `clamp(32px, 4vw, 48px)` | 600, `font-variant-numeric: tabular-nums` |
+| Título de tarjeta | `clamp(18px, 1.6vw, 22px)` | 600 |
+| Subtítulo | `clamp(15px, 1.3vw, 18px)` | 400 |
+| Cuerpo | `16px` | 400 |
+| Secundario | `14px` | 400 |
+| Etiqueta (mayúsculas, `letter-spacing: .12em`) | `11px` | 600 |
+| Importes en tabla | `15px` mono o `tabular-nums` | 500 |
 
-### 2.1 Escala
-
-| Elemento | Tamaño |
-|---|---|
-| Título de pantalla (`h1`) | `clamp(34px, 4vw, 56px)` |
-| Título de tarjeta (`h2`/`h3`) | `clamp(22px, 1.8vw, 26px)` |
-| Subtítulo | `clamp(17px, 1.4vw, 20px)` |
-| Cuerpo | `17px` |
-| Secundario | `15px` / `14px` |
-| Etiqueta (mayúsculas, `letter-spacing:.2em`) | `11px` / `12px` |
-| Cifra de indicador | `clamp(40px, 4vw, 54px)` |
-
-**Regla:** los tamaños ya están definidos. No se agregan escalones.
+**Regla de importes:** todo número de dinero usa `font-variant-numeric: tabular-nums` para que las columnas alineen. Un importe que baila entre filas se lee mal y se compara peor.
 
 ---
 
-## 3. Estructura y espaciado
+## 4. Las dos acciones protagonistas
 
-```css
---lateral:    248px;   /* barra lateral en escritorio */
---inferior:   64px;    /* barra inferior en celular */
---compositor: 96px;    /* compositor fijo de conversación */
---suave: cubic-bezier(.16,.8,.24,1);
-```
+Son el elemento visual **dominante** de Inicio. No son botones en una barra: son dos tarjetas grandes.
 
-| Punto de corte | Comportamiento |
+| Regla | Detalle |
 |---|---|
-| `≥ 900px` | Barra lateral fija a la izquierda; `.principal` con `margin-left: var(--lateral)`; sin barra inferior. |
-| `< 900px` | Sin lateral; barra inferior fija de 64px; cabecera móvil con marca y chip de estado. |
-| `≤ 480px` | Segmentos en columna; compositor con etiquetas ocultas visualmente; reducción de padding lateral a 16px. |
-
-Padding de contenido: `clamp(28px,4vw,56px)` vertical · `clamp(20px,4vw,56px)` horizontal.
-Separación entre bloques de pantalla: `clamp(36px,4vw,56px)`. Dentro de una tarjeta: `14px`.
-Ancho máximo de contenido: `1240px`.
-
-### 3.1 Barra inferior y las seis vistas
-
-La referencia usa **4 destinos** en la barra inferior (`grid-template-columns: repeat(4,1fr)`). El Escritorio Vendedores tiene **6**.
-
-**Decisión:** en celular la barra inferior muestra **5 destinos fijos** — Día · Cartera · Portafolio · Propuestas · Más — y "Más" despliega Seguimiento y Dinero. En escritorio la lateral lista las 6 sin agrupar. Motivo: seis íconos en 360px dejan áreas táctiles por debajo del mínimo de 44px, y la referencia es explícita en respetar ese mínimo. **Dueño del cambio: Sesión 1.**
+| Tamaño | Mínimo 160 px de alto en escritorio, 120 px en celular. |
+| Jerarquía | Ocupan más superficie visual que las cuatro cifras juntas. |
+| Contenido | Ícono + título + una línea de ejemplo en lenguaje real (*"Mi amigo tiene una repuestera"*). |
+| Acento | Borde y realce en `--cian`; superficie `--glass`. |
+| Disposición | Dos columnas en ≥ 768 px; una columna apilada por debajo. |
+| Estado vacío | Cuando no hay datos, quedan como **lo único accionable** de la pantalla. |
+| Accesibilidad | Son `<a>` o `<button>` reales, enfocables, con área táctil completa. ⛔ No un `div` con `onclick`. |
 
 ---
 
-## 4. Componentes
-
-Todos existen en la referencia; se reutilizan tal cual. Ninguna sesión inventa un componente nuevo sin acordarlo con Sesión 1.
+## 5. Componentes
 
 | Componente | Clase | Uso |
 |---|---|---|
 | Tarjeta | `.tarjeta` | Contenedor de bloque |
-| Rejilla | `.rejilla` + `.rejilla-2/3/4` | Auto-fit con `minmax`; **siempre `min-width:0`** en los hijos |
-| Indicadores | `.indicadores` / `.indicador` | Cifras del día; variante `.vacio` cuando no hay dato |
-| Lista | `.lista` con `.hora`, `.item-cuerpo`, `.punto`, `.resolver` | Agenda, pendientes, atención |
-| Botón | `.btn`, `.btn-borde`, `.btn-texto`, `.btn-chico` | Altura mínima 48px (44px en `chico`) |
-| Campo | `.campo` + `.entrada` | Altura mínima 52px; foco con borde `--oro` |
+| Acción protagonista | `.accion-protagonista` | §4 |
+| Cifra | `.cifra` / `.cifra-valor` / `.cifra-pista` | Las cuatro de Inicio, las ocho de Dinero |
+| Rejilla | `.rejilla` + modificadores | Auto-fit con `minmax`; ⛔ **siempre `min-width: 0`** en los hijos |
+| Lista | `.lista` | Próximos seguimientos, línea de tiempo |
+| Ranking | `.ranking` / `.ranking-fila` | Los 13 ordenados, con posición, encaje y motivo |
+| Encaje | `.encaje` + `--directo` / `--cercano` / `--adaptable` / `--no-recomendado` | Siempre con **texto**, no sólo color |
+| Botón | `.btn`, `.btn-borde`, `.btn-texto` | Altura mínima 48 px |
+| Campo | `.campo` + `.entrada` | Altura mínima 48 px, foco con borde `--cian` |
 | Pestañas | `.pestanas` / `.pestana` | `role="tablist"`, navegación con flechas |
-| Segmentos | `.segmentos` / `.segmento` | Radio group; en `≤480px` pasa a columna |
 | Chips | `.chips` / `.chip` | Filtros con `aria-pressed` |
-| Zona de carga | `.zona` | Arrastrar y soltar con equivalente por teclado |
-| Mensajes | `.mensajes` / `.mensaje` / `.mensaje.mio` | Conversación y seguimiento |
-| Compositor | `.compositor` | Fijo al pie; variante `.compositor-local` cuando va en línea |
+| Tabla | `.tabla` dentro de `.tabla-contenedor` | ⛔ La tabla **siempre** dentro de un contenedor con `overflow-x: auto` propio |
 | Diálogo | `<dialog>` + `.dialogo` | Confirmaciones |
-| Aviso | `.aviso` | Mensaje breve, `role="status"`, 3,2 s |
-| Definiciones | `.definiciones` | Pares dato/valor |
-| Gráfico | `.grafico` | SVG en línea, responsivo, con pie de texto |
+| Aviso | `.aviso` | Mensaje breve, `role="status"` |
+| Estados | `.cargando` / `.hueso` · `.vacio` · `.error` | §6 |
 
-### 4.1 Los cuatro estados
+### 5.1 Los cuatro estados — obligatorios
 
-Existen como piezas listas en la referencia y son **obligatorios en todo bloque asíncrono**:
-
-| Estado | Pieza | Regla |
-|---|---|---|
-| Cargando | `.cargando` + `.hueso` + `.rueda` | Esqueletos con la forma del contenido real. `role="status"`. |
-| Vacío | `.vacio` | Explica qué falta **y** ofrece la acción que lo resuelve. |
-| Error | `.error` | Causa en lenguaje claro + *Volver a intentar*. `role="alert"`. Sin códigos crudos. |
-| Con datos | — | Importes con moneda; fechas en `es-PY`. |
+| Estado | Regla |
+|---|---|
+| **Cargando** | Esqueletos con la forma del contenido real. `role="status"`. ⛔ Nunca pantalla en blanco. |
+| **Vacío** | Explica qué falta **y** ofrece la acción que lo resuelve. |
+| **Error** | Causa en lenguaje claro + *Volver a intentar*. `role="alert"`. ⛔ Sin códigos técnicos. |
+| **Con datos** | Importes con moneda; fechas en `es-PY`. |
 
 ---
 
-## 5. Movimiento
+## 6. Navegación
 
-```css
-.reveal { opacity:0; transform:translateY(18px);
-          transition: opacity .6s var(--suave), transform .6s var(--suave); }
-.reveal.is-visible { opacity:1; transform:none; }
-```
+| Ancho | Comportamiento |
+|---|---|
+| ≥ 900 px | Barra lateral fija de 248 px. Lista las vistas del rol: 5 para vendedor, 6 para administrador. |
+| < 900 px | Barra inferior fija de 64 px con **5 destinos**: Inicio · Planificar · Clientes · Propuestas · Más. "Más" despliega Dinero y, si el rol lo permite, Administración. |
+
+**Por qué 5 y no 6:** seis íconos a 360 px dejan áreas táctiles por debajo del mínimo de 44 px. El destino que se agrupa es el menos frecuente en el uso diario.
+
+⛔ La entrada a Administración se oculta para el vendedor **y además** la ruta se bloquea en el ruteo y en la capa de datos. Ocultar un enlace no es proteger.
+
+---
+
+## 7. Responsive — por causa, no por parche
+
+> ⛔ **`overflow-x: hidden` no es una solución.** Esconde el síntoma, deja el problema y rompe el `position: sticky`.
+
+### 7.1 Causas reales de desbordamiento y su corrección
+
+| Causa | Corrección |
+|---|---|
+| `min-width` mayor que el viewport | Quitarlo o pasarlo a `min-width: 0` |
+| Hijo de flex/grid que no encoge | `min-width: 0` en el hijo (es el olvido más común) |
+| Tabla ancha | Envolver en `.tabla-contenedor { overflow-x: auto }` — el scroll es de la tabla, ⛔ nunca de la página |
+| Palabra o URL larga | `overflow-wrap: anywhere` en el contenedor de texto |
+| `padding` sumado a `width: 100%` | `box-sizing: border-box` global |
+| Grilla que no baja de columnas | `repeat(auto-fit, minmax(min(260px, 100%), 1fr))` |
+| Imagen sin límite | `max-width: 100%; height: auto` |
+| Elemento posicionado fuera del flujo | Contenerlo en un padre con `position: relative` |
+| `100vw` con barra de scroll visible | Usar `100%` o `100dvw` |
+
+### 7.2 Anchos de validación obligatorios
+
+| Ancho | Qué representa |
+|---|---|
+| **360 px** | Celular chico. El más exigente para áreas táctiles. |
+| **390 px** | Celular de referencia. |
+| **768 px** | Tablet vertical. Transición de disposición. |
+| **1024 px** | Tablet horizontal / notebook chica. Aparece la lateral. |
+| **1440 px** | Escritorio. Contenido limitado a 1240 px. |
+
+### 7.3 Criterio
 
 | # | Regla |
 |---|---|
-| MO1 | Entradas: 600 ms. Micro-interacciones: 180 ms. Aviso: 250 ms. |
-| MO2 | `@media (prefers-reduced-motion: reduce)` anula **toda** animación y transición, y desactiva el desplazamiento suave. Ya está en la referencia; **no se debilita**. |
-| MO3 | Nada se mueve sin motivo. Sin parallax, sin rebotes, sin animación decorativa. |
+| RS1 | En los cinco anchos: **cero scroll horizontal de página**. |
+| RS2 | El único scroll horizontal permitido es el de `.tabla-contenedor`, y es **de la tabla**. |
+| RS3 | Una vista que sólo funciona porque hay `overflow-x: hidden` **no está terminada**. |
+| RS4 | Se valida con la regla de depuración `* { outline: 1px solid red }` y con `document.documentElement.scrollWidth`. |
+| RS5 | Áreas táctiles de 44 × 44 px en los cinco anchos, no sólo en el más cómodo. |
 
 ---
 
-## 6. Accesibilidad
+## 8. Movimiento
 
-Criterios de la referencia, obligatorios en las seis vistas y en el administrador.
+| # | Regla |
+|---|---|
+| MO1 | Entradas 400 ms, micro-interacciones 180 ms, avisos 250 ms. |
+| MO2 | `@media (prefers-reduced-motion: reduce)` anula **toda** animación y transición, y el desplazamiento suave. |
+| MO3 | ⛔ Nada se mueve sin motivo. Sin parallax, sin rebotes, sin animación decorativa. |
+
+---
+
+## 9. Accesibilidad
 
 | # | Criterio |
 |---|---|
-| AC1 | Área táctil mínima **44×44 px** en todo control. |
-| AC2 | Foco visible: `outline: 2px solid var(--oro); outline-offset: 3px`. **No se elimina el outline.** |
-| AC3 | Enlace *"Ir al contenido"* (`.saltar`) como primer elemento enfocable. |
-| AC4 | Un solo `h1` por pantalla, con `tabindex="-1"`, enfocado al navegar. |
-| AC5 | Regiones que cambian: `aria-live="polite"`; errores: `role="alert"`. |
-| AC6 | Pestañas y radio groups con navegación completa por teclado. |
-| AC7 | `<dialog>` nativo: trampa de foco, `Esc` cierra, foco devuelto al origen. |
-| AC8 | Íconos decorativos con `aria-hidden="true"`; íconos informativos con `role="img"` y etiqueta. |
-| AC9 | Contraste AA mínimo; el color nunca es el único portador de significado. |
-| AC10 | `html,body { max-width:100%; overflow-x:hidden }` y `min-width:0` en hijos de flex/grid: **cero desplazamiento horizontal** a cualquier ancho. |
-| AC11 | Texto en `overflow-wrap: anywhere` donde puede entrar contenido del usuario. |
+| AC1 | Área táctil mínima **44 × 44 px** en todo control, en los cinco anchos. |
+| AC2 | Foco visible: `outline: 2px solid var(--cian); outline-offset: 3px`. ⛔ No se elimina. |
+| AC3 | Enlace *"Ir al contenido"* como primer elemento enfocable. |
+| AC4 | Un solo `h1` por vista, con `tabindex="-1"`, enfocado al navegar. |
+| AC5 | `aria-live="polite"` en regiones que cambian; `role="alert"` en errores. |
+| AC6 | Pestañas y radio groups navegables por teclado. |
+| AC7 | `<dialog>` nativo: trampa de foco, `Esc` cierra, foco devuelto. |
+| AC8 | Íconos decorativos con `aria-hidden`; informativos con etiqueta. |
+| AC9 | Contraste AA; el color nunca es el único portador de significado. |
+| AC10 | El estado de encaje (`directo` / `cercano` / `adaptable` / `no_recomendado`) se lee **en texto**, no sólo por color. |
+| AC11 | Toda la aplicación operable **sólo con teclado**. |
 
 ---
 
-## 7. Idioma y formato
+## 10. Idioma y formato
 
 | # | Regla |
 |---|---|
-| L1 | `lang="es-PY"` en el documento. |
-| L2 | Fechas y números con `Intl` y locale `es-PY`. Zona `America/Asuncion`. |
-| L3 | Voseo y registro de la referencia: *"Preguntá"*, *"Cargá"*, *"Contá qué pasó"*. |
-| L4 | Moneda siempre explícita: `Gs.` para PYG, `USD` para dólares. **Nunca un número pelado.** |
-| L5 | Mensajes de error en lenguaje claro, sin jerga técnica ni códigos. |
-| L6 | El copy de producto **se sirve tal cual** del copy aprobado: ni se corrige, ni se acorta, ni se normaliza. |
+| L1 | `lang="es-PY"`. |
+| L2 | Fechas y números con `Intl`, locale `es-PY`, zona `America/Asuncion`. |
+| L3 | Voseo, registro natural paraguayo. |
+| L4 | Moneda siempre explícita: `Gs.` para PYG, `USD` para dólares. ⛔ **Nunca un número pelado.** |
+| L5 | Mensajes de error en lenguaje claro, sin jerga ni códigos. |
+| L6 | El copy de producto se sirve **tal cual**: ni se corrige, ni se acorta, ni se normaliza. |
 
 ---
 
-## 8. Marca
+## 11. Marca en la interfaz
 
 | # | Regla |
 |---|---|
-| B1 | ⛔ **El monograma de la referencia no se reutiliza.** Es la marca de otra persona. |
-| B2 | La marca de Lab.IA para el Escritorio está **pendiente de entrega** (`ASSET_SOURCES.md`). |
-| B3 | Mientras tanto: espacio de marca reservado con el nombre en texto, con `--fuente-titulo`. ⛔ Nada de un logo provisional generado. |
+| B1 | Se usa el **logo oficial de Lab.IA**, desde archivo. |
+| B2 | ⛔ No se redibuja, no se recolorea, no se deforma. `object-fit: contain`. |
+| B3 | ⛔ No se reutiliza ninguna marca de la referencia operativa. |
 | B4 | ⛔ No se generan íconos de producto, ilustraciones ni fotografías. |
-| B5 | Los íconos de interfaz son los SVG en línea de la referencia. Si falta uno, se pide; no se inventa una biblioteca. |
+| B5 | Mientras el archivo oficial no esté en el repositorio, se muestra **Lab.IA** en texto con Inter 600. ⛔ Nada de un logo provisional generado. |
+
+Detalle de activos: `docs/ASSET_SOURCES.md`.
 
 ---
 
-## 9. Reglas para las seis sesiones
+## 12. Reglas para las seis sesiones
 
 | # | Regla |
 |---|---|
-| S1 | **Ningún valor literal en CSS de vista**: ni color, ni fuente, ni curva. Sólo tokens. |
-| S2 | `packages/ui/src/tokens.css` lo edita **sólo Sesión 1**. |
-| S3 | Una sesión que necesita un token nuevo lo pide a Sesión 1; no lo agrega por su cuenta. |
-| S4 | Las clases de componente son compartidas y estables. Una variante propia de una vista va con prefijo de vista (`.cartera-…`) en el archivo de esa vista. |
-| S5 | Cada vista entrega sus cuatro estados. Una vista sin estado vacío o sin estado de error **no está terminada**. |
-| S6 | Antes de cerrar, cada vista pasa `QA_CHECKLIST.md` §2 y §4 a 360px y a 1440px. |
+| S1 | ⛔ Ningún valor literal en CSS de vista: ni color, ni fuente, ni curva. Sólo tokens. |
+| S2 | `tokens.css` y `marca-labia.css` los edita **sólo Sesión 1**. |
+| S3 | Un token nuevo se pide a Sesión 1; no se agrega por cuenta propia. |
+| S4 | Una variante propia de una vista lleva prefijo de vista (`.planificar-…`) y vive en el CSS de esa vista. |
+| S5 | Cada vista entrega sus cuatro estados. Sin estado vacío o sin estado de error, **no está terminada**. |
+| S6 | Antes de cerrar, cada vista se valida en **360, 390, 768, 1024 y 1440 px**, sin scroll horizontal de página. |
+| S7 | ⛔ Prohibido usar `overflow-x: hidden` para tapar un desbordamiento. Se corrige la causa. |

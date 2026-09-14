@@ -1,58 +1,62 @@
 /**
- * Usuarios, roles y permisos.
- * Ver MASTER_SPEC.md §1.2 y §12.3.
+ * Identidad y roles.
+ *
+ * ⛔ SÓLO DOS ROLES: vendedor y administrador.
+ *    No existen supervisor ni auditor en ninguna capa del sistema.
+ * ⛔ UNA SOLA APLICACIÓN, UN SOLO LOGIN. Administración es una ruta protegida.
+ *
+ * Ver MASTER_SPEC.md §1.
  */
 
-import type { Dinero, Id, ISODate, Trazado } from './core';
+import type { Id, ISODate, Trazado } from './core';
 
-export type Rol = 'vendedor' | 'supervisor' | 'administrador' | 'auditor';
+/** Los únicos dos roles del sistema. */
+export type Rol = 'vendedor' | 'administrador';
 
 export interface Usuario extends Trazado {
   readonly id: Id;
   readonly nombre: string;
   readonly email: string;
+  /** Nombre de usuario para el ingreso. */
+  readonly usuario: string;
   readonly rol: Rol;
-  readonly supervisorId: Id | null;
   readonly activo: boolean;
-  /**
-   * Límite autónomo de descuento.
-   * ⛔ `null` = **no definido**, y se interpreta como el escenario conservador:
-   * todo descuento requiere aprobación. Nunca significa "ilimitado".
-   * Ver COMMERCIAL_RULES.md §4.1.
-   */
-  readonly limiteDescuentoAutonomo: Dinero | null;
-  readonly rubrosAsignados: ReadonlyArray<Id>;
   readonly ultimoIngresoEn: ISODate | null;
 }
 
-export interface Equipo {
-  readonly id: Id;
+export interface NuevoUsuario {
   readonly nombre: string;
-  readonly supervisorId: Id;
-  readonly integrantes: ReadonlyArray<Id>;
+  readonly email: string;
+  readonly usuario: string;
+  readonly rol: Rol;
 }
 
 export interface Sesion {
   readonly usuario: Usuario;
+  readonly rol: Rol;
   readonly iniciadaEn: ISODate;
-  readonly permisos: ReadonlyArray<Permiso>;
-  /** `true` mientras la aplicación corra contra el mock: obliga a mostrar el chip "Datos de ejemplo". */
+  /** `true` mientras la app corra con mock: obliga a mostrar el chip "Datos de ejemplo". */
   readonly datosDeEjemplo: boolean;
 }
 
-export type Permiso =
-  | 'cartera.ver.propia'
-  | 'cartera.ver.equipo'
-  | 'cartera.ver.todas'
-  | 'propuestas.crear'
-  | 'cotizaciones.aprobar'
-  | 'catalogo.editar'
-  | 'comisiones.reglas.publicar'
-  | 'periodo.cerrar'
-  | 'accesos.enlace.ver.propios'
-  | 'accesos.enlace.ver.equipo'
-  | 'accesos.enlace.ver.todos'
-  | 'auditoria.ver.propia'
-  | 'auditoria.ver.toda'
-  | 'sugerencias.resolver'
-  | 'usuarios.administrar';
+/**
+ * Capacidades derivadas del rol.
+ *
+ * ⛔ Ocultar un enlace no es proteger una ruta: la guardia vive en el ruteo
+ *    Y en la capa de datos. Esto sólo decide qué se dibuja.
+ */
+export interface Capacidades {
+  readonly verAdministracion: boolean;
+  readonly aprobarCotizaciones: boolean;
+  readonly configurarComercial: boolean;
+  readonly verTodosLosClientes: boolean;
+  readonly verAccesosDeVendedores: boolean;
+  readonly administrarVendedores: boolean;
+  readonly cerrarPeriodo: boolean;
+}
+
+export interface FiltroUsuarios {
+  readonly rol?: Rol;
+  readonly activo?: boolean;
+  readonly texto?: string;
+}

@@ -1,100 +1,102 @@
 # ASSET_SOURCES — Escritorio Vendedores Lab.IA
 
-> **Regla cero: no se inventa ningún activo.** Ni logos, ni íconos de producto, ni ilustraciones, ni fotografías, ni capturas, ni mockups, ni paletas de marca.
-> Todo lo que aparece en pantalla tiene que poder señalarse en esta tabla con su origen. Lo que no está acá, **no se usa**.
+> **Versión 2.0.** Identidad **Lab.IA**.
+> **Regla cero:** ⛔ no se inventa ningún activo. Ni logos, ni íconos de marca, ni ilustraciones, ni fotografías, ni capturas, ni paletas.
+> Todo lo que aparece en pantalla tiene que poder señalarse en esta tabla. Lo que no está acá, **no se usa**.
 
 ---
 
-## 1. Inventario de activos disponibles
+## 1. Activos disponibles
 
-### 1.1 Copy aprobado — **disponible, congelado**
+### 1.1 Copy aprobado — **congelado**
 
-| Activo | Ruta | Origen | Licencia de uso | Estado |
-|---|---|---|---|---|
-| Copy 9 soluciones específicas | `content/copy/LabIA_9_Soluciones_Especificas_Copy_Maestro.md` | Entregado por Lab.IA (`/inputs`) | Interno Lab.IA | **Congelado.** Sólo lectura. |
-| Copy 4 soluciones integrales | `content/copy/LabIA_4_Soluciones_Integrales_Copy_Maestro.md` | Entregado por Lab.IA (`/inputs`) | Interno Lab.IA | **Congelado.** Sólo lectura. |
-
-Copiados **byte a byte** desde los insumos. Verificación en `content/copy/COPY_LOCK.md`.
-
-### 1.2 Referencia visual — **disponible, sólo lectura**
-
-| Activo | Ruta | Origen | Uso permitido |
+| Activo | Ruta | Origen | Estado |
 |---|---|---|---|
-| Escritorio de referencia | `docs/referencia/escritorio-referencia.html` | Entregado en `/inputs` | Referencia de sistema visual y de patrones de interacción. |
-| Referencia secundaria | `index.html` en `/inputs` (no incorporado al repositorio) | Entregado en `/inputs` | Consulta de convenciones de `<head>`, manifest e integración con formularios. |
+| Copy 9 soluciones específicas | `content/copy/LabIA_9_Soluciones_Especificas_Copy_Maestro.md` | Entregado por Lab.IA | **Congelado.** Sólo lectura. |
+| Copy 4 soluciones integrales | `content/copy/LabIA_4_Soluciones_Integrales_Copy_Maestro.md` | Entregado por Lab.IA | **Congelado.** Sólo lectura. |
 
-⚠️ La referencia pertenece a un **proyecto y una marca distintos** (escritorio privado de otra persona, dominio real estate). Se hereda **el sistema visual**; no se heredan marca, contenido, dominio ni datos. Ver §2.
+Copiados byte a byte. Verificación por hash en `content/copy/COPY_LOCK.md`.
 
-### 1.3 Tipografías — **disponibles**
+### 1.2 Referencia **operativa** — sólo lectura
 
-| Fuente | Origen | Cortes usados | Licencia | Notas |
-|---|---|---|---|---|
-| **Newsreader** | Google Fonts | 300 / 400 / 500, eje óptico 6–72 | SIL Open Font License 1.1 | Títulos. |
-| **Archivo** | Google Fonts | 400 / 500 / 600 | SIL Open Font License 1.1 | Cuerpo e interfaz. |
-| Pila mono del sistema | Sistema operativo | — | — | `ui-monospace, SFMono-Regular, Menlo, monospace`. Sin descarga. |
+| Activo | Ruta | Uso permitido | ⛔ Uso prohibido |
+|---|---|---|---|
+| Escritorio de referencia | `docs/referencia/escritorio-referencia.html` | **Arquitectura operativa**: estructura de navegación, patrones de componente, los cuatro estados, criterios de accesibilidad, ruteo por hash | **Toda su identidad visual**: paleta dorada, tipografías serif, monograma, dominio y datos |
 
-Carga igual que la referencia: `fonts.googleapis.com` con `preconnect` a `fonts.gstatic.com` y `display=swap`. **Toda familia declara su pila de respaldo completa**: si la fuente no carga, la pantalla sigue siendo legible.
+⚠️ Esta referencia pertenece a **otra marca y otro proyecto**. Se mira cómo está armada, no cómo se ve.
 
-### 1.4 Íconos — **disponibles, limitados**
+### 1.3 Identidad Lab.IA — parcialmente disponible
 
-SVG en línea, definidos como `<symbol>` en la referencia. Sin biblioteca externa, sin descarga, sin dependencia.
-
-| `id` | Qué representa | Reutilizable |
+| Elemento | Estado | Fuente |
 |---|---|---|
-| `i-dia` | Sol / día | ✓ |
-| `i-secretaria` | Documento con lista | ✓ |
-| `i-consejeria` | Documento con lupa | ✓ |
-| `i-asesoria` | Globo de diálogo | ✓ |
-| `i-check` | Confirmación | ✓ |
-| `i-copiar` | Copiar | ✓ |
-| `i-guardar` | Guardar | ✓ |
-| `i-mic` | Micrófono / dictado | ✓ |
-| `i-enviar` | Enviar | ✓ |
-| `i-subir` | Subir archivo | ✓ |
-| `i-alerta` | Alerta / error | ✓ |
-| `i-monograma` | **Monograma EBA** | ⛔ **NO** — ver §2 |
+| Sistema: dark · navy · cyan · azul · glass · profundidad · premium | **Documentado** | `rgrlk-brand-guardian` |
+| Tipografía **Inter** | **Documentado** | `rgrlk-brand-guardian` → "Lab.IA UI: Inter" |
+| Fondo navy `rgba(3, 10, 28, .94)` | **Documentado** | `headerproductos` |
+| Borde cian sutil, desenfoque 18 px | **Documentado** | `headerproductos` |
+| Hex exactos de azul y cyan | **PENDIENTE** | `masivoslabia/references/design-system.md` |
+| Logo Lab.IA (archivo) | **PENDIENTE** | Archivo oficial de marca |
 
-**Íconos que el Escritorio necesita y la referencia no tiene:** cartera, portafolio, propuestas, dinero, PDF, enlace, aprobación, registro de accesos, sugerencia.
-⛔ **No se generan.** Se pide el juego completo a diseño (§4). Hasta entonces, la vista usa el ícono existente más cercano o **texto sin ícono** — nunca un ícono improvisado.
+### 1.4 Tipografía
+
+| Fuente | Origen | Cortes | Licencia |
+|---|---|---|---|
+| **Inter** | Google Fonts | 400 / 500 / 600 / 700 | SIL Open Font License 1.1 |
+| Pila mono del sistema | Sistema operativo | — | — |
+
+Carga con `display=swap` y pila de respaldo completa: si Inter no carga, la pantalla sigue siendo legible.
+⛔ **Sin serif.** Ni Newsreader, ni Georgia, ni ninguna otra.
+
+### 1.5 Íconos
+
+SVG en línea. Sin biblioteca externa, sin descarga, sin dependencia.
+
+**Reutilizables de la referencia operativa** (son formas genéricas, no marca): check, copiar, guardar, micrófono, enviar, subir, alerta, documento con lista, documento con lupa, globo de diálogo.
+
+⛔ **NO reutilizable:** el monograma. Es marca de otra persona (§2 P1).
+
+**Íconos que el Escritorio necesita y no existen:** inicio, planificar/brújula, lupa de investigar, clientes, propuestas, dinero, administración, PDF, enlace, aprobación, ranking.
+⛔ **No se generan.** Se piden a diseño. Mientras tanto: el ícono genérico más cercano, o **texto sin ícono**. Nunca un ícono improvisado que parezca de marca.
 
 ---
 
-## 2. Activos explícitamente prohibidos
+## 2. Activos prohibidos
 
 | # | Activo | Motivo |
 |---|---|---|
-| P1 | **Monograma `i-monograma` (EBA)** | Marca personal de otra persona, presente en la referencia. Reutilizarla en un producto de Lab.IA es apropiación de marca ajena. |
-| P2 | Nombre, rol y datos de la persona de la referencia | Contenido de ejemplo de otro proyecto. |
-| P3 | Cualquier logo de Lab.IA reconstruido, redibujado, vectorizado desde una captura o generado | Regla cero. |
-| P4 | Íconos o marcas de los 13 productos generados por nosotros | Regla cero. |
-| P5 | Fotografías de comercios, personas o locales | Regla cero. Además, derechos de imagen. |
-| P6 | Logos de clientes o de empresas citadas en los ejemplos del copy | Los ejemplos del copy son ilustrativos y algunos nombran empresas reales. No se representan gráficamente. |
-| P7 | Capturas de producto simuladas | Un mockup de un panel que no existe es una promesa falsa en material comercial. |
-| P8 | Iconografía de terceros no licenciada | Riesgo legal. |
-| P9 | Paletas o tipografías "de marca Lab.IA" deducidas de una landing | Deducir no es documentar. Se pide el manual. |
-| P10 | **Sentinela** y cualquier producto adicional hallado en la web, en cualquier forma | Portafolio cerrado en 13 (MASTER_SPEC §0 R2). |
+| P1 | Monograma de la referencia operativa | Marca personal de otra persona. |
+| P2 | Nombre, rol y datos de la persona de la referencia | Contenido de otro proyecto. |
+| P3 | **La paleta dorada y la tipografía serif de la referencia** | La identidad es Lab.IA: dark/navy, azul y cyan, Inter. |
+| P4 | Logo de Lab.IA reconstruido, redibujado, vectorizado desde captura o generado | Regla cero y regla de marca: se usa el archivo. |
+| P5 | Logo de Lab.IA recoloreado, deformado o con efectos nuevos | `rgrlk-brand-guardian`: no recolorear, no deformar, `object-fit: contain`. |
+| P6 | Íconos o marcas de los 13 productos generados por nosotros | Regla cero. |
+| P7 | Fotografías de comercios, personas o locales | Regla cero + derechos de imagen. |
+| P8 | Logos de clientes o de empresas citadas en los ejemplos del copy | Los ejemplos son ilustrativos. |
+| P9 | Capturas de producto simuladas | Un panel que no existe es una promesa falsa. |
+| P10 | Hex de marca "deducidos" de una landing o de una captura | Deducir no es documentar. Se copian del design-system oficial. |
+| P11 | Fondo blanco corporativo convencional · neón excesivo | `rgrlk-brand-guardian`, prohibiciones explícitas. |
+| P12 | Productos adicionales hallados en la web, en cualquier forma | Portafolio cerrado en 13. |
 
 ---
 
-## 3. Activos pendientes de entrega
+## 3. Activos pendientes
 
-Lo que el Escritorio necesita y **hoy no existe en los insumos**. Hasta que llegue, cada fila tiene un comportamiento provisional definido — **ninguno inventa un activo**.
+Lo que el Escritorio necesita y hoy no está. Cada fila tiene un comportamiento provisional que ⛔ **no inventa nada**.
 
-| # | Activo | Para qué | Comportamiento hasta que llegue |
+| # | Activo | Para qué | Mientras no llegue |
 |---|---|---|---|
-| 1 | **Logotipo Lab.IA** (SVG, versión clara y oscura) | Barra lateral, cabecera móvil, portada de presentaciones, membrete de PDF | Nombre **Lab.IA** en texto, con `--fuente-titulo`. Espacio reservado con las proporciones finales. |
-| 2 | **Isotipo / marca reducida** | Favicon, ícono de aplicación, manifest | Favicon del mismo tipo que usa la referencia: SVG en línea con la inicial sobre el fondo del tema. Sin forma de marca. |
-| 3 | **Manual de marca** (paleta, tipografías, usos) | Confirmar o reemplazar los tokens de `DESIGN_SYSTEM.md` | Se usan los tokens de la referencia. El cambio, si viene, es un reemplazo en `packages/ui/src/tokens.css`. |
-| 4 | **Juego de íconos faltantes** (§1.4) | Navegación de las seis vistas y del administrador | Ícono existente más cercano o texto sin ícono. |
-| 5 | **Plantilla de presentación aprobada** | Presentaciones de venta | Composición tipográfica con el copy aprobado, sin elementos gráficos. |
-| 6 | **Membrete y pie legal para PDF** | Cotizaciones y comprobantes | PDF tipográfico con folio, versión y fecha. Sin logo. |
-| 7 | **Material de apoyo por producto** (fichas, one-pagers existentes) | Adjuntar desde el portafolio | La ficha muestra sólo el copy aprobado. Sin adjuntos. |
-| 8 | **Términos y condiciones comerciales** | Pie de cotización | Bloque ausente, marcado como pendiente en el documento generado. |
-| 9 | **Datos societarios de Lab.IA** (razón social, RUC, domicilio) | Encabezado legal de cotizaciones | Campo vacío, marcado como pendiente. ⛔ No se completa con un dato supuesto. |
+| 1 | **Hex oficiales de azul y cyan** | `packages/ui/src/marca-labia.css` | La interfaz se ve **monocromática navy**, con respaldo desde la familia `--bg`. Funciona, es legible y **se nota que le falta la marca**. `--marca-pendiente: 1`. |
+| 2 | **Logotipo Lab.IA** (SVG, claro y oscuro) | Barra lateral, cabecera, portada de presentaciones, membrete de PDF | **Lab.IA** en texto, Inter 600, con el espacio reservado en las proporciones finales. |
+| 3 | **Isotipo / marca reducida** | Favicon, ícono de aplicación | Favicon SVG en línea con la inicial sobre el fondo navy. Sin forma de marca. |
+| 4 | **Design-system completo de Lab.IA** | Confirmar radios, sombras, espaciados y breakpoints | Se usan los del sistema definido en `DESIGN_SYSTEM.md`. |
+| 5 | **Juego de íconos faltantes** (§1.5) | Navegación de las seis vistas | Ícono genérico más cercano o texto sin ícono. |
+| 6 | **Plantilla de presentación aprobada** | Presentaciones para dejar al cliente | Composición tipográfica con el copy aprobado, sin elementos gráficos. |
+| 7 | **Membrete y pie legal para PDF** | Cotizaciones y comprobantes | PDF tipográfico con folio, versión y fecha. Sin logo. |
+| 8 | **Datos societarios de Lab.IA** (razón social, RUC, domicilio) | Encabezado legal de cotizaciones | Campo vacío, marcado como pendiente. ⛔ No se completa con un dato supuesto. |
+| 9 | **Términos y condiciones comerciales** | Pie de cotización | Bloque ausente, marcado como pendiente. |
 
-### 3.1 Cómo pedirlos
+### 3.1 Cómo se piden
 
-Cada activo se solicita con: **formato** (SVG preferido para marca e íconos), **variantes** (claro/oscuro, horizontal/reducido), **usos permitidos**, **quién lo aprueba** y **fecha de entrega**. Un activo sin origen documentado no entra al repositorio.
+Cada activo se solicita con: **formato** (SVG para marca e íconos), **variantes** (claro/oscuro, horizontal/reducido), **usos permitidos**, **quién lo aprueba** y **fecha**. Un activo sin origen documentado no entra al repositorio.
 
 ---
 
@@ -102,14 +104,15 @@ Cada activo se solicita con: **formato** (SVG preferido para marca e íconos), *
 
 | # | Regla |
 |---|---|
-| I1 | Todo activo que entre al repositorio **se agrega a la tabla §1** con origen, licencia y quién lo aprobó. Sin fila en la tabla, no entra. |
+| I1 | Todo activo que entre **se agrega a la tabla §1** con origen y quién lo aprobó. Sin fila, no entra. |
 | I2 | ⛔ **Prohibido generar** logos, íconos de marca, ilustraciones, fotografías y capturas simuladas. |
-| I3 | ⛔ **Prohibido descargar** activos de landings, redes o buscadores para "usarlos mientras tanto". |
-| I4 | Un marcador de posición **se ve como marcador de posición**: espacio reservado o texto. Nunca algo que pueda confundirse con la marca real. |
-| I5 | Los activos binarios (imágenes, fuentes locales) van en `apps/*/public/`, nunca embebidos en base64 dentro del código. |
-| I6 | Las fuentes se cargan desde Google Fonts como en la referencia. Alojarlas localmente exige verificar la licencia y dejarlo asentado acá. |
-| I7 | El copy aprobado **no se edita nunca**, ni para corregir ortografía, puntuación o acentuación. Ver `content/copy/COPY_LOCK.md`. |
-| I8 | Los datos de ejemplo se marcan siempre con el chip **"Datos de ejemplo"** de la referencia, mientras la aplicación corra con mock. |
+| I3 | ⛔ **Prohibido descargar** activos de landings, redes o buscadores "para usarlos mientras tanto". |
+| I4 | Un marcador de posición **se ve como marcador de posición**. Nunca algo que pueda confundirse con la marca real. |
+| I5 | Los binarios van en `apps/escritorio/public/`, ⛔ nunca embebidos en base64 en el código. |
+| I6 | Inter se carga desde Google Fonts. Alojarla localmente exige verificar la licencia y asentarlo acá. |
+| I7 | ⛔ El copy aprobado **no se edita nunca**, ni para corregir ortografía o acentuación. |
+| I8 | Los datos de ejemplo se marcan siempre con el chip **"Datos de ejemplo"** mientras la app corra con mock. |
+| I9 | Los logos se usan **desde archivo**, con `object-fit: contain`. ⛔ Sin redibujar, recolorear ni deformar. |
 
 ---
 
@@ -117,11 +120,12 @@ Cada activo se solicita con: **formato** (SVG preferido para marca e íconos), *
 
 Antes de cada entrega:
 
-1. `grep` de rutas de imagen en el código ⇒ **toda ruta tiene fila en §1**.
+1. Toda ruta de imagen del código tiene fila en §1.
 2. Ningún `<img>`, `background-image` ni `data:image` fuera de lo listado.
-3. Ningún archivo binario sin origen documentado.
-4. El monograma `i-monograma` **no aparece** en `apps/`.
-5. Las cadenas "Sentinela", "Elvio", "Brun Ayala" y "EBA" **no aparecen** en `apps/`, `packages/` ni `content/`.
-6. Los dos archivos de copy conservan su hash original (`content/copy/COPY_LOCK.md`).
+3. Ningún binario sin origen documentado.
+4. Las cadenas `Newsreader`, `Georgia`, `serif`, `i-monograma`, `#E1B864` **no aparecen** en `apps/` ni en `packages/`.
+5. Las cadenas de la marca de la referencia **no aparecen** en `apps/`, `packages/` ni `content/`.
+6. Los dos archivos de copy conservan su hash original.
+7. Cuando llegue la marca oficial: `--marca-pendiente` pasa a `0` y §3 filas 1 y 2 se mueven a §1.
 
-Los seis controles están en `docs/QA_CHECKLIST.md` §7 como bloqueantes de entrega.
+Los siete controles están en `docs/QA_CHECKLIST.md` §7 como bloqueantes de entrega.

@@ -1,23 +1,23 @@
 /**
- * Núcleo del mock: latencia simulada, falla forzada y paginación.
+ * Núcleo del mock: latencia simulada, falla forzada, paginación y rol.
  *
  * ⛔ DUEÑO: SESIÓN 1.
  *
- * Existe para que los cuatro estados de interfaz (cargando, vacío, error, con datos)
- * se puedan probar SIN backend. Una vista que no puede mostrar su estado de error
- * no está terminada (docs/QA_CHECKLIST.md §2).
+ * Existe para que los cuatro estados de interfaz se puedan probar SIN backend.
+ * Una vista que no puede mostrar su estado de error no está terminada.
  */
 
-import type { ErrorApi, Pagina, Resultado } from '@labia/compartido';
+import type { ErrorApi, Pagina, Resultado, Rol } from '@labia/compartido';
 
 export interface ConfiguracionMock {
-  /** Latencia simulada en milisegundos. */
   readonly latenciaMs: number;
   /** Fuerza el error indicado en la próxima llamada. `null` = sin falla forzada. */
   readonly fallaForzada: ErrorApi | null;
   /** Devuelve listados vacíos, para probar el estado vacío. */
   readonly forzarVacio: boolean;
-  /** Semilla del generador de datos de ejemplo: el mock es reproducible. */
+  /** Rol con el que responde el mock: permite probar la guardia sin dos cuentas. */
+  readonly rol: Rol;
+  /** Semilla: el mock es reproducible. */
   readonly semilla: number;
 }
 
@@ -25,9 +25,15 @@ export const CONFIGURACION_POR_DEFECTO: ConfiguracionMock = {
   latenciaMs: 350,
   fallaForzada: null,
   forzarVacio: false,
+  rol: 'vendedor',
   semilla: 20260914,
 };
 
-/** Firma de los ayudantes del mock. Implementación: Sesión 1, Fase 0. */
 export type Responder = <T>(datos: T) => Promise<Resultado<T>>;
 export type Paginar = <T>(items: ReadonlyArray<T>, cursor?: string, limite?: number) => Pagina<T>;
+
+/**
+ * ⛔ Todo método de `CapaAdministracion` pasa por acá antes de responder.
+ * Si el mock es permisivo, la guardia de rol nunca se prueba.
+ */
+export type ExigirAdministrador = () => Resultado<void>;

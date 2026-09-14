@@ -1,55 +1,55 @@
 /**
  * Registro de accesos — los DOS registros del sistema.
  *
- * 1. `AccesoEnlace`      (en propuestas.ts) responde: "¿el cliente abrió lo que le mandé?"
- * 2. `RegistroAuditoria` (acá)              responde: "¿quién tocó qué dentro del sistema?"
+ *   1. `AccesoEnlace`   (en propuestas.ts) → "¿el cliente abrió lo que le mandé?"
+ *   2. `RegistroAcceso` (acá)              → "¿quién usa el sistema y qué tocó?"
  *
- * Son tablas distintas, con audiencias, permisos y retenciones distintas.
- * ⛔ La interfaz NUNCA las mezcla en una misma lista.
- * ⛔ Ambas son append-only: no hay método de escritura ni de borrado desde la aplicación.
+ * ⛔ La interfaz NUNCA los mezcla en una misma lista.
+ * ⛔ Ambos son append-only: no existe método de escritura ni de borrado.
  *
- * Ver MASTER_SPEC.md §12, DATA_MODEL.md §10.
+ * Ver MASTER_SPEC.md §10, DATA_MODEL.md §11.
  */
 
 import type { Id, ISODate } from './core';
 import type { Rol } from './identidad';
 import type { TipoDispositivo } from './propuestas';
 
-export type AccionAuditada =
+export type AccionRegistrada =
   | 'ingreso'
   | 'cierre_sesion'
   | 'intento_fallido'
-  | 'cambio_permiso'
-  | 'alta_usuario'
-  | 'baja_usuario'
-  | 'cambio_catalogo'
-  | 'cambio_precio'
-  | 'publicacion_regla_comision'
-  | 'aprobacion'
-  | 'rechazo'
-  | 'solicitud_cambios'
+  | 'alta_vendedor'
+  | 'baja_vendedor'
+  | 'cambio_participacion'
+  | 'cambio_presupuesto'
+  | 'cambio_taxonomia'
+  | 'aprobacion_cotizacion'
+  | 'correccion_cotizacion'
+  | 'rechazo_cotizacion'
   | 'cierre_periodo'
-  | 'ajuste_comision'
+  | 'ajuste'
   | 'emision_pdf'
   | 'emision_enlace'
   | 'revocacion_enlace'
   | 'borrado_audio'
-  | 'exportacion_datos'
   | 'reasignacion_cartera'
   | 'cambio_parametros';
 
-export type EntidadAuditada =
+export type EntidadRegistrada =
   | 'usuario'
-  | 'cuenta'
+  | 'cliente'
+  | 'plan'
   | 'producto'
-  | 'precio'
+  | 'precio_lista'
+  | 'participacion'
+  | 'presupuesto'
+  | 'taxonomia'
   | 'cotizacion'
   | 'presentacion'
   | 'enlace'
   | 'documento'
   | 'seguimiento'
   | 'audio'
-  | 'regla_comision'
   | 'liquidacion'
   | 'ajuste'
   | 'sugerencia'
@@ -61,12 +61,13 @@ export interface OrigenSesion {
 }
 
 /** ⛔ Append-only. Sin UPDATE, sin DELETE desde la aplicación. */
-export interface RegistroAuditoria {
+export interface RegistroAcceso {
   readonly id: Id;
   readonly actorId: Id;
-  readonly rolVigente: Rol;
-  readonly accion: AccionAuditada;
-  readonly entidadTipo: EntidadAuditada;
+  readonly nombreActor: string;
+  readonly rol: Rol;
+  readonly accion: AccionRegistrada;
+  readonly entidadTipo: EntidadRegistrada;
   readonly entidadId: Id | null;
   readonly valorAnterior: unknown | null;
   readonly valorPosterior: unknown | null;
@@ -74,10 +75,10 @@ export interface RegistroAuditoria {
   readonly origenSesion: OrigenSesion;
 }
 
-export interface FiltroAuditoria {
+export interface FiltroRegistroAcceso {
   readonly actorId?: Id;
-  readonly accion?: AccionAuditada;
-  readonly entidadTipo?: EntidadAuditada;
+  readonly accion?: AccionRegistrada;
+  readonly entidadTipo?: EntidadRegistrada;
   readonly entidadId?: Id;
   readonly desde?: ISODate;
   readonly hasta?: ISODate;

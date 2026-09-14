@@ -1,118 +1,170 @@
 /**
- * Presentaciones, cotizaciones, aprobación, PDF, enlaces y accesos a enlaces.
- * Ver MASTER_SPEC.md §2.4, §10 y §11; USER_FLOWS.md F5–F8 y F17.
+ * Presentaciones y cotizaciones. Son DOS COSAS DISTINTAS que nunca se mezclan.
+ *
+ *   A) PRESENTACIÓN — se genera PRIMERO. Personalizada, visual, compartible,
+ *      SIN precio definitivo, NO requiere aprobación.
+ *
+ *   B) COTIZACIÓN — se prepara DESPUÉS. El vendedor propone el precio
+ *      personalizado. ⛔ SIEMPRE pasa por aprobación del administrador.
+ *
+ * El circuito, sin desvíos:
+ *   borrador del vendedor → revisión del administrador → aprobada o corregida
+ *   → PDF definitivo → envío al cliente
+ *
+ * ⛔ No existe ninguna transición que lleve una cotización al cliente sin pasar
+ *    por `aprobada`. El tipo `EstadoCotizacion` y los métodos de api.ts lo
+ *    hacen imposible por construcción, no por una validación saltéable.
+ *
+ * Ver MASTER_SPEC.md §2.4 y §9, USER_FLOWS.md F8 a F12.
  */
 
 import type { Dinero, Id, ISODate, TotalesPorMoneda, Trazado } from './core';
-import type { ModalidadPrecio, ProductoId } from './catalogo';
+import type { ProductoId } from './catalogo';
 
 export type TipoPropuesta = 'presentacion' | 'cotizacion';
 
-interface PropuestaBase extends Trazado {
+// ===========================================================================
+// A · PRESENTACIÓN — material de venta, sin efecto comercial
+// ===========================================================================
+
+export interface Presentacion extends Trazado {
   readonly id: Id;
-  readonly tipo: TipoPropuesta;
-  readonly cuentaId: Id;
+  readonly tipo: 'presentacion';
+  readonly clienteId: Id;
   readonly vendedorId: Id;
   readonly titulo: string;
-}
-
-// ---------------------------------------------------------------------------
-// Presentación — material de venta, sin efecto comercial
-// ---------------------------------------------------------------------------
-
-export interface Presentacion extends PropuestaBase {
-  readonly tipo: 'presentacion';
   readonly productosIncluidos: ReadonlyArray<ProductoId>;
   readonly casosDeUsoIncluidos: ReadonlyArray<string>;
+  /** Plan del motor que la originó: de ahí salen dolores y argumentos. */
+  readonly planId: Id | null;
   /**
-   * ⛔ `true` convierte la presentación en propuesta económica:
-   * queda sujeta a la misma aprobación que una cotización.
+   * Rango de referencia documentado, si se decide incluirlo.
+   * ⛔ Va SIEMPRE marcado como referencia. Nunca es un precio definitivo.
    */
-  readonly incluyePrecios: boolean;
-  readonly plantillaId: Id | null;
+  readonly mostrarRangoDeReferencia: boolean;
+  readonly version: number;
 }
 
 export interface NuevaPresentacion {
-  readonly cuentaId: Id;
+  readonly clienteId: Id;
   readonly titulo: string;
   readonly productosIncluidos: ReadonlyArray<ProductoId>;
   readonly casosDeUsoIncluidos?: ReadonlyArray<string>;
-  readonly incluyePrecios?: boolean;
-  readonly plantillaId?: Id;
+  readonly planId?: Id;
+  readonly mostrarRangoDeReferencia?: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Cotización
-// ---------------------------------------------------------------------------
+// ===========================================================================
+// B · COTIZACIÓN — precio personalizado, aprobación obligatoria
+// ===========================================================================
 
+/**
+ * ⛔ `enviada_al_cliente` sólo se alcanza desde `aprobada`.
+ * `corregida` vuelve a `borrador` con versión +1, historial intacto.
+ */
 export type EstadoCotizacion =
   | 'borrador'
-  | 'enviada_a_aprobacion'
+  | 'en_revision'
   | 'aprobada'
+  | 'corregida'
   | 'rechazada'
-  | 'cambios_solicitados'
   | 'enviada_al_cliente'
   | 'aceptada'
   | 'perdida'
   | 'vencida';
 
-export type MotivoAprobacion =
-  | 'descuento_supera_limite'
-  | 'limite_no_definido'
-  | 'item_no_documentado'
-  | 'fuera_de_rango'
-  | 'bajo_el_piso'
-  | 'condicion_no_prevista'
-  | 'presentacion_con_precios'
-  | 'version_catalogo_desactualizada';
-
+/**
+ * Un ítem de cotización guarda el precio de lista JUNTO al propuesto:
+ * es lo que permite explicar la desviación meses después.
+ */
 export interface ItemCotizacion {
   readonly id: Id;
   readonly productoId: ProductoId;
-  readonly modalidad: ModalidadPrecio;
   readonly plan: string | null;
-  readonly cantidad: number;
-  readonly precioCatalogoId: Id | null;
-  /** `null` cuando el ítem está `aCotizar`. */
-  readonly precioLista: Dinero | null;
-  readonly descuentoPorcentaje: number;
-  /** ⛔ Misma moneda que `precioLista`. Un ítem nunca cambia de moneda. */
-  readonly precioFinal: Dinero | null;
-  /** Producto con precio `no_documentado`: sin importe, dispara aprobación obligatoria. */
-  readonly aCotizar: boolean;
+  /** Documentado en el copy. `null` cuando el producto no tiene precio de lista. */
+  readonly precioListaSetup: Dinero | null;
+  readonly precioListaMensualidad: Dinero | null;
+  /** Lo que propone el vendedor. */
+  readonly setupPropuesto: Dinero;
+  readonly mensualidadPropuesta: Dinero;
+  readonly descuentoImplementacionPorcentaje: number;
+  readonly alcance: string;
   readonly notas: string | null;
 }
 
-export type ItemCotizacionEntrada = Omit<ItemCotizacion, 'id' | 'precioLista' | 'precioFinal'>;
+export type ItemCotizacionEntrada = Omit<ItemCotizacion, 'id' | 'precioListaSetup' | 'precioListaMensualidad'>;
 
-export interface Cotizacion extends PropuestaBase {
+/** Las condiciones comerciales que el vendedor propone y el administrador aprueba. */
+export interface CondicionesCotizacion {
+  readonly debitoAutomatico: boolean;
+  readonly compromisoDoceMeses: boolean;
+  readonly pagoAnualAnticipado: boolean;
+  readonly alcance: string;
+  readonly cronograma: ReadonlyArray<EtapaCronograma>;
+  readonly condicionesComerciales: string;
+  /** El copy sólo documenta "+ IVA" en un producto: acá se declara y se aprueba. */
+  readonly tratamientoIva: string;
+}
+
+export interface EtapaCronograma {
+  readonly orden: number;
+  readonly titulo: string;
+  readonly duracionDias: number;
+  readonly entregable: string;
+}
+
+export interface Cotizacion extends Trazado {
+  readonly id: Id;
   readonly tipo: 'cotizacion';
+  readonly clienteId: Id;
+  readonly vendedorId: Id;
+  /** La presentación previa, si la hubo. El circuito esperado es presentación primero. */
+  readonly presentacionId: Id | null;
   readonly folio: string;
+  readonly version: number;
   readonly estado: EstadoCotizacion;
   readonly items: ReadonlyArray<ItemCotizacion>;
+  readonly condiciones: CondicionesCotizacion;
   /** ⛔ Una entrada por moneda. Nunca un total consolidado. */
   readonly totalesPorMoneda: TotalesPorMoneda;
   readonly vigenteHasta: ISODate;
-  /** Con qué versión de precios se armó. Permite explicar una diferencia meses después. */
   readonly versionCatalogo: number;
-  readonly requiereAprobacion: boolean;
-  readonly motivoRequiereAprobacion: ReadonlyArray<MotivoAprobacion>;
   /** Obligatorio al pasar a `perdida`. */
   readonly motivoPerdida: string | null;
 }
 
 export interface CotizacionDetalle extends Cotizacion {
-  readonly solicitudAprobacion: SolicitudAprobacion | null;
+  readonly revision: Revision | null;
+  readonly versiones: ReadonlyArray<VersionCotizacion>;
   readonly documentos: ReadonlyArray<DocumentoEmitido>;
   readonly enlaces: ReadonlyArray<EnlaceCompartido>;
+  readonly comparacion: ComparacionConLista;
   readonly avisos: ReadonlyArray<string>;
 }
 
 export interface NuevaCotizacion {
-  readonly cuentaId: Id;
-  readonly titulo: string;
+  readonly clienteId: Id;
+  readonly presentacionId?: Id;
   readonly items: ReadonlyArray<ItemCotizacionEntrada>;
+  readonly condiciones: CondicionesCotizacion;
   readonly vigenteHasta: ISODate;
+}
+
+/** Lo propuesto contra lo documentado. Es información para el administrador, no un bloqueo. */
+export interface ComparacionConLista {
+  readonly lineas: ReadonlyArray<{
+    readonly productoId: ProductoId;
+    readonly precioListaSetup: Dinero | null;
+    readonly setupPropuesto: Dinero;
+    readonly desviacionSetup: Dinero | null;
+    readonly desviacionSetupPorcentaje: number | null;
+    readonly precioListaMensualidad: Dinero | null;
+    readonly mensualidadPropuesta: Dinero;
+    readonly desviacionMensualidad: Dinero | null;
+    readonly desviacionMensualidadPorcentaje: number | null;
+    /** `true` en Smart Commerce y Exeq.IA: no hay lista contra la cual comparar. */
+    readonly sinPrecioDeLista: boolean;
+  }>;
 }
 
 export interface VersionCotizacion {
@@ -126,61 +178,64 @@ export interface VersionCotizacion {
 
 export interface FiltroCotizaciones {
   readonly estado?: EstadoCotizacion;
-  readonly cuentaId?: Id;
+  readonly clienteId?: Id;
   readonly vendedorId?: Id;
   readonly desde?: ISODate;
   readonly hasta?: ISODate;
 }
 
 // ---------------------------------------------------------------------------
-// Aprobación
+// Revisión del administrador
 // ---------------------------------------------------------------------------
 
-export type AccionAprobacion = 'enviar' | 'aprobar' | 'rechazar' | 'solicitar_cambios' | 'escalar';
+export type AccionRevision = 'enviar' | 'aprobar' | 'corregir' | 'rechazar';
 
-export interface SolicitudAprobacion {
+export interface Revision {
   readonly id: Id;
   readonly cotizacionId: Id;
-  readonly versionCotizacion: number;
-  readonly solicitanteId: Id;
-  readonly aprobadorId: Id | null;
-  readonly estado: 'pendiente' | 'aprobada' | 'rechazada' | 'cambios_solicitados';
-  /** `null` mientras el SLA esté pendiente de definición (COMMERCIAL_RULES.md §6-9). */
-  readonly slaVenceEn: ISODate | null;
-  readonly escaladaA: Id | null;
+  readonly version: number;
+  readonly vendedorId: Id;
+  readonly revisorId: Id | null;
+  readonly estado: 'pendiente' | 'aprobada' | 'corregida' | 'rechazada';
   readonly creadoEn: ISODate;
   readonly resueltoEn: ISODate | null;
-  readonly eventos: ReadonlyArray<EventoAprobacion>;
+  readonly eventos: ReadonlyArray<EventoRevision>;
 }
 
-/** Append-only. ⛔ `actorId !== solicitanteId` para `aprobar`: nadie aprueba lo propio. */
-export interface EventoAprobacion {
+/**
+ * Append-only.
+ * ⛔ `comentario` no vacío en aprobar, corregir y rechazar.
+ * ⛔ `actorId !== vendedorId` en `aprobar`: nadie aprueba lo propio.
+ */
+export interface EventoRevision {
   readonly id: Id;
-  readonly solicitudId: Id;
+  readonly cotizacionId: Id;
+  readonly version: number;
   readonly actorId: Id;
-  readonly accion: AccionAprobacion;
-  /** Obligatorio en `aprobar`, `rechazar` y `solicitar_cambios`. */
+  readonly accion: AccionRevision;
   readonly comentario: string;
   readonly ocurridoEn: ISODate;
 }
 
-export interface FiltroColaAprobacion {
-  readonly aprobadorId?: Id;
+export interface FiltroColaRevision {
   readonly vendedorId?: Id;
-  readonly vencidas?: boolean;
   readonly desde?: ISODate;
+  readonly ordenarPor?: 'antiguedad' | 'monto';
 }
 
 // ---------------------------------------------------------------------------
 // PDF y enlaces
 // ---------------------------------------------------------------------------
 
-/** Inmutable. Mismo insumo ⇒ mismo `hashContenido`. Un cambio produce otro documento. */
+/**
+ * Inmutable. Mismo insumo ⇒ mismo `hashContenido`.
+ * ⛔ Para una cotización sólo se emite si el estado es `aprobada`.
+ */
 export interface DocumentoEmitido {
   readonly id: Id;
   readonly propuestaId: Id;
+  readonly tipoPropuesta: TipoPropuesta;
   readonly versionPropuesta: number;
-  readonly tipo: 'pdf';
   readonly folio: string;
   readonly hashContenido: string;
   readonly emitidoEn: ISODate;
@@ -198,8 +253,9 @@ export interface OpcionesEnlace {
 export interface EnlaceCompartido {
   readonly id: Id;
   readonly propuestaId: Id;
+  readonly tipoPropuesta: TipoPropuesta;
   readonly versionPropuesta: number;
-  /** ⛔ Token opaco. NUNCA deriva de propuestaId, cuentaId ni de dato alguno del cliente. */
+  /** ⛔ Token opaco. NUNCA deriva de clienteId, propuestaId ni de dato alguno del cliente. */
   readonly token: string;
   readonly creadoEn: ISODate;
   readonly creadoPor: Id;
@@ -211,21 +267,17 @@ export interface EnlaceCompartido {
   readonly revocadoPor: Id | null;
 }
 
-export type ResultadoAcceso =
-  | 'ok'
-  | 'vencido'
-  | 'revocado'
-  | 'tope_superado'
-  | 'codigo_invalido';
+export type ResultadoAcceso = 'ok' | 'vencido' | 'revocado' | 'tope_superado' | 'codigo_invalido';
 
 export type TipoDispositivo = 'escritorio' | 'celular' | 'tablet' | 'desconocido';
 
 /**
- * Registro de accesos a material compartido. **Append-only.**
+ * Apertura de material compartido. **Append-only.**
+ * Responde: "¿el cliente abrió lo que le mandé?"
  *
- * ⛔ Prohibido almacenar: IP completa, user-agent crudo, identificador de dispositivo,
- *    cookie persistente, datos de contacto del visitante, o correlación entre enlaces.
- *    Granularidad geográfica máxima: país.
+ * ⛔ Prohibido almacenar: IP completa, user-agent crudo, identificador de
+ *    dispositivo, cookie persistente, datos de contacto del visitante, o
+ *    correlación entre enlaces. Granularidad geográfica máxima: país.
  */
 export interface AccesoEnlace {
   readonly id: Id;
@@ -239,7 +291,7 @@ export interface AccesoEnlace {
   readonly resultado: ResultadoAcceso;
 }
 
-export interface FiltroAccesos {
+export interface FiltroAperturas {
   readonly propuestaId?: Id;
   readonly enlaceId?: Id;
   readonly vendedorId?: Id;
@@ -249,23 +301,23 @@ export interface FiltroAccesos {
 }
 
 // ---------------------------------------------------------------------------
-// Vista pública del enlace
+// Vista pública
 // ---------------------------------------------------------------------------
 
 /**
- * Superficie pública mínima.
- * ⛔ Sin navegación al Escritorio, sin otras cuentas, sin precios de otros clientes.
- * ⛔ Nunca revela cuántos accesos hubo.
+ * ⛔ Superficie mínima: sin navegación al Escritorio, sin otros clientes,
+ *    sin precios de terceros, y NUNCA revela cuántas aperturas hubo.
  */
 export interface PropuestaPublica {
   readonly tipo: TipoPropuesta;
   readonly titulo: string;
-  readonly nombreCuenta: string;
+  readonly nombreCliente: string;
   readonly nombreVendedor: string;
   readonly emitidaEn: ISODate;
   readonly productos: ReadonlyArray<ProductoId>;
   /** ⛔ Vacío cuando la cotización está `vencida`. */
-  readonly items: ReadonlyArray<Omit<ItemCotizacion, 'notas' | 'precioCatalogoId'>>;
+  readonly items: ReadonlyArray<Omit<ItemCotizacion, 'notas' | 'precioListaSetup' | 'precioListaMensualidad'>>;
+  readonly condiciones: CondicionesCotizacion | null;
   readonly totalesPorMoneda: TotalesPorMoneda;
   readonly vigenteHasta: ISODate | null;
   readonly avisoVigencia: string | null;

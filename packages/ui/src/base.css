@@ -1,26 +1,37 @@
 /*
  * Estilos base y componentes compartidos.
  *
- * ⛔ DUEÑO: SESIÓN 1. Las sesiones 2 a 6 consumen estas clases; no las editan.
- *    Una variante propia de una vista va con prefijo de vista (.cartera-…)
- *    en el archivo CSS de esa vista.
+ * ⛔ DUEÑO: SESIÓN 2. Las sesiones 3 a 6 consumen estas clases; no las editan.
+ *    Una variante propia de una vista lleva prefijo (.planificar-…) y vive en
+ *    el CSS de esa vista.
  *
- * Los componentes de docs/DESIGN_SYSTEM.md §4 se implementan acá durante Fase 0,
- * transcriptos de docs/referencia/escritorio-referencia.html:
+ * COMPONENTES a implementar en Fase 0 (docs/DESIGN_SYSTEM.md §5):
+ *   .tarjeta · .accion-protagonista · .cifra · .rejilla · .lista
+ *   .ranking/.ranking-fila · .encaje(--directo|--cercano|--adaptable|--no-recomendado)
+ *   .btn(-borde|-texto) · .campo/.entrada · .pestanas/.pestana · .chips/.chip
+ *   .tabla dentro de .tabla-contenedor · dialog/.dialogo · .aviso
+ *   .cargando/.hueso · .vacio · .error
+ *   .lateral · .inferior · .principal · .vista · .encabezado · .saltar
  *
- *   .tarjeta · .rejilla(-2/-3/-4) · .indicadores/.indicador · .lista
- *   .btn(-borde/-texto/-chico) · .campo/.entrada · .pestanas/.pestana
- *   .segmentos/.segmento · .chips/.chip · .zona · .mensajes/.mensaje
- *   .compositor · dialog/.dialogo · .aviso · .definiciones · .grafico
- *   .cargando/.hueso/.rueda · .vacio · .error · .reveal
- *   .lateral · .inferior · .principal · .pantalla · .encabezado · .saltar
- *
- * Reglas que no se debilitan (docs/DESIGN_SYSTEM.md §6):
- *   - área táctil mínima 44×44 px
- *   - :focus-visible { outline: 2px solid var(--oro); outline-offset: 3px }
+ * REGLAS QUE NO SE DEBILITAN
+ * ──────────────────────────
+ *   - área táctil mínima 44 × 44 px, en los CINCO anchos
+ *   - :focus-visible { outline: 2px solid var(--cian); outline-offset: 3px }
  *   - @media (prefers-reduced-motion: reduce) anula toda animación
- *   - html, body { max-width: 100%; overflow-x: hidden }
+ *   - box-sizing: border-box global
  *   - min-width: 0 en hijos de flex y grid
+ *   - los importes usan font-variant-numeric: tabular-nums
+ *
+ * ⛔ RESPONSIVE — PROHIBIDO `overflow-x: hidden` PARA TAPAR UN DESBORDAMIENTO.
+ *    Esconde el síntoma, deja el problema y rompe position: sticky.
+ *    El único overflow-x permitido es el de .tabla-contenedor, y es de la tabla.
+ *    Toda causa se corrige en su origen (docs/DESIGN_SYSTEM.md §7.1):
+ *      min-width de más · hijo de flex/grid sin min-width:0 · tabla sin
+ *      contenedor · palabra larga sin overflow-wrap · padding sumado a 100% ·
+ *      grilla que no baja · imagen sin max-width · 100vw con scrollbar.
+ *
+ *    Validar en 360, 390, 768, 1024 y 1440 px:
+ *      document.documentElement.scrollWidth <= window.innerWidth
  */
 
 @import url('./tokens.css');

@@ -3,11 +3,12 @@
  *
  * ⛔ Este canal NO abre el portafolio: los 13 productos siguen siendo 13.
  * ⛔ No existe ninguna ruta de escritura desde una sugerencia hacia el catálogo.
+ * ⛔ Origen: desde Planificar, cuando ninguno de los 13 encaja; o desde un seguimiento.
  *
- * Ver MASTER_SPEC.md §13, USER_FLOWS.md F13.
+ * Ver MASTER_SPEC.md §11, USER_FLOWS.md F18.
  */
 
-import type { Adjunto, Dinero, Id, ISODate } from './core';
+import type { Adjunto, Id, ISODate } from './core';
 import type { ProductoId } from './catalogo';
 
 export type FrecuenciaObservada = 'unica' | 'ocasional' | 'frecuente';
@@ -25,16 +26,11 @@ export interface SugerenciaProducto {
   readonly titulo: string;
   /** El problema en palabras del cliente, no en las nuestras. */
   readonly problemaCliente: string;
-  readonly cuentaId: Id | null;
-  readonly rubroId: Id | null;
+  readonly clienteId: Id | null;
+  readonly actividadId: Id | null;
   readonly frecuenciaObservada: FrecuenciaObservada;
   readonly productosQueNoAlcanzan: ReadonlyArray<ProductoId>;
   readonly porQueNoAlcanzan: string;
-  /**
-   * ⛔ Estimación del vendedor. Se muestra SIEMPRE etiquetada como tal.
-   * Nunca es un precio, nunca entra a una cotización, nunca llega al catálogo.
-   */
-  readonly valorPercibido: Dinero | null;
   readonly adjuntos: ReadonlyArray<Adjunto>;
   readonly creadaPor: Id;
   readonly creadaEn: ISODate;
@@ -51,12 +47,11 @@ export interface SugerenciaProducto {
 export interface NuevaSugerencia {
   readonly titulo: string;
   readonly problemaCliente: string;
-  readonly cuentaId?: Id;
-  readonly rubroId?: Id;
+  readonly clienteId?: Id;
+  readonly actividadId?: Id;
   readonly frecuenciaObservada: FrecuenciaObservada;
   readonly productosQueNoAlcanzan: ReadonlyArray<ProductoId>;
   readonly porQueNoAlcanzan: string;
-  readonly valorPercibido?: Dinero;
   readonly adjuntos?: ReadonlyArray<Id>;
 }
 
@@ -70,14 +65,14 @@ export interface ResolucionSugerencia {
 
 export interface FiltroSugerencias {
   readonly estado?: EstadoSugerencia;
-  readonly rubroId?: Id;
+  readonly actividadId?: Id;
   readonly creadaPor?: Id;
   readonly frecuencia?: FrecuenciaObservada;
 }
 
 /** Agregación por rubro y frecuencia: el insumo de roadmap del administrador. */
 export interface AgregadoSugerencias {
-  readonly rubroId: Id;
+  readonly actividadId: Id;
   readonly total: number;
   readonly porEstado: Readonly<Record<EstadoSugerencia, number>>;
   readonly porFrecuencia: Readonly<Record<FrecuenciaObservada, number>>;

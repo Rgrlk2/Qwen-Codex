@@ -1,22 +1,21 @@
 /**
- * Implementación mock de `CapaDatos` y `CapaDatosAdmin`.
+ * Implementación mock de `CapaDatos`.
  *
- * ⛔ DUEÑO DE ESTE ARCHIVO: SESIÓN 1. Ensambla los módulos de datos de cada sesión.
- *    Los módulos `datos-*.ts` tienen cada uno su propia sesión dueña:
+ * ⛔ DUEÑO DE ESTE ARCHIVO: SESIÓN 1. Ensambla los módulos de cada sesión:
  *
- *      datos-dia.ts          → Sesión 2
- *      datos-seguimiento.ts  → Sesión 2
- *      datos-cartera.ts      → Sesión 3
- *      datos-portafolio.ts   → Sesión 4
- *      datos-propuestas.ts   → Sesión 5
- *      datos-dinero.ts       → Sesión 6
- *      datos-admin.ts        → Sesión 6
+ *   datos-sesion.ts     → Sesión 1   (ingreso, roles, capacidades)
+ *   datos-inicio.ts     → Sesión 2   (las cuatro cifras, próximos seguimientos)
+ *   datos-motor.ts      → Sesión 3   (taxonomía, planes, catálogo, sugerencias)
+ *   datos-clientes.ts   → Sesión 4   (cartera, seguimientos, audios)
+ *   datos-propuestas.ts → Sesión 5   (presentaciones, cotizaciones, enlaces)
+ *   datos-finanzas.ts   → Sesión 6   (participación, mensualidades, admin)
  *
- *    Un archivo por dominio, nunca uno compartido: así seis sesiones escriben
- *    datos de ejemplo al mismo tiempo sin tocarse (docs/PARALLEL_SESSIONS.md §7).
+ * ⛔ Mientras la app corra con mock, la interfaz muestra de forma permanente el
+ *    chip "Datos de ejemplo". Nunca se presenta un dato ficticio como real.
  *
- * ⛔ Mientras la aplicación corra con mock, la interfaz muestra de forma permanente
- *    el chip "Datos de ejemplo". Nunca se presenta un dato ficticio como real.
+ * ⛔ El mock debe respetar la guardia de rol: un método de administración
+ *    llamado con rol `vendedor` devuelve `sin_permiso`, igual que el servidor.
+ *    Si el mock es permisivo, la guardia no se prueba nunca.
  */
 
 export * from './nucleo';

@@ -1,9 +1,9 @@
 # Escritorio Vendedores Lab.IA
 
-Herramienta de trabajo diaria del vendedor de Lab.IA, con su contraparte de administración comercial.
+Una sola aplicación para el equipo comercial de Lab.IA. Un login, dos roles.
+La planificación es el comienzo: el vendedor abre el sistema y lo primero que ve es su plata y dos formas de empezar a vender.
 
-**Estado: especificación y esqueleto.** Esta entrega define *qué* se construye y *con qué reglas*.
-Las funciones finales todavía no se construyen — arrancan con los límites de `docs/PARALLEL_SESSIONS.md`.
+**Estado: especificación v2.0 y esqueleto.** Define *qué* se construye y *con qué reglas*. Las vistas finales todavía no se construyen — arrancan con los límites de `docs/PARALLEL_SESSIONS.md`.
 
 ---
 
@@ -11,12 +11,46 @@ Las funciones finales todavía no se construyen — arrancan con los límites de
 
 | # | Regla |
 |---|---|
-| R1 | **Portafolio cerrado en 13 productos**: 9 soluciones específicas + 4 integrales. |
-| R2 | **Todo producto adicional hallado en la web queda excluido** (`docs/MASTER_SPEC.md` §4.2). |
-| R3 | **El copy aprobado no se modifica.** `content/copy/` es de sólo lectura, con verificación por hash. |
-| R4 | **No se inventan precios.** Sólo los importes documentados, transcriptos literalmente. |
-| R5 | **No se inventan logos ni imágenes.** Todo activo tiene fila en `docs/ASSET_SOURCES.md`. |
-| R6 | **Todo importe lleva moneda.** El portafolio opera en PYG y USD; sin conversión automática. |
+| R1 | **Portafolio cerrado en 13 productos**: 9 específicas + 4 integrales. La amplitud está en los **rubros y adaptaciones**, nunca en productos nuevos. |
+| R2 | **Una sola aplicación, un solo login.** Administración es una ruta protegida, no otra app. |
+| R3 | **Dos roles**: `vendedor` y `administrador`. No existen supervisor ni auditor. |
+| R4 | **El copy aprobado no se modifica.** Verificado por hash. |
+| R5 | **No se inventan precios de lista, logos ni imágenes.** |
+| R6 | **Toda cotización pasa por aprobación del administrador.** Sin excepción. |
+| R7 | **50 % Lab.IA / 50 % vendedor**, sobre setup y mensualidades. Configurable por producto. |
+| R8 | **Identidad Lab.IA**: dark/navy, azul y cyan, Inter. |
+| R9 | **Responsive por causa.** `overflow-x: hidden` no es una solución. |
+
+---
+
+## Las vistas
+
+| # | Ruta | Vista | Quién | Responde a |
+|---|---|---|---|---|
+| 01 | `#/inicio` | **Inicio** | ambos | ¿Cómo voy y qué hago ahora? |
+| 02 | `#/planificar` | **Planificar** | ambos | ¿Qué le vendo a este negocio y por qué? |
+| 03 | `#/clientes` | **Clientes** | ambos | ¿Con quién hablo y qué se dijo? |
+| 04 | `#/propuestas` | **Propuestas** | ambos | ¿Qué le presenté y qué le cotizo? |
+| 05 | `#/dinero` | **Dinero** | ambos | ¿Cuánto vendí, cuánto se cobró y cuánto me toca? |
+| 06 | `#/administracion` | **Administración** | **sólo admin** | ¿Cómo va la operación y qué tengo que aprobar? |
+
+### Inicio: la planificación es el comienzo
+
+Cuatro cifras — dinero vendido · dinero cobrado · comisión acumulada · comisión pendiente —, los próximos seguimientos, y **dos acciones protagonistas**:
+
+> 🔍 **Investigar una empresa o un profesional que conozco**
+> *"Mi amigo tiene una repuestera", "mi primo tiene un restaurante", "mi odontóloga".*
+
+> 🧭 **Explorar oportunidades por rubro**
+> *"Quiero ver qué le puedo vender a las peluquerías."*
+
+⛔ Sin gráficos decorativos, sin embudos, sin tasas de conversión.
+
+### Planificar: el motor comercial
+
+Acepta **cualquier rubro escrito** — "motel", "gomería", "vivero" — y devuelve: cómo funciona ese negocio · dolores probables (como hipótesis, con su motivo) · **los 13 productos ordenados** · producto 1, 2 y 3 · combos · encaje (`directo` / `cercano` / `adaptable` / `no_recomendado`) · la adaptación necesaria · estrategia de entrada · argumentos · preguntas de confirmación.
+
+⛔ Nunca responde "rubro no encontrado". ⛔ Nunca propone un producto fuera de los 13.
 
 ---
 
@@ -24,18 +58,18 @@ Las funciones finales todavía no se construyen — arrancan con los límites de
 
 | Documento | Qué resuelve |
 |---|---|
-| [`docs/MASTER_SPEC.md`](docs/MASTER_SPEC.md) | Especificación maestra: seis vistas del vendedor, vista completa del administrador, planificación por empresa/profesional/rubro, los 13 productos, dinero, seguimiento por voz y texto, presentaciones, aprobación, PDF y enlaces, registro de accesos, sugerencias |
-| [`docs/USER_FLOWS.md`](docs/USER_FLOWS.md) | 18 recorridos con decisiones, bloqueos y estados |
+| [`docs/MASTER_SPEC.md`](docs/MASTER_SPEC.md) | Especificación maestra |
+| [`docs/USER_FLOWS.md`](docs/USER_FLOWS.md) | 19 recorridos con decisiones y bloqueos |
 | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | Entidades, relaciones e invariantes |
-| [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md) | Contrato `CapaDatos` entre vistas y datos |
-| [`docs/COMMERCIAL_RULES.md`](docs/COMMERCIAL_RULES.md) | **Fuente única de dinero**: precios documentados, IVA, descuentos, aprobación, comisiones, pendientes |
-| [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) | Tokens, componentes, movimiento, accesibilidad |
-| [`docs/ASSET_SOURCES.md`](docs/ASSET_SOURCES.md) | Qué activos existen, cuáles están prohibidos, cuáles faltan |
-| [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) | Verificaciones de entrega, con bloqueantes marcados |
-| [`docs/PARALLEL_SESSIONS.md`](docs/PARALLEL_SESSIONS.md) | **Límites exactos de archivos para seis sesiones paralelas** |
-| [`docs/PEDIDOS.md`](docs/PEDIDOS.md) | Canal de pedidos entre sesiones |
-| [`content/taxonomia/rubros.md`](content/taxonomia/rubros.md) | 71 términos derivados del copy: 60 rubros + 11 calificadores |
-| [`content/copy/COPY_LOCK.md`](content/copy/COPY_LOCK.md) | Congelamiento del copy aprobado y sus huellas |
+| [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md) | Contrato `CapaDatos` |
+| [`docs/COMMERCIAL_RULES.md`](docs/COMMERCIAL_RULES.md) | **Fuente única de dinero**: precios, 50/50, aprobación |
+| [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) | Identidad Lab.IA, componentes, responsive |
+| [`docs/ASSET_SOURCES.md`](docs/ASSET_SOURCES.md) | Activos disponibles, prohibidos y pendientes |
+| [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) | Verificaciones de entrega |
+| [`docs/PARALLEL_SESSIONS.md`](docs/PARALLEL_SESSIONS.md) | Límites exactos de archivos |
+| [`docs/PROMPTS_SESIONES.md`](docs/PROMPTS_SESIONES.md) | **Prompts listos para las seis sesiones** |
+| [`content/taxonomia/LEEME.md`](content/taxonomia/LEEME.md) | Taxonomía editable de tres capas |
+| [`content/copy/COPY_LOCK.md`](content/copy/COPY_LOCK.md) | Copy congelado y sus huellas |
 
 ---
 
@@ -43,34 +77,22 @@ Las funciones finales todavía no se construyen — arrancan con los límites de
 
 ```
 .
-├── docs/                        Especificación completa (arriba)
-│   └── referencia/              Referencia visual entregada, sin modificar
+├── docs/                        Especificación completa
+│   └── referencia/              Referencia OPERATIVA (no visual), sin modificar
 ├── content/
 │   ├── copy/                    ⛔ Copy maestro aprobado — CONGELADO
-│   └── taxonomia/               Rubros y calificadores derivados del copy
+│   └── taxonomia/               Actividades, operaciones, necesidades, relaciones
 ├── packages/
 │   ├── compartido/              Interfaces TypeScript compartidas
-│   ├── ui/                      Tokens y estilos base
+│   ├── ui/                      Tokens Lab.IA + marca-labia.css
 │   └── mock/                    CapaDatos sin backend, un archivo por dominio
 ├── apps/
-│   ├── escritorio/              Las seis vistas del vendedor
-│   └── admin/                   Las nueve vistas del administrador
+│   └── escritorio/              LA ÚNICA APLICACIÓN
+│       └── src/vistas/          ingreso · inicio · planificar · clientes
+│                                propuestas · dinero · administracion
 └── scripts/
     └── verificar-portafolio.mjs Verificaciones bloqueantes
 ```
-
----
-
-## Las seis vistas del vendedor
-
-| # | Ruta | Vista | Responde a |
-|---|---|---|---|
-| 01 | `#/dia` | Mi Día | ¿Qué tengo que hacer hoy? |
-| 02 | `#/cartera` | Mi Cartera | ¿A quién le vendo y cómo voy con cada uno? |
-| 03 | `#/portafolio` | Mi Portafolio | ¿Qué vendo, a quién le sirve y cuánto cuesta? |
-| 04 | `#/propuestas` | Mis Propuestas | ¿Qué le mandé, en qué estado está y quién lo abrió? |
-| 05 | `#/seguimiento` | Mi Seguimiento | ¿Qué se habló y qué quedó pendiente? |
-| 06 | `#/dinero` | Mi Dinero | ¿Cuánto generé, cuánto cobro y cuándo? |
 
 ---
 
@@ -80,7 +102,30 @@ Las funciones finales todavía no se construyen — arrancan con los límites de
 
 **Integrales (4):** Park.IA · Smart Commerce · Agendar.IA · Exeq.IA
 
-El copy de los 13 vive **únicamente** en `content/copy/`. El código sólo conoce identificadores.
+El copy vive **únicamente** en `content/copy/`. El código conoce identificadores, no textos.
+
+---
+
+## Dinero: 50 / 50
+
+Regla vigente: **50 % Lab.IA, 50 % vendedor**, sobre **setup** y sobre **mensualidades**. Configurable por producto, con meses de participación configurables.
+
+Se devenga sobre lo **cobrado**, no sobre lo vendido: plata que no entró no genera comisión pagable.
+
+Ocho cifras, siempre por moneda: vendido · cobrado · por cobrar · parte de Lab.IA · parte del vendedor · comisión pendiente · comisión pagada · mensualidades vigentes.
+
+---
+
+## Cotizaciones: el circuito
+
+```
+borrador del vendedor → revisión del administrador → aprobada o corregida
+→ PDF definitivo → envío al cliente
+```
+
+⛔ **Ningún vendedor puede enviar una cotización final sin aprobación.** No hay botón, ni URL, ni llamada que lo permita: el contrato de la capa de datos lo rechaza.
+
+La **presentación** es otra cosa: se genera primero, es personalizada y visual, **no lleva precio definitivo** y **no requiere aprobación**.
 
 ---
 
@@ -88,36 +133,32 @@ El copy de los 13 vive **únicamente** en `content/copy/`. El código sólo cono
 
 ```bash
 npm install
-npm run verificar        # copy intacto + portafolio cerrado + compilación
+npm run verificar
 ```
 
 | Comando | Verifica |
 |---|---|
-| `npm run verificar:copy` | Que los dos archivos de copy conserven su hash original |
-| `npm run verificar:portafolio` | 13 productos, sin términos prohibidos, sin copy duplicado en código, sin métodos prohibidos en la API |
-| `npm run typecheck` | Que los tipos compartidos compilen sin `any` y sin advertencias |
+| `npm run verificar:copy` | Hash original de los dos archivos de copy |
+| `npm run verificar:portafolio` | 13 productos · una sola app · dos roles · sin términos prohibidos · sin copy duplicado · sin métodos prohibidos · identidad Lab.IA · sin `overflow-x: hidden` de parche |
+| `npm run typecheck` | Tipos compartidos sin `any` y sin advertencias |
 
 ---
 
 ## Seis sesiones paralelas
 
-| Sesión | Alcance | Ámbito de archivos |
-|---|---|---|
-| **S1** | Núcleo, contratos y andamiaje | `packages/compartido/`, `packages/ui/`, `apps/*/src/nucleo/`, `apps/*/src/datos/`, configuración |
-| **S2** | Mi Día + Mi Seguimiento | `apps/escritorio/src/vistas/{dia,seguimiento}/`, `packages/mock/src/datos-{dia,seguimiento}.ts` |
-| **S3** | Mi Cartera | `apps/escritorio/src/vistas/cartera/`, `packages/mock/src/datos-cartera.ts` |
-| **S4** | Mi Portafolio | `apps/escritorio/src/vistas/portafolio/`, `packages/mock/src/datos-portafolio.ts`, `content/taxonomia/rubros.md` |
-| **S5** | Mis Propuestas | `apps/escritorio/src/vistas/propuestas/`, `packages/mock/src/datos-propuestas.ts` |
-| **S6** | Mi Dinero + Administración | `apps/escritorio/src/vistas/dinero/`, `apps/admin/src/vistas/`, `packages/mock/src/datos-{dinero,admin}.ts` |
+| Sesión | Alcance |
+|---|---|
+| **S1** | Núcleo y autenticación |
+| **S2** | Interfaz e inicio |
+| **S3** | Motor de planificación |
+| **S4** | Clientes, voz y seguimiento |
+| **S5** | Presentaciones y cotizaciones |
+| **S6** | Finanzas y administración |
 
-**Un archivo tiene un solo dueño.** Lo que no está en tu ámbito, no es tuyo: se pide en `docs/PEDIDOS.md`.
-Detalle completo, fases y protocolo: [`docs/PARALLEL_SESSIONS.md`](docs/PARALLEL_SESSIONS.md).
+**Un archivo tiene un solo dueño.** Ámbitos exactos y protocolo: [`docs/PARALLEL_SESSIONS.md`](docs/PARALLEL_SESSIONS.md). Prompts listos: [`docs/PROMPTS_SESIONES.md`](docs/PROMPTS_SESIONES.md).
 
 ---
 
-## Pendientes de definición comercial
+## Lo único pendiente de entrega
 
-Once parámetros no están en los insumos recibidos y **no se inventan**: porcentajes de comisión, base de devengamiento, calendario de liquidación, límites de descuento, régimen de IVA de 12 productos, precio de Smart Commerce y Exeq.IA, tipo de cambio, vigencias por defecto, SLA de aprobación, políticas de retención y la marca gráfica de Lab.IA.
-
-Cada uno tiene un comportamiento conservador definido mientras esté pendiente.
-Lista completa: [`docs/COMMERCIAL_RULES.md`](docs/COMMERCIAL_RULES.md) §6 y [`docs/MASTER_SPEC.md`](docs/MASTER_SPEC.md) §16.
+Los **hex oficiales de azul y cyan** y el **archivo del logotipo** de Lab.IA. Hasta que lleguen, la interfaz se ve monocromática navy y la marca aparece en texto: funciona, es legible, y se nota que le falta la marca. ⛔ No se inventan.

@@ -1,15 +1,69 @@
 /**
- * Dinero, mensualidades y comisiones.
+ * Dinero: participación, mensualidades, liquidaciones y presupuesto.
  *
- * ⛔ Este archivo NO contiene ningún porcentaje, tope ni calendario: no están definidos
- *    en los insumos y no se inventan. Ver COMMERCIAL_RULES.md §6.
- * ⛔ Ningún total consolidado entre monedas: todo va como `TotalesPorMoneda`.
+ * REGLA COMERCIAL VIGENTE — no es un pendiente:
+ *   50 % Lab.IA / 50 % vendedor, sobre SETUP y sobre MENSUALIDADES.
+ *   Configurable por producto. Los meses de participación del vendedor en la
+ *   mensualidad también son configurables por producto.
  *
- * Ver MASTER_SPEC.md §2.6 y §7, DATA_MODEL.md §8.
+ * ⛔ La participación se calcula sobre lo COBRADO, no sobre lo vendido.
+ *    Plata que no entró no genera comisión pagable.
+ * ⛔ porcentajeLabIA + porcentajeVendedor === 100. Siempre.
+ * ⛔ Ningún total consolidado entre monedas.
+ *
+ * Ver MASTER_SPEC.md §2.5 y §7, COMMERCIAL_RULES.md §3 y §4.
  */
 
 import type { Dinero, Id, ISODate, PeriodoMensual, TotalesPorMoneda } from './core';
 import type { ModalidadPrecio, ProductoId } from './catalogo';
+
+// ---------------------------------------------------------------------------
+// Participación — la regla 50/50
+// ---------------------------------------------------------------------------
+
+/** Valores por defecto de la regla comercial vigente. */
+export const PARTICIPACION_POR_DEFECTO = {
+  porcentajeLabIA: 50,
+  porcentajeVendedor: 50,
+  aplicaASetup: true,
+  aplicaAMensualidad: true,
+  /** `null` = sin límite mientras la mensualidad esté activa. */
+  mesesParticipacionVendedor: null,
+} as const;
+
+/**
+ * Participación configurable por producto.
+ * ⛔ Una versión publicada es inmutable: cambiar = publicar `version + 1`.
+ */
+export interface ParticipacionProducto {
+  readonly id: Id;
+  readonly productoId: ProductoId;
+  /** ⛔ `porcentajeLabIA + porcentajeVendedor === 100`. */
+  readonly porcentajeLabIA: number;
+  readonly porcentajeVendedor: number;
+  readonly aplicaASetup: boolean;
+  readonly aplicaAMensualidad: boolean;
+  /**
+   * Meses que el vendedor participa de la mensualidad, contados desde el alta.
+   * `null` = sin límite. ⛔ `null` NO es cero.
+   */
+  readonly mesesParticipacionVendedor: number | null;
+  readonly version: number;
+  readonly vigenteDesde: ISODate;
+  readonly publicadaPor: Id;
+  readonly publicadaEn: ISODate;
+}
+
+export interface NuevaParticipacion {
+  readonly productoId: ProductoId;
+  readonly porcentajeLabIA: number;
+  readonly porcentajeVendedor: number;
+  readonly aplicaASetup: boolean;
+  readonly aplicaAMensualidad: boolean;
+  readonly mesesParticipacionVendedor: number | null;
+  readonly vigenteDesde: ISODate;
+  readonly motivo: string;
+}
 
 // ---------------------------------------------------------------------------
 // Mensualidades
@@ -19,17 +73,22 @@ export type EstadoMensualidad = 'activa' | 'suspendida' | 'baja';
 
 export interface Mensualidad {
   readonly id: Id;
-  readonly cuentaId: Id;
+  readonly clienteId: Id;
+  readonly nombreCliente: string;
   readonly productoId: ProductoId;
   readonly plan: string | null;
-  /** Importe del `precioFinal` del ítem aceptado. No se re-deriva del catálogo. */
+  /** El importe APROBADO en la cotización. ⛔ No el de lista. */
   readonly importe: Dinero;
   readonly vendedorId: Id;
+  readonly cotizacionId: Id;
   readonly altaEn: ISODate;
   readonly bajaEn: ISODate | null;
   readonly motivoBaja: string | null;
   readonly estado: EstadoMensualidad;
   readonly diaCobro: number | null;
+  readonly mesesAcumulados: number;
+  /** `null` cuando el producto no tiene plazo de participación. */
+  readonly mesesDeParticipacionRestantes: number | null;
 }
 
 export type EstadoCobro = 'pendiente' | 'cobrado' | 'atrasado' | 'incobrable';
@@ -41,113 +100,57 @@ export interface CobroMensualidad {
   readonly importe: Dinero;
   readonly estado: EstadoCobro;
   readonly cobradoEn: ISODate | null;
+  /** Contado desde el alta: permite aplicar `mesesParticipacionVendedor`. */
+  readonly mesDeParticipacion: number;
 }
 
 export interface FiltroMensualidades {
-  readonly cuentaId?: Id;
+  readonly clienteId?: Id;
   readonly productoId?: ProductoId;
   readonly vendedorId?: Id;
   readonly estado?: EstadoMensualidad;
 }
 
 // ---------------------------------------------------------------------------
-// Reglas de comisión
+// Líneas de participación
 // ---------------------------------------------------------------------------
 
-export type TipoRegla = 'porcentaje' | 'monto_fijo' | 'escalonada';
-
-export interface AlcanceRegla {
-  readonly productoIds?: ReadonlyArray<ProductoId>;
-  readonly familias?: ReadonlyArray<'especifica' | 'integral'>;
-  readonly modalidades?: ReadonlyArray<ModalidadPrecio>;
-  readonly vendedorIds?: ReadonlyArray<Id>;
-}
+export type EstadoLinea = 'devengada' | 'liquidada' | 'ajustada' | 'anulada';
 
 /**
- * Parámetros de la regla.
- * ⛔ Arranca **vacío**: los factores no están definidos en los insumos.
- *    Sin regla vigente aplicable, la comisión queda "pendiente de regla".
- *    Nunca se aplica un factor por defecto.
+ * Una línea nace SÓLO contra un cobro confirmado.
+ *
+ * Invariantes:
+ *   parteLabIA.moneda === parteVendedor.moneda === baseCobrada.moneda
+ *   parteLabIA.monto + parteVendedor.monto === baseCobrada.monto
+ *   fuera del plazo de participación: parteVendedor = 0, parteLabIA = baseCobrada
  */
-export interface ParametrosRegla {
-  readonly porcentaje?: number;
-  readonly montoFijo?: Dinero;
-  readonly escalones?: ReadonlyArray<{
-    readonly desde: Dinero;
-    readonly hasta: Dinero | null;
-    readonly porcentaje: number;
-  }>;
-}
-
-/** ⛔ Inmutable una vez publicada. Cambiar = publicar `version + 1`. */
-export interface ReglaComision {
-  readonly id: Id;
-  readonly nombre: string;
-  readonly version: number;
-  readonly alcance: AlcanceRegla;
-  readonly tipo: TipoRegla;
-  readonly parametros: ParametrosRegla;
-  readonly vigenteDesde: ISODate;
-  readonly publicadaPor: Id;
-  readonly publicadaEn: ISODate;
-}
-
-export interface NuevaReglaComision {
-  readonly nombre: string;
-  readonly alcance: AlcanceRegla;
-  readonly tipo: TipoRegla;
-  readonly parametros: ParametrosRegla;
-  readonly vigenteDesde: ISODate;
-}
-
-export interface SimulacionComision {
-  readonly periodo: PeriodoMensual;
-  readonly lineasAfectadas: number;
-  readonly totalesPorMoneda: TotalesPorMoneda;
-  readonly diferenciasPorMoneda: TotalesPorMoneda;
-}
-
-// ---------------------------------------------------------------------------
-// Comisiones
-// ---------------------------------------------------------------------------
-
-export type OrigenComision = ModalidadPrecio;
-
-export type EstadoLineaComision =
-  | 'pendiente_de_regla'
-  | 'devengada'
-  | 'aprobada'
-  | 'liquidada'
-  | 'ajustada'
-  | 'anulada';
-
-export interface LineaComision {
+export interface LineaParticipacion {
   readonly id: Id;
   readonly vendedorId: Id;
-  readonly origen: OrigenComision;
-  /** Cotización o cobro de mensualidad que la genera. */
-  readonly referenciaId: Id;
-  readonly cuentaId: Id;
+  readonly clienteId: Id;
+  readonly nombreCliente: string;
   readonly productoId: ProductoId;
-  /** Importe efectivo post-descuento, con moneda. */
-  readonly base: Dinero;
-  /** `null` cuando no hay regla vigente aplicable: la línea queda "pendiente de regla". */
-  readonly reglaId: Id | null;
-  readonly reglaVersion: number | null;
-  readonly factorAplicado: number | null;
-  /** ⛔ Misma moneda que `base`. La comisión no cambia de moneda. `null` sin regla. */
-  readonly importe: Dinero | null;
+  readonly origen: ModalidadPrecio;
+  /** Cotización aceptada o cobro de mensualidad. */
+  readonly referenciaId: Id;
+  readonly baseCobrada: Dinero;
+  readonly participacionId: Id;
+  readonly participacionVersion: number;
+  readonly porcentajeVendedorAplicado: number;
+  readonly parteLabIA: Dinero;
+  readonly parteVendedor: Dinero;
   readonly periodo: PeriodoMensual;
-  readonly estado: EstadoLineaComision;
+  readonly estado: EstadoLinea;
   readonly liquidacionId: Id | null;
-  readonly devengadaEn: ISODate | null;
+  readonly devengadaEn: ISODate;
 }
 
 // ---------------------------------------------------------------------------
-// Liquidaciones y ajustes
+// Liquidación, ajuste y observación
 // ---------------------------------------------------------------------------
 
-/** ⛔ `cerrada` es terminal. No se reabre. Toda corrección es un `AjusteComision`. */
+/** ⛔ `cerrada` es terminal. No se reabre. */
 export interface Liquidacion {
   readonly id: Id;
   readonly vendedorId: Id;
@@ -160,20 +163,20 @@ export interface Liquidacion {
 }
 
 export interface LiquidacionDetalle extends Liquidacion {
-  readonly lineas: ReadonlyArray<LineaComision>;
-  readonly ajustes: ReadonlyArray<AjusteComision>;
+  readonly lineas: ReadonlyArray<LineaParticipacion>;
+  readonly ajustes: ReadonlyArray<Ajuste>;
 }
 
-export interface AjusteComision {
+export interface Ajuste {
   readonly id: Id;
   readonly liquidacionOrigenId: Id | null;
   readonly periodoAplicacion: PeriodoMensual;
   readonly vendedorId: Id;
-  /** Con signo. Suma o resta sobre el período de aplicación. */
+  /** Con signo: suma o resta sobre el período de aplicación. */
   readonly importe: Dinero;
   /** Obligatorio. */
   readonly motivo: string;
-  readonly discrepanciaId: Id | null;
+  readonly observacionId: Id | null;
   readonly creadoPor: Id;
   readonly creadoEn: ISODate;
 }
@@ -184,48 +187,88 @@ export interface NuevoAjuste {
   readonly vendedorId: Id;
   readonly importe: Dinero;
   readonly motivo: string;
-  readonly discrepanciaId?: Id;
+  readonly observacionId?: Id;
 }
 
-// ---------------------------------------------------------------------------
-// Discrepancias
-// ---------------------------------------------------------------------------
+export type EstadoObservacion = 'abierta' | 'procede' | 'no_procede' | 'parcial';
 
-export type EstadoDiscrepancia = 'abierta' | 'procede' | 'no_procede' | 'parcial';
-
-/** Abrir una discrepancia ⛔ no modifica ningún importe. */
-export interface Discrepancia {
+/** ⛔ Abrir una observación NO modifica ningún importe. */
+export interface Observacion {
   readonly id: Id;
-  readonly lineaComisionId: Id;
+  readonly lineaParticipacionId: Id;
   readonly abiertaPor: Id;
   readonly descripcion: string;
-  readonly estado: EstadoDiscrepancia;
+  readonly estado: EstadoObservacion;
   readonly resolucion: string | null;
   readonly resueltaPor: Id | null;
   readonly resueltaEn: ISODate | null;
   readonly abiertaEn: ISODate;
 }
 
-export interface NuevaDiscrepancia {
-  readonly lineaComisionId: Id;
+export interface NuevaObservacion {
+  readonly lineaParticipacionId: Id;
   readonly descripcion: string;
 }
 
 // ---------------------------------------------------------------------------
-// Resumen del vendedor
+// Presupuesto
 // ---------------------------------------------------------------------------
 
+export interface Presupuesto {
+  readonly id: Id;
+  readonly vendedorId: Id;
+  readonly nombreVendedor: string;
+  readonly periodo: PeriodoMensual;
+  /** En guaraníes: el ranking ordena por monto. */
+  readonly metaVendido: Dinero;
+  readonly metaCobrado: Dinero | null;
+  readonly definidoPor: Id;
+  readonly definidoEn: ISODate;
+  readonly version: number;
+}
+
+export interface NuevoPresupuesto {
+  readonly vendedorId: Id;
+  readonly periodo: PeriodoMensual;
+  readonly metaVendido: Dinero;
+  readonly metaCobrado?: Dinero;
+}
+
+// ---------------------------------------------------------------------------
+// Las ocho cifras
+// ---------------------------------------------------------------------------
+
+/**
+ * ⛔ No existe ningún campo `totalConsolidado`: cada cifra es TotalesPorMoneda,
+ *    una entrada por moneda.
+ */
 export interface ResumenDinero {
   readonly periodo: PeriodoMensual;
-  /** ⛔ Una entrada por moneda. No existe ningún campo `totalConsolidado`. */
-  readonly vendidoImplementaciones: TotalesPorMoneda;
-  readonly mensualidadesIncorporadas: TotalesPorMoneda;
-  readonly comisionDevengada: TotalesPorMoneda;
-  readonly comisionLiquidada: TotalesPorMoneda;
+  readonly vendido: TotalesPorMoneda;
+  readonly cobrado: TotalesPorMoneda;
+  readonly porCobrar: TotalesPorMoneda;
+  readonly parteLabIA: TotalesPorMoneda;
+  readonly parteVendedor: TotalesPorMoneda;
   readonly comisionPendiente: TotalesPorMoneda;
-  /** Cantidad de líneas sin regla vigente aplicable. Se muestra como tal. */
-  readonly lineasPendientesDeRegla: number;
-  readonly mensualidadesActivas: number;
+  readonly comisionPagada: TotalesPorMoneda;
+  readonly mensualidadesVigentes: {
+    readonly cantidad: number;
+    readonly importe: TotalesPorMoneda;
+  };
+}
+
+export interface LineaPorCobrar {
+  readonly id: Id;
+  readonly clienteId: Id;
+  readonly nombreCliente: string;
+  readonly vendedorId: Id;
+  readonly nombreVendedor: string;
+  readonly productoId: ProductoId;
+  readonly origen: ModalidadPrecio;
+  readonly importe: Dinero;
+  readonly venceEn: ISODate | null;
+  readonly diasDeAntiguedad: number;
+  readonly estado: EstadoCobro;
 }
 
 // ---------------------------------------------------------------------------
@@ -233,10 +276,9 @@ export interface ResumenDinero {
 // ---------------------------------------------------------------------------
 
 export type BloqueoCierre =
-  | 'cotizaciones_en_cola_vencida'
-  | 'discrepancias_abiertas'
+  | 'cotizaciones_sin_resolver'
   | 'cobros_sin_confirmar'
-  | 'lineas_pendientes_de_regla';
+  | 'observaciones_abiertas';
 
 export interface VerificacionCierre {
   readonly periodo: PeriodoMensual;

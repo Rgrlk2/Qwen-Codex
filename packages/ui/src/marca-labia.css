@@ -1,0 +1,43 @@
+/*
+ * Marca Lab.IA — valores oficiales.
+ *
+ * ⛔ DUEÑO: SESIÓN 2 (interfaz). Es el ÚNICO archivo donde viven los hex de marca.
+ *
+ * QUÉ HAY QUE HACER ACÁ
+ * ─────────────────────
+ * Copiar los valores oficiales desde el design-system de Lab.IA
+ * (masivoslabia/references/design-system.md) y poner --marca-pendiente en 0.
+ *
+ * ⛔ NO se inventan estos valores. ⛔ No se deducen de una captura ni de una landing.
+ *    Deducir no es documentar.
+ *
+ * QUÉ PASA MIENTRAS TANTO
+ * ───────────────────────
+ * tokens.css los consume con `var(--labia-azul, <respaldo navy>)`. Sin estos
+ * valores, la interfaz se ve MONOCROMÁTICA NAVY: funciona, es legible, y se
+ * nota que le falta la marca. Es deliberado — un respaldo que pareciera la
+ * marca real sería peor que uno que no lo parece.
+ *
+ * LO QUE YA ESTÁ DOCUMENTADO (no hace falta pedirlo)
+ * ──────────────────────────────────────────────────
+ *   Sistema:    dark · navy · cyan · azul · glass · profundidad · premium
+ *   Tipografía: Inter
+ *   Fondo:      rgba(3, 10, 28, .94)  →  #030A1C   (header Lab.IA)
+ *   Borde:      cian sutil sobre ese fondo, desenfoque 18 px
+ *
+ * Ver docs/DESIGN_SYSTEM.md §1 y docs/ASSET_SOURCES.md §3.
+ */
+
+:root {
+  /* Descomentar y completar con los valores oficiales:
+  --labia-azul:        #......;
+  --labia-azul-claro:  #......;
+  --labia-cian:        #......;
+  --labia-cian-claro:  #......;
+  --labia-cian-linea:  rgba(..., ..., ..., .28);
+  --labia-acento-suave: rgba(..., ..., ..., .18);
+  */
+
+  /* 1 = faltan los valores oficiales · 0 = marca completa. QA lo verifica. */
+  --marca-pendiente: 1;
+}

@@ -1,8 +1,7 @@
 # API_CONTRACTS — Escritorio Vendedores Lab.IA
 
-> Contrato entre las vistas y la capa de datos. **Las vistas nunca llaman `fetch` directo.**
-> Expresión ejecutable: `packages/compartido/src/api.ts`.
-> Dos implementaciones del mismo contrato: `mock` (sin backend, para construir en paralelo) y `http`.
+> **Versión 2.0.** Contrato entre las vistas y la capa de datos. **Las vistas nunca llaman `fetch` directo.**
+> Expresión ejecutable: `packages/compartido/src/api.ts`. Dueño: **Sesión 1**.
 
 ---
 
@@ -11,13 +10,14 @@
 | # | Principio |
 |---|---|
 | A1 | **Un solo puerto.** Toda vista consume `CapaDatos`. Cambiar de mock a HTTP no toca una línea de vista. |
-| A2 | **Errores tipados, no excepciones sueltas.** Todo error es un `ErrorApi` con `codigo`, `mensajeAmable` y `pista`. La interfaz muestra `mensajeAmable`, nunca un stack ni un código HTTP crudo. |
-| A3 | **Sin `any`.** El contrato es la barrera entre seis sesiones paralelas; un `any` la anula. |
-| A4 | **Paginación explícita** en todo listado. Sin listados abiertos. |
-| A5 | **Idempotencia** en toda escritura: `claveIdempotencia` obligatoria en creación y en acciones de estado. |
-| A6 | **El servidor manda en dinero.** El cliente calcula para previsualizar; el servidor recalcula y su resultado prevalece. |
-| A7 | **Las respuestas nunca traen copy de producto.** Traen `productoId`; el copy se resuelve contra `content/copy/`. |
-| A8 | **Nada se persiste desde voz o texto sin `confirmadoPorUsuario: true`** en el cuerpo de la petición. |
+| A2 | **Errores tipados.** Todo error es un `ErrorApi` con `codigo`, `mensajeAmable` y `pista`. ⛔ Nunca se muestra un código HTTP, una traza ni un nombre de tabla. |
+| A3 | **Sin `any`.** El contrato es la barrera entre seis sesiones paralelas. |
+| A4 | **Paginación explícita** en todo listado. |
+| A5 | **Idempotencia** obligatoria en creación y en acciones de estado. |
+| A6 | **El servidor manda en dinero.** El cliente previsualiza; el servidor recalcula y su resultado prevalece. |
+| A7 | **Las respuestas nunca traen copy de producto.** Traen `productoId`. |
+| A8 | **Nada se persiste desde voz o texto sin `confirmadoPorUsuario: true`.** |
+| A9 | **El rol se verifica en el servidor.** Un método de administración llamado por un vendedor devuelve `sin_permiso`, siempre. |
 
 ---
 
@@ -31,207 +31,237 @@ type Resultado<T> =
 interface ErrorApi {
   codigo: CodigoError;
   mensajeAmable: string;   // se muestra al usuario, en es-PY
-  pista?: string;          // qué puede hacer al respecto
-  campo?: string;          // para errores de validación
-  detalle?: unknown;       // sólo para registro técnico, nunca para pantalla
+  pista?: string;
+  campo?: string;
+  detalle?: unknown;       // sólo registro técnico
 }
 
 type CodigoError =
-  | "no_autenticado" | "sin_permiso" | "no_encontrado" | "validacion"
-  | "conflicto_version" | "regla_comercial" | "limite_excedido"
+  | "credenciales_invalidas" | "no_autenticado" | "sin_permiso" | "no_encontrado"
+  | "validacion" | "conflicto_version" | "regla_comercial" | "requiere_aprobacion"
   | "enlace_vencido" | "enlace_revocado" | "tope_aperturas"
-  | "servicio_no_disponible" | "tiempo_agotado" | "desconocido";
+  | "limite_excedido" | "servicio_no_disponible" | "tiempo_agotado" | "desconocido";
 
-interface Pagina<T> {
-  items: T[];
-  cursor: string | null;   // null = no hay más
-  total: number | null;    // null cuando el conteo es caro
-}
+interface Pagina<T> { items: T[]; cursor: string | null; total: number | null }
 ```
 
-### Códigos HTTP → `CodigoError`
-
-| HTTP | Código | Ejemplo |
-|---|---|---|
-| 400 | `validacion` | falta rubro principal |
-| 401 | `no_autenticado` | sesión vencida |
-| 403 | `sin_permiso` | vendedor intentando aprobar |
-| 404 | `no_encontrado` | cotización inexistente |
-| 409 | `conflicto_version` | la cotización cambió mientras se editaba |
-| 410 | `enlace_vencido` / `enlace_revocado` | enlace público caído |
-| 422 | `regla_comercial` | descuento fuera de límite |
-| 429 | `limite_excedido` | demasiadas peticiones |
-| 5xx | `servicio_no_disponible` | backend caído |
-
-⛔ Ningún `mensajeAmable` contiene el código HTTP, el nombre de una tabla ni una traza.
+| HTTP | Código |
+|---|---|
+| 400 | `validacion` |
+| 401 | `no_autenticado` / `credenciales_invalidas` |
+| 403 | `sin_permiso` |
+| 404 | `no_encontrado` |
+| 409 | `conflicto_version` |
+| 410 | `enlace_vencido` / `enlace_revocado` |
+| 422 | `regla_comercial` / `requiere_aprobacion` |
+| 429 | `limite_excedido` |
+| 5xx | `servicio_no_disponible` |
 
 ---
 
-## 2. Superficie `CapaDatos`
+## 2. Superficie
 
-Agrupada por vista. Cada grupo tiene **una sesión dueña** (`docs/PARALLEL_SESSIONS.md`); el contrato completo lo congela la **Sesión 1**.
+Cada grupo tiene **una sesión dueña** (`docs/PARALLEL_SESSIONS.md`). El contrato completo lo congela **Sesión 1**.
 
-### 2.1 Sesión / identidad
+### 2.1 Sesión y autenticación — S1
 ```ts
-sesionActual(): Promise<Resultado<Sesion>>;
-cerrarSesion(): Promise<Resultado<void>>;
+ingresar(usuario: string, clave: string): R<Sesion>;
+sesionActual(): R<Sesion>;
+cerrarSesion(): R<void>;
+cambiarClave(actual: string, nueva: string): R<void>;
 ```
+⛔ `Sesion.rol` es `"vendedor" | "administrador"`. No hay otros valores posibles.
 
-### 2.2 Mi Día — vista 01
+### 2.2 Inicio — S2
 ```ts
-indicadoresDelDia(): Promise<Resultado<IndicadorDia[]>>;
-agendaDelDia(fecha?: ISODate): Promise<Resultado<CompromisoAgenda[]>>;
-pendientes(filtro?: FiltroPendientes): Promise<Resultado<Pagina<Pendiente>>>;
-requierenAtencion(): Promise<Resultado<SenalAtencion[]>>;
-graficosDelDia(): Promise<Resultado<GraficosDia>>;
-resolverPendiente(id: string, clave: ClaveIdempotencia): Promise<Resultado<Pendiente>>;
-consultarMiDia(pregunta: string): Promise<Resultado<RespuestaConsulta>>;
+resumenInicio(): R<ResumenInicio>;          // las cuatro cifras
+proximosSeguimientos(limite?: number): R<ProximoSeguimiento[]>;
 ```
+`ResumenInicio` trae `dineroVendido`, `dineroCobrado`, `comisionAcumulada` y `comisionPendiente`, cada uno como `TotalesPorMoneda`.
 
-**`consultarMiDia` — contrato estricto:**
-- `RespuestaConsulta` incluye `fuentes: ReferenciaFuente[]` **no vacío**. Una respuesta sin fuente es un error, no una respuesta.
-- ⛔ **Sólo lectura.** No crea, no modifica, no dispara acciones. Una respuesta nunca contiene un efecto secundario.
-- Si no hay datos suficientes, responde que no los hay. **No estima, no completa, no infiere.**
+⛔ **No existe ningún método de analítica**: sin embudos, sin tasas de conversión, sin mezcla de productos, sin series para gráficos decorativos. Lo que no está en el contrato no se puede dibujar.
 
-### 2.3 Mi Cartera — vista 02
+### 2.3 Motor de planificación — S3
 ```ts
-listarCuentas(filtro: FiltroCuentas, cursor?: string): Promise<Resultado<Pagina<Cuenta>>>;
-obtenerCuenta(id: string): Promise<Resultado<CuentaDetalle>>;
-crearCuenta(datos: NuevaCuenta, clave: ClaveIdempotencia): Promise<Resultado<Cuenta>>;
-actualizarCuenta(id: string, cambios: Partial<NuevaCuenta>, version: number): Promise<Resultado<Cuenta>>;
-listarContactos(cuentaId: string): Promise<Resultado<Contacto[]>>;
-lineaDeTiempo(cuentaId: string, cursor?: string): Promise<Resultado<Pagina<EventoLineaTiempo>>>;
+// Taxonomía
+buscarActividad(texto: string): R<Actividad[]>;
+// ⛔ Nunca devuelve "no encontrado": crea el término como pendiente_de_revision.
+resolverActividad(texto: string, clave: ClaveIdempotencia): R<Actividad>;
+listarOperaciones(): R<Operacion[]>;
+listarNecesidades(): R<Necesidad[]>;
 
-listarRubros(): Promise<Resultado<Rubro[]>>;
-resumenPorRubro(rubroId: string): Promise<Resultado<ResumenRubro>>;
+// El plan
+generarPlan(entrada: EntradaPlan): R<Plan>;              // ⛔ no persiste
+recalcularPlan(plan: Plan, ajustes: AjustePerfil[]): R<PlanRecalculado>;
+guardarPlan(plan: Plan, clave: ClaveIdempotencia): R<Plan>;
+obtenerPlan(id: Id): R<Plan>;
+listarPlanes(filtro: FiltroPlanes, pagina?): R<Pagina<Plan>>;
+cerrarPlan(id: Id, motivo: MotivoCierrePlan, comentario: string): R<Plan>;
+objetivosSugeridos(planId: Id): R<ObjetivoSugerido[]>;
+aceptarObjetivo(objetivoId: Id, clave: ClaveIdempotencia): R<ObjetivoSugerido>;
 
-listarPlanes(filtro: FiltroPlanes): Promise<Resultado<Pagina<PlanDeAccion>>>;
-crearPlan(datos: NuevoPlan, clave: ClaveIdempotencia): Promise<Resultado<PlanDeAccion>>;
-cerrarPlan(id: string, motivo: MotivoCierrePlan, comentario: string): Promise<Resultado<PlanDeAccion>>;
-objetivosSugeridos(planId: string): Promise<Resultado<ObjetivoSugerido[]>>;
-aceptarObjetivo(objetivoId: string, clave: ClaveIdempotencia): Promise<Resultado<ObjetivoSugerido>>;
-```
-**Reglas:** `crearPlan` con `eje: "rubro"` y `cuentaId` presente ⇒ `validacion`. `cerrarPlan` sin motivo ⇒ `validacion`.
-
-### 2.4 Mi Portafolio — vista 03
-```ts
-listarProductos(filtro?: FiltroProductos): Promise<Resultado<Producto[]>>;      // siempre ≤ 13
-obtenerProducto(id: ProductoId): Promise<Resultado<ProductoDetalle>>;
-preciosDeProducto(id: ProductoId): Promise<Resultado<PrecioCatalogo[]>>;
-productosRecomendados(cuentaId: string): Promise<Resultado<ProductoId[]>>;
-crearSugerenciaProducto(datos: NuevaSugerencia, clave: ClaveIdempotencia): Promise<Resultado<SugerenciaProducto>>;
-listarMisSugerencias(cursor?: string): Promise<Resultado<Pagina<SugerenciaProducto>>>;
-```
-**Reglas:** `listarProductos` devuelve como máximo **13** ítems, todos con `id` dentro del catálogo cerrado. Cualquier otro id es un fallo de contrato, no un dato. `ProductoDetalle` trae `claveCopy`, **no** el texto del copy.
-
-### 2.5 Mis Propuestas — vista 04
-```ts
-// Presentaciones
-listarPresentaciones(filtro, cursor?): Promise<Resultado<Pagina<Presentacion>>>;
-crearPresentacion(datos: NuevaPresentacion, clave: ClaveIdempotencia): Promise<Resultado<Presentacion>>;
-actualizarPresentacion(id: string, cambios, version: number): Promise<Resultado<Presentacion>>;
-
-// Cotizaciones
-listarCotizaciones(filtro, cursor?): Promise<Resultado<Pagina<Cotizacion>>>;
-obtenerCotizacion(id: string): Promise<Resultado<CotizacionDetalle>>;
-crearCotizacion(datos: NuevaCotizacion, clave: ClaveIdempotencia): Promise<Resultado<Cotizacion>>;
-actualizarCotizacion(id: string, cambios, version: number): Promise<Resultado<Cotizacion>>;
-previsualizarTotales(items: ItemCotizacionEntrada[]): Promise<Resultado<Dinero[]>>;
-enviarAAprobacion(id: string, comentario: string, clave: ClaveIdempotencia): Promise<Resultado<Cotizacion>>;
-marcarDesenlace(id: string, desenlace: "aceptada" | "perdida", motivo?: string): Promise<Resultado<Cotizacion>>;
-historialVersiones(id: string): Promise<Resultado<VersionCotizacion[]>>;
-
-// Documentos y enlaces
-emitirPdf(propuestaId: string, clave: ClaveIdempotencia): Promise<Resultado<DocumentoEmitido>>;
-crearEnlace(propuestaId: string, opciones: OpcionesEnlace, clave: ClaveIdempotencia): Promise<Resultado<EnlaceCompartido>>;
-revocarEnlace(enlaceId: string, motivo: string): Promise<Resultado<EnlaceCompartido>>;
-accesosDePropuesta(propuestaId: string, cursor?: string): Promise<Resultado<Pagina<AccesoEnlace>>>;
-```
-**Reglas:**
-- `previsualizarTotales` devuelve **un `Dinero` por moneda**. Nunca un único total consolidado.
-- `enviarAAprobacion` sobre una cotización con `items[].aCotizar === true` es válido; enviarla **al cliente** sin aprobación no.
-- `emitirPdf` es idempotente por `(propuestaId, versionPropuesta)`: dos llamadas devuelven el mismo `DocumentoEmitido`.
-- `actualizarCotizacion` sobre estado `aprobada` ⇒ crea versión nueva en `borrador` y caduca la aprobación. La respuesta lo informa en `avisos[]`.
-
-### 2.6 Mi Seguimiento — vista 05
-```ts
-listarSeguimientos(filtro: FiltroSeguimientos, cursor?): Promise<Resultado<Pagina<Seguimiento>>>;
-procesarCaptura(entrada: CapturaSeguimiento): Promise<Resultado<PropuestaDeSeguimiento>>;
-guardarSeguimiento(datos: SeguimientoConfirmado, clave: ClaveIdempotencia): Promise<Resultado<Seguimiento>>;
-subirAudio(archivo: Blob, clave: ClaveIdempotencia): Promise<Resultado<AudioSeguimiento>>;
-borrarAudio(audioId: string, motivo: string): Promise<Resultado<void>>;
-actualizarPaso(pasoId: string, estado: EstadoPaso): Promise<Resultado<PasoSugerido>>;
-```
-**Reglas:**
-- `procesarCaptura` **no persiste nada**. Devuelve una propuesta para que el usuario confirme.
-- `guardarSeguimiento` exige `confirmadoPorUsuario: true`; sin eso ⇒ `validacion`.
-- `PropuestaDeSeguimiento.productosMencionados` sólo contiene ids de los 13; lo demás va en `mencionesFueraDeCatalogo: string[]`, que sólo puede derivar a una sugerencia (§2.4), nunca a un producto.
-
-### 2.7 Mi Dinero — vista 06
-```ts
-resumenDinero(periodo: Periodo): Promise<Resultado<ResumenDinero>>;       // totales por moneda
-listarMensualidades(filtro, cursor?): Promise<Resultado<Pagina<Mensualidad>>>;
-listarComisiones(periodo: Periodo, cursor?): Promise<Resultado<Pagina<LineaComision>>>;
-listarLiquidaciones(cursor?): Promise<Resultado<Pagina<Liquidacion>>>;
-obtenerLiquidacion(id: string): Promise<Resultado<LiquidacionDetalle>>;
-abrirDiscrepancia(datos: NuevaDiscrepancia, clave: ClaveIdempotencia): Promise<Resultado<Discrepancia>>;
-```
-**Reglas:** `ResumenDinero.totales` es `Dinero[]`, una entrada por moneda. ⛔ No existe ningún campo `totalConsolidado`. Toda escritura sobre comisiones desde este grupo está **prohibida por contrato**: no hay método para hacerlo.
-
-### 2.8 Administración
-```ts
-// Usuarios y equipos
-listarUsuarios(filtro, cursor?): Promise<Resultado<Pagina<Usuario>>>;
-crearUsuario / actualizarUsuario / desactivarUsuario
-fijarLimiteDescuento(usuarioId: string, limite: Dinero | null, motivo: string): Promise<Resultado<Usuario>>;
-reasignarCartera(datos: ReasignacionCartera, clave: ClaveIdempotencia): Promise<Resultado<ResultadoReasignacion>>;
-
-// Catálogo
-publicarProducto(id: ProductoId, publicado: boolean, motivo: string): Promise<Resultado<Producto>>;
-cargarPrecios(precios: PrecioCatalogoEntrada[], motivo: string): Promise<Resultado<{ versionCatalogo: number }>>;
-
-// Aprobaciones
-colaAprobacion(filtro, cursor?): Promise<Resultado<Pagina<SolicitudAprobacion>>>;
-resolverAprobacion(id: string, accion: AccionAprobacion, comentario: string, clave: ClaveIdempotencia): Promise<Resultado<SolicitudAprobacion>>;
-delegarAprobacion(id: string, aprobadorId: string, motivo: string): Promise<Resultado<SolicitudAprobacion>>;
-
-// Dinero
-listarReglasComision(cursor?): Promise<Resultado<Pagina<ReglaComision>>>;
-publicarReglaComision(datos: NuevaReglaComision, clave: ClaveIdempotencia): Promise<Resultado<ReglaComision>>;
-simularRegla(datos: NuevaReglaComision, periodo: Periodo): Promise<Resultado<SimulacionComision>>;
-verificarCierrePeriodo(periodo: Periodo): Promise<Resultado<VerificacionCierre>>;
-cerrarPeriodo(periodo: Periodo, clave: ClaveIdempotencia): Promise<Resultado<Liquidacion[]>>;
-crearAjuste(datos: NuevoAjuste, clave: ClaveIdempotencia): Promise<Resultado<AjusteComision>>;
-resolverDiscrepancia(id: string, resolucion, comentario: string): Promise<Resultado<Discrepancia>>;
+// Portafolio
+listarProductos(filtro?): R<Producto[]>;                 // ⛔ siempre ≤ 13
+obtenerProducto(id: ProductoId): R<ProductoDetalle>;
+preciosDeProducto(id: ProductoId): R<PrecioLista[]>;
 
 // Sugerencias
-listarSugerencias(filtro, cursor?): Promise<Resultado<Pagina<SugerenciaProducto>>>;
-resolverSugerencia(id: string, resolucion: ResolucionSugerencia): Promise<Resultado<SugerenciaProducto>>;
-
-// Registros
-listarAccesosEnlace(filtro, cursor?): Promise<Resultado<Pagina<AccesoEnlace>>>;
-listarAuditoria(filtro, cursor?): Promise<Resultado<Pagina<RegistroAuditoria>>>;
-exportarAuditoria(filtro): Promise<Resultado<DocumentoEmitido>>;   // se audita a sí misma
-
-// Parámetros
-obtenerParametros(): Promise<Resultado<ParametrosSistema>>;
-actualizarParametros(cambios: Partial<ParametrosSistema>, motivo: string): Promise<Resultado<ParametrosSistema>>;
+crearSugerencia(datos: NuevaSugerencia, clave: ClaveIdempotencia): R<SugerenciaProducto>;
+listarMisSugerencias(pagina?): R<Pagina<SugerenciaProducto>>;
 ```
 
-**Reglas duras de administración:**
-- ⛔ **No existe `crearProducto` ni `eliminarProducto`.** El portafolio cerrado se defiende en el contrato, no con una validación que alguien pueda saltear.
-- ⛔ **No existe `editarReglaComision`.** Sólo `publicarReglaComision` con versión nueva.
-- ⛔ **No existe `reabrirPeriodo`.** Sólo `crearAjuste`.
-- ⛔ **No existe ningún método de escritura ni borrado sobre `RegistroAuditoria` ni `AccesoEnlace`.**
-- `resolverAprobacion` con `actorId === solicitanteId` ⇒ `sin_permiso`.
-- `cerrarPeriodo` exige `verificarCierrePeriodo` en verde; si no, ⇒ `regla_comercial` con la lista de bloqueos.
+**Reglas del motor:**
+- `resolverActividad` **nunca** devuelve `no_encontrado`. Crea el término y lo devuelve como `pendiente_de_revision`.
+- `generarPlan` **no persiste nada**: devuelve el plan para que el vendedor lo ajuste.
+- `Plan.ranking` trae **exactamente 13** posiciones, sin repetidos, cada una con `motivo` no vacío.
+- `recalcularPlan` devuelve además `cambios: CambioPlan[]`: qué se movió y por qué.
+- `listarProductos` devuelve como máximo **13** ítems, todos del catálogo cerrado. Cualquier otro id es un fallo de contrato, no un dato.
 
-### 2.9 Enlace público (sin sesión)
+### 2.4 Clientes, voz y seguimiento — S4
 ```ts
-obtenerPropuestaPublica(token: string, codigo?: string): Promise<Resultado<PropuestaPublica>>;
-descargarPdfPublico(token: string): Promise<Resultado<{ url: string; venceEn: ISODate }>>;
+listarClientes(filtro: FiltroClientes, pagina?): R<Pagina<Cliente>>;
+obtenerCliente(id: Id): R<ClienteDetalle>;
+crearCliente(datos: NuevoCliente, clave: ClaveIdempotencia): R<Cliente>;
+actualizarCliente(id: Id, cambios, version: Version): R<Cliente>;
+listarContactos(clienteId: Id): R<Contacto[]>;
+lineaDeTiempo(clienteId: Id, pagina?): R<Pagina<EventoLineaTiempo>>;
+
+soporteDictado(): R<SoporteDictado>;
+subirAudio(archivo: Blob, clave: ClaveIdempotencia): R<AudioSeguimiento>;
+procesarCaptura(entrada: CapturaSeguimiento): R<PropuestaDeSeguimiento>;   // ⛔ no persiste
+guardarSeguimiento(datos: SeguimientoConfirmado, clave: ClaveIdempotencia): R<Seguimiento>;
+listarSeguimientos(filtro, pagina?): R<Pagina<Seguimiento>>;
+borrarAudio(audioId: Id, motivo: string): R<void>;
+actualizarPaso(pasoId: Id, estado: EstadoPaso): R<PasoSugerido>;
 ```
-**Reglas:** superficie mínima. ⛔ Sin datos de otras cuentas, sin navegación al Escritorio, sin listados. `PropuestaPublica` de una cotización `vencida` viene **sin importes** y con `avisoVigencia`. Cada llamada genera un `AccesoEnlace`; la respuesta **nunca** revela cuántos accesos hubo.
+- `procesarCaptura` **no escribe nada**.
+- `guardarSeguimiento` exige `confirmadoPorUsuario: true`; sin eso ⇒ `validacion`.
+- `mencionesFueraDeCatalogo` sólo puede derivar a una sugerencia, ⛔ nunca a un producto.
+- `borrarAudio` borra el audio; ⛔ **no** borra la transcripción ni el seguimiento.
+
+### 2.5 Presentaciones y cotizaciones — S5
+```ts
+// Presentación — sin precio definitivo, sin aprobación
+listarPresentaciones(filtro, pagina?): R<Pagina<Presentacion>>;
+crearPresentacion(datos: NuevaPresentacion, clave: ClaveIdempotencia): R<Presentacion>;
+actualizarPresentacion(id: Id, cambios, version: Version): R<Presentacion>;
+emitirPresentacion(id: Id, clave: ClaveIdempotencia): R<DocumentoEmitido>;
+
+// Cotización — precio propuesto por el vendedor
+listarCotizaciones(filtro, pagina?): R<Pagina<Cotizacion>>;
+obtenerCotizacion(id: Id): R<CotizacionDetalle>;
+crearCotizacion(datos: NuevaCotizacion, clave: ClaveIdempotencia): R<Cotizacion>;
+actualizarCotizacion(id: Id, cambios, version: Version): R<Cotizacion>;
+previsualizarTotales(items: ItemCotizacionEntrada[]): R<TotalesPorMoneda>;
+compararConLista(items: ItemCotizacionEntrada[]): R<ComparacionConLista>;
+enviarARevision(id: Id, comentario: string, clave: ClaveIdempotencia): R<Cotizacion>;
+historialVersiones(id: Id): R<VersionCotizacion[]>;
+
+// Sólo después de aprobar
+emitirPdfDefinitivo(cotizacionId: Id, clave: ClaveIdempotencia): R<DocumentoEmitido>;
+enviarAlCliente(cotizacionId: Id, clave: ClaveIdempotencia): R<Cotizacion>;
+marcarDesenlace(id: Id, desenlace: "aceptada" | "perdida", motivo?: string): R<Cotizacion>;
+
+// Enlaces y aperturas
+crearEnlace(propuestaId: Id, opciones: OpcionesEnlace, clave: ClaveIdempotencia): R<EnlaceCompartido>;
+revocarEnlace(enlaceId: Id, motivo: string): R<EnlaceCompartido>;
+aperturasDePropuesta(propuestaId: Id, pagina?): R<Pagina<AccesoEnlace>>;
+```
+
+**Reglas duras:**
+- ⛔ **No existe `aprobarCotizacion` en esta capa.** Aprobar es de administración (§2.7).
+- `emitirPdfDefinitivo` sobre una cotización que no está `aprobada` ⇒ `requiere_aprobacion`.
+- `enviarAlCliente` sobre una cotización que no está `aprobada` ⇒ `requiere_aprobacion`.
+- `previsualizarTotales` devuelve **un `Dinero` por moneda**. ⛔ Nunca un total consolidado.
+- `actualizarCotizacion` sobre `aprobada` crea versión nueva en `borrador` y **caduca la aprobación**; la respuesta lo informa en `avisos[]`.
+- `emitirPdfDefinitivo` es idempotente por `(cotizacionId, version)`.
+
+### 2.6 Dinero del vendedor — S6
+```ts
+resumenDinero(periodo: PeriodoMensual): R<ResumenDinero>;   // las ocho cifras, por moneda
+listarMensualidades(filtro, pagina?): R<Pagina<Mensualidad>>;
+listarLineasParticipacion(periodo: PeriodoMensual, pagina?): R<Pagina<LineaParticipacion>>;
+listarLiquidaciones(pagina?): R<Pagina<Liquidacion>>;
+obtenerLiquidacion(id: Id): R<LiquidacionDetalle>;
+abrirObservacion(datos: NuevaObservacion, clave: ClaveIdempotencia): R<Observacion>;
+```
+⛔ **No existe ningún método de escritura sobre participaciones, líneas ni liquidaciones en esta capa.** El vendedor observa; no edita.
+
+### 2.7 Administración — S6 · sólo rol `administrador`
+```ts
+// Control financiero
+controlFinanciero(periodo: PeriodoMensual): R<ControlFinanciero>;
+porCobrar(filtro, pagina?): R<Pagina<LineaPorCobrar>>;          // con antigüedad
+rankingVendedores(periodo: PeriodoMensual): R<FilaRanking[]>;   // ⛔ en guaraníes
+
+// Presupuesto
+listarPresupuestos(periodo: PeriodoMensual): R<Presupuesto[]>;
+definirPresupuesto(datos: NuevoPresupuesto, clave: ClaveIdempotencia): R<Presupuesto>;
+
+// Comisiones
+listarParticipacionesTodas(periodo, pagina?): R<Pagina<LineaParticipacion>>;
+verificarCierrePeriodo(periodo): R<VerificacionCierre>;
+cerrarPeriodo(periodo, clave: ClaveIdempotencia): R<Liquidacion[]>;
+crearAjuste(datos: NuevoAjuste, clave: ClaveIdempotencia): R<Ajuste>;
+resolverObservacion(id: Id, estado, comentario: string): R<Observacion>;
+
+// Clientes de toda la operación
+listarTodosLosClientes(filtro, pagina?): R<Pagina<Cliente>>;
+lineaDeTiempoDeCualquierCliente(clienteId: Id, pagina?): R<Pagina<EventoLineaTiempo>>;
+
+// Aprobación de cotizaciones
+colaDeRevision(filtro, pagina?): R<Pagina<Cotizacion>>;
+revisarCotizacion(id: Id, accion: "aprobar" | "corregir" | "rechazar",
+                  comentario: string, clave: ClaveIdempotencia): R<Cotizacion>;
+
+// Configuración comercial
+listarParticipaciones(): R<ParticipacionProducto[]>;
+publicarParticipacion(datos: NuevaParticipacion, clave: ClaveIdempotencia): R<ParticipacionProducto>;
+listarActividadesPendientes(pagina?): R<Pagina<Actividad>>;
+confirmarActividad(id: Id): R<Actividad>;
+fusionarActividad(origenId: Id, destinoId: Id, motivo: string): R<Actividad>;
+editarTaxonomia(cambio: CambioTaxonomia, clave: ClaveIdempotencia): R<void>;
+listarVendedores(filtro, pagina?): R<Pagina<Usuario>>;
+crearVendedor(datos: NuevoUsuario, clave: ClaveIdempotencia): R<Usuario>;
+desactivarVendedor(id: Id, motivo: string): R<Usuario>;
+reasignarCartera(datos: ReasignacionCartera, clave: ClaveIdempotencia): R<ResultadoReasignacion>;
+
+// Accesos y frecuencia de uso
+usoPorVendedor(periodo: PeriodoMensual): R<UsoPorVendedor[]>;
+listarRegistroAcceso(filtro, pagina?): R<Pagina<RegistroAcceso>>;
+listarAperturasEnlace(filtro, pagina?): R<Pagina<AccesoEnlace>>;
+
+// Sugerencias
+listarSugerencias(filtro, pagina?): R<Pagina<SugerenciaProducto>>;
+resolverSugerencia(id: Id, resolucion: ResolucionSugerencia): R<SugerenciaProducto>;
+```
+
+**Reglas duras que el contrato defiende por ausencia:**
+
+| ⛔ Método que NO existe | Por qué |
+|---|---|
+| `crearProducto`, `eliminarProducto` | El portafolio está cerrado en 13. |
+| `editarParticipacion` | Sólo `publicarParticipacion`, con versión nueva. |
+| `reabrirPeriodo` | Sólo `crearAjuste`. |
+| Escritura o borrado sobre `RegistroAcceso` / `AccesoEnlace` | Son append-only. |
+| `autoaprobarCotizacion`, cualquier aprobación por umbral | Toda cotización pasa por una persona. |
+| `editarCopy`, `editarPrecioLista` | El copy y el precio de lista son sólo lectura. |
+
+Y las que se verifican en tiempo de ejecución:
+- `revisarCotizacion` con `actorId === cotizacion.vendedorId` ⇒ `sin_permiso`.
+- `revisarCotizacion` con comentario vacío ⇒ `validacion`.
+- `publicarParticipacion` con porcentajes que no suman 100 ⇒ `validacion`.
+- `cerrarPeriodo` sin `verificarCierrePeriodo` en verde ⇒ `regla_comercial` con la lista de bloqueos.
+- Cualquier método de §2.7 llamado con rol `vendedor` ⇒ `sin_permiso`.
+
+### 2.8 Enlace público — sin sesión
+```ts
+obtenerPropuestaPublica(token: string, codigo?: string): R<PropuestaPublica>;
+descargarPdfPublico(token: string): R<{ url: string; venceEn: ISODate }>;
+```
+⛔ Superficie mínima. Sin datos de otros clientes, sin navegación al Escritorio, sin listados.
+Una cotización `vencida` vuelve **sin importes**, con `avisoVigencia`.
+Cada llamada genera un `AccesoEnlace`; ⛔ la respuesta **nunca** revela cuántas aperturas hubo.
 
 ---
 
@@ -239,9 +269,9 @@ descargarPdfPublico(token: string): Promise<Resultado<{ url: string; venceEn: IS
 
 | Mecanismo | Uso |
 |---|---|
-| `version: number` optimista | Toda entidad editable. Desajuste ⇒ `conflicto_version` con la versión actual en `detalle`, para que la vista ofrezca recargar sin perder lo escrito. |
-| `claveIdempotencia: string` | Toda creación y toda acción de estado. El servidor devuelve el mismo resultado ante una repetición. Evita cotizaciones duplicadas por doble toque. |
-| Bloqueo pesimista | **No se usa.** Con esta volumetría, agrega complejidad sin resolver nada. |
+| `version: number` optimista | Toda entidad editable. Desajuste ⇒ `conflicto_version` con la versión actual, para recargar sin perder lo escrito. |
+| `claveIdempotencia` | Toda creación y acción de estado. Evita cotizaciones duplicadas por doble toque. |
+| Bloqueo pesimista | **No se usa.** |
 
 ---
 
@@ -249,28 +279,29 @@ descargarPdfPublico(token: string): Promise<Resultado<{ url: string; venceEn: IS
 
 | Implementación | Paquete | Uso |
 |---|---|---|
-| `CapaDatosMock` | `packages/mock` | Desarrollo en paralelo sin backend. Datos de ejemplo claramente marcados, latencia simulada, **modo de falla forzada** para poder probar los estados de error. |
-| `CapaDatosHttp` | `apps/*/src/datos/http.ts` | Producción. Traduce HTTP ⇄ `Resultado<T>` según §1. |
+| `CapaDatosMock` | `packages/mock` | Construcción en paralelo sin backend. Datos de ejemplo marcados, latencia simulada y **modo de falla forzada** para probar los estados de error. |
+| `CapaDatosHttp` | `apps/escritorio/src/datos/http.ts` | Producción. Traduce HTTP ⇄ `Resultado<T>`. |
 
-**Regla de los datos de ejemplo** (heredada de la referencia): mientras el Escritorio corra con mock, la interfaz muestra de forma permanente el chip **"Datos de ejemplo"**. Nunca se presenta un dato ficticio como real.
+Mientras la app corra con mock, la interfaz muestra de forma permanente el chip **"Datos de ejemplo"**. ⛔ Nunca se presenta un dato ficticio como real.
 
 ---
 
-## 5. Contrato de rendimiento
+## 5. Rendimiento
 
 | Operación | Objetivo |
 |---|---|
-| Lecturas de vista (indicadores, listados) | p95 < 800 ms |
-| `procesarCaptura` (voz/texto) | p95 < 6 s, con progreso visible desde el primer segundo |
-| `emitirPdf` | p95 < 10 s, asíncrono con estado consultable |
+| Inicio (cuatro cifras + seguimientos) | p95 < 800 ms |
+| `generarPlan` | p95 < 4 s, con progreso visible desde el primer segundo |
+| `procesarCaptura` (voz/texto) | p95 < 6 s, con progreso |
+| `emitirPdfDefinitivo` | p95 < 10 s, asíncrono con estado consultable |
 | Enlace público | p95 < 1,5 s en 3G |
 
 Superado el umbral, la interfaz **no se congela**: muestra progreso y deja cancelar.
 
 ---
 
-## 6. Versionado
+## 6. Versionado del contrato
 
-- La `CapaDatos` se versiona junto a `packages/compartido`.
-- Un cambio que rompa el contrato exige acuerdo de las seis sesiones y lo aplica la **Sesión 1**. Ninguna otra sesión edita `api.ts`.
-- Los cambios aditivos (campos opcionales, métodos nuevos) no rompen y se pueden pedir a Sesión 1 sin ceremonia.
+- Un cambio **rompiente** (renombrar un campo, cambiar un tipo, quitar un método) exige acuerdo de las seis sesiones; lo aplica **Sesión 1**.
+- Un cambio **aditivo** (campo opcional, método nuevo) se pide a Sesión 1 sin ceremonia.
+- ⛔ Ninguna otra sesión edita `api.ts`.

@@ -1,13 +1,13 @@
 {
   "name": "@labia/escritorio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Escritorio del vendedor: seis vistas",
+  "description": "Escritorio Vendedores Lab.IA: una sola aplicacion, dos roles",
   "type": "module",
   "dependencies": {
-    "@labia/compartido": "0.1.0",
-    "@labia/mock": "0.1.0",
-    "@labia/ui": "0.1.0"
+    "@labia/compartido": "0.2.0",
+    "@labia/mock": "0.2.0",
+    "@labia/ui": "0.2.0"
   },
   "scripts": {
     "dev": "vite",

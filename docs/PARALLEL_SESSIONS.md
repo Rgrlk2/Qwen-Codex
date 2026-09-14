@@ -1,136 +1,132 @@
 # PARALLEL_SESSIONS — Límites exactos de archivos para seis sesiones
 
-> **Objetivo:** que seis sesiones trabajen al mismo tiempo **sin tocar jamás el mismo archivo**.
-> **Regla de oro:** un archivo tiene **un solo dueño**. Si una sesión necesita cambiar un archivo que no es suyo, **no lo cambia**: lo pide (§6).
-> Los ámbitos de abajo son **exhaustivos**. Lo que no está en tu lista, no es tuyo.
+> **Versión 2.0.** Reorganizada alrededor del sistema corregido: **una sola aplicación**, dos roles, el motor de planificación como corazón.
+> **Regla de oro:** un archivo tiene **un solo dueño**. Lo que no está en tu lista, no es tuyo: se pide (§6).
+> ⛔ **Ninguna sesión implementa la especificación anterior.** Las vistas `dia`, `cartera`, `portafolio`, `seguimiento` y la app `apps/admin` **ya no existen**.
 
 ---
 
 ## 1. Las tres fases
 
-| Fase | Quién trabaja | Qué pasa |
+| Fase | Quién | Qué pasa |
 |---|---|---|
-| **Fase 0 — Andamiaje** | **Sólo Sesión 1** | Crea el esqueleto completo, congela contratos de tipos y tokens, y deja **creados y vacíos** todos los archivos que después serán de otros. Ninguna otra sesión arranca antes de que termine. |
+| **Fase 0 — Andamiaje** | **Sólo S1** | Crea el esqueleto completo, congela contratos y tokens, y deja **creados y vacíos** todos los archivos que después serán de otros. Nadie más arranca antes. |
 | **Fase 1 — Construcción** | **S1 a S6 en paralelo** | Cada sesión trabaja **sólo** dentro de su ámbito. Cero intersección. |
-| **Fase 2 — Integración** | **Sesión 1** | Integra, corre `QA_CHECKLIST.md` §7 y resuelve lo que quedó pendiente. |
+| **Fase 2 — Integración** | **S1** | Integra, corre `QA_CHECKLIST.md` §7 y cierra pendientes. |
 
-**Por qué Fase 0 es secuencial.** El 90 % de los conflictos en trabajo paralelo nacen de tres archivos: el registro de rutas, el índice de tipos y el archivo de tokens. Si **todos existen y están completos antes de empezar**, nadie necesita editarlos y el conflicto desaparece por construcción.
+**Por qué Fase 0 es secuencial.** Casi todos los conflictos de trabajo paralelo nacen en tres archivos: el registro de rutas, el índice de tipos y los tokens. Si existen y están completos **antes** de empezar, nadie necesita editarlos.
 
 ---
 
-## 2. Reparto de responsabilidades
+## 2. Reparto
 
 | Sesión | Nombre | Entrega |
 |---|---|---|
-| **S1** | Núcleo, contratos y andamiaje | Tipos compartidos, tokens, cáscara de la app, ruteo, estados base, capa HTTP, configuración del monorepo |
-| **S2** | Mi Día + Mi Seguimiento | Vistas 01 y 05: panel diario, señales de atención, seguimiento por voz y texto |
-| **S3** | Mi Cartera | Vista 02: empresas, profesionales, rubros y planificación por los tres ejes |
-| **S4** | Mi Portafolio | Vista 03: los 13 productos, taxonomía de rubros, recomendación, sugerencias de producto |
-| **S5** | Mis Propuestas | Vista 04: presentaciones, cotizaciones, aprobación, PDF, enlaces y accesos |
-| **S6** | Mi Dinero + Administración | Vista 06 y la app de administración completa |
+| **S1** | **Núcleo y autenticación** | Login, sesión, guardia de rol, ruteo, tipos compartidos, capa HTTP, configuración del monorepo |
+| **S2** | **Interfaz e inicio** | Sistema visual Lab.IA, cáscara, los cuatro estados, y la vista **Inicio** con sus cuatro cifras, próximos seguimientos y las dos acciones protagonistas |
+| **S3** | **Motor de planificación** | Taxonomía de tres capas, inferencia de perfil y dolores, ranking de los 13, combos, encaje, adaptaciones, estrategia, argumentos, preguntas, portafolio y sugerencias |
+| **S4** | **Clientes, voz y seguimiento** | Cartera, ficha, línea de tiempo, captura por voz y por texto con confirmación humana |
+| **S5** | **Presentaciones y cotizaciones** | Presentación sin precio, cotización con precio propuesto, envío a revisión, PDF definitivo, enlaces y aperturas |
+| **S6** | **Finanzas y administración** | Las ocho cifras, participación 50/50, mensualidades, liquidaciones, y la vista **Administración** completa con sus diez secciones |
 
-**Por qué este reparto.** S2 une Día y Seguimiento porque Mi Día es, en los hechos, la bandeja de lo que sale del seguimiento. S6 une Dinero y Administración porque el panel del vendedor es el espejo exacto del panel del administrador: si los construyen dos personas distintas, las reglas de comisión se implementan dos veces y divergen.
+**Por qué este reparto.** S2 hace interfaz **e** inicio porque Inicio es la pantalla donde el sistema visual se define de hecho: quien fija los tokens y los estados es quien mejor construye la primera pantalla. S6 une dinero del vendedor y administración porque el panel del vendedor es el espejo exacto del panel del administrador: si los hacen dos personas, la regla 50/50 se implementa dos veces y diverge.
 
 ---
 
 ## 3. Ámbitos exactos
 
-### S1 · Núcleo, contratos y andamiaje
+### S1 · Núcleo y autenticación
 
 **Crea y edita — exclusivo:**
 ```
 package.json
 tsconfig.base.json
-.gitignore
-.editorconfig
-.nvmrc
+.gitignore  .editorconfig  .nvmrc
 README.md
 
 packages/compartido/**                    (todos los tipos compartidos)
-packages/ui/**                            (tokens.css, base.css, componentes.css)
 
 packages/mock/package.json
 packages/mock/tsconfig.json
 packages/mock/src/index.ts
 packages/mock/src/nucleo.ts               (latencia, falla forzada, paginación)
+packages/mock/src/datos-sesion.ts
 
-apps/escritorio/index.html
 apps/escritorio/package.json
 apps/escritorio/tsconfig.json
 apps/escritorio/vite.config.ts
-apps/escritorio/public/**
 apps/escritorio/src/main.ts
-apps/escritorio/src/nucleo/**             (ruteo, disposición, estados, registro-vistas, formato)
+apps/escritorio/src/nucleo/rutas.ts
+apps/escritorio/src/nucleo/guardia-rol.ts
+apps/escritorio/src/nucleo/contrato-vista.ts
+apps/escritorio/src/nucleo/formato.ts
 apps/escritorio/src/datos/**              (proveedor.ts, http.ts)
+apps/escritorio/src/vistas/ingreso/**     (pantalla de login)
 
-apps/admin/index.html
-apps/admin/package.json
-apps/admin/tsconfig.json
-apps/admin/vite.config.ts
-apps/admin/public/**
-apps/admin/src/main.ts
-apps/admin/src/nucleo/**
-apps/admin/src/datos/**
+scripts/**
 ```
 
-**Crea en Fase 0 y NO vuelve a tocar** (pasan a ser de otra sesión):
+**Crea en Fase 0 y NO vuelve a tocar** (pasan a otra sesión):
 ```
-apps/escritorio/src/vistas/{dia,seguimiento,cartera,portafolio,propuestas,dinero}/vista.ts
-apps/admin/src/vistas/*.ts
-packages/mock/src/datos-*.ts
-content/taxonomia/rubros.md
+apps/escritorio/index.html
+apps/escritorio/public/**
+packages/ui/**
+apps/escritorio/src/vistas/{inicio,planificar,clientes,propuestas,dinero,administracion}/**
+packages/mock/src/datos-{inicio,motor,clientes,propuestas,finanzas}.ts
+content/taxonomia/**
 ```
 
 **Lee, nunca edita:** `docs/**`, `content/copy/**`.
 
 ---
 
-### S2 · Mi Día + Mi Seguimiento
+### S2 · Interfaz e inicio
 
 **Edita — exclusivo:**
 ```
-apps/escritorio/src/vistas/dia/**
-apps/escritorio/src/vistas/seguimiento/**
-packages/mock/src/datos-dia.ts
-packages/mock/src/datos-seguimiento.ts
+packages/ui/**                            (tokens.css, marca-labia.css, base.css, componentes.css)
+apps/escritorio/index.html
+apps/escritorio/public/**
+apps/escritorio/src/nucleo/disposicion.ts (lateral, barra inferior, cabecera)
+apps/escritorio/src/nucleo/estados.ts     (cargando, vacío, error)
+apps/escritorio/src/vistas/inicio/**
+packages/mock/src/datos-inicio.ts
 ```
 
-**Lee, nunca edita:** `packages/compartido/**`, `packages/ui/**`, `apps/escritorio/src/nucleo/**`, `docs/**`, `content/**`.
+**Responsabilidad especial:** S2 es la dueña del **sistema visual Lab.IA** y de los **cinco anchos de validación**. Todo lo que las demás sesiones consumen en materia de estilo sale de acá.
 
-**Prohibido:** tocar `registro-vistas.ts` (ya trae sus dos rutas), agregar tokens, editar `api.ts`, tocar archivos de otra vista.
+⛔ **Prohibido:** usar `overflow-x: hidden` para tapar un desbordamiento · usar serif · inventar hex de marca (van en `marca-labia.css`, copiados del design-system oficial) · poner gráficos, embudos o tasas de conversión en Inicio · editar `rutas.ts`.
 
 ---
 
-### S3 · Mi Cartera
+### S3 · Motor de planificación
 
 **Edita — exclusivo:**
 ```
-apps/escritorio/src/vistas/cartera/**
-packages/mock/src/datos-cartera.ts
+apps/escritorio/src/vistas/planificar/**
+packages/mock/src/datos-motor.ts
+content/taxonomia/**                      (ÚNICA dueña de la taxonomía)
 ```
 
-**Lee, nunca edita:** igual que S2, más `content/taxonomia/rubros.md` (propiedad de S4).
+Incluye: entrada por conocido y por rubro · perfil operativo · dolores inferidos · ranking de los 13 · productos 1-2-3 · combos · encaje y adaptaciones · estrategia, argumentos y preguntas · ficha de producto con el copy aprobado · formulario de sugerencia.
 
-**Prohibido:** definir rubros propios — los consume de la taxonomía de S4. Si falta un rubro, lo pide (§6).
+⛔ **Prohibido:** editar una sola letra del copy aprobado · hardcodear slogans o precios en TypeScript · proponer un producto fuera de los 13 · inventar un precio · rechazar un rubro escrito por el vendedor · limitarse al mapeo literal de *"Dónde tiene más sentido"*.
 
 ---
 
-### S4 · Mi Portafolio
+### S4 · Clientes, voz y seguimiento
 
 **Edita — exclusivo:**
 ```
-apps/escritorio/src/vistas/portafolio/**
-packages/mock/src/datos-portafolio.ts
-content/taxonomia/rubros.md               (ÚNICO dueño de la taxonomía)
+apps/escritorio/src/vistas/clientes/**
+packages/mock/src/datos-clientes.ts
 ```
 
-**Lee, nunca edita:** `content/copy/**` — **congelado, sólo lectura**.
-
-**Prohibido:** ⛔ **editar una sola letra del copy aprobado**; hardcodear slogans o precios en TypeScript; agregar un producto 14.°; incluir Sentinela en cualquier forma.
+⛔ **Prohibido:** persistir algo derivado de voz o texto sin confirmación explícita · dejar un botón de dictado inerte cuando el dispositivo no lo soporta · grabar sin avisar · crear productos desde menciones fuera del catálogo · declarar actividades propias (se consumen de la taxonomía de S3).
 
 ---
 
-### S5 · Mis Propuestas
+### S5 · Presentaciones y cotizaciones
 
 **Edita — exclusivo:**
 ```
@@ -138,27 +134,22 @@ apps/escritorio/src/vistas/propuestas/**
 packages/mock/src/datos-propuestas.ts
 ```
 
-Incluye las cuatro pestañas: presentaciones, cotizaciones, aprobación (lado vendedor) y accesos.
-
-**Lee, nunca edita:** `docs/COMMERCIAL_RULES.md` es su norma de cálculo.
-
-**Prohibido:** implementar reglas de comisión (son de S6); inventar un precio; sumar monedas distintas; permitir el envío al cliente de una cotización que requiere aprobación sin tenerla.
+⛔ **Prohibido:** ⛔ **cualquier camino que lleve una cotización al cliente sin aprobación del administrador** · emitir el PDF definitivo antes de aprobar · poner precio definitivo en una presentación · implementar la aprobación (es de S6) · implementar reglas de participación (son de S6) · sumar monedas distintas · derivar el token del enlace de un dato del cliente.
 
 ---
 
-### S6 · Mi Dinero + Administración
+### S6 · Finanzas y administración
 
 **Edita — exclusivo:**
 ```
 apps/escritorio/src/vistas/dinero/**
-apps/admin/src/vistas/**
-packages/mock/src/datos-dinero.ts
-packages/mock/src/datos-admin.ts
+apps/escritorio/src/vistas/administracion/**
+packages/mock/src/datos-finanzas.ts
 ```
 
-**Lee, nunca edita:** `docs/COMMERCIAL_RULES.md` — es su especificación literal.
+Incluye la vista Dinero del vendedor **y** la vista Administración con sus diez secciones: control financiero · presupuesto de ventas · vendido/cobrado/por cobrar · comisiones · ranking en guaraníes · accesos y frecuencia de uso · todos los clientes e historiales · aprobación de cotizaciones · configuración comercial · sugerencias.
 
-**Prohibido:** ⛔ dejar un porcentaje de comisión por defecto en el código; dar al vendedor cualquier ruta de escritura sobre comisiones; implementar `reabrirPeriodo`, `editarReglaComision`, `crearProducto` ni escritura sobre auditoría.
+⛔ **Prohibido:** dar al vendedor cualquier ruta de escritura sobre participaciones, líneas o liquidaciones · publicar una participación cuyos porcentajes no sumen 100 · devengar sobre plata no cobrada · implementar `reabrirPeriodo`, `editarParticipacion` o `crearProducto` · escribir sobre los registros de acceso · poner analítica genérica, embudos, tasas de conversión, mezcla de productos o gráficos decorativos · cualquier forma de autoaprobación.
 
 ---
 
@@ -166,11 +157,11 @@ packages/mock/src/datos-admin.ts
 
 | Zona | Estado | Quién puede cambiarla |
 |---|---|---|
-| `content/copy/**` | ⛔ **Congelado permanente** | **Nadie.** Sólo Lab.IA, entregando un copy aprobado nuevo. |
-| `docs/**` | 🔒 Congelado en Fase 1 | Sólo S1, y sólo con acuerdo previo (§6). |
+| `content/copy/**` | ⛔ **Congelado permanente** | **Nadie.** Sólo Lab.IA, con un copy aprobado nuevo. |
+| `docs/**` | 🔒 Congelado en Fase 1 | Sólo S1, con acuerdo previo. |
 | `packages/compartido/src/api.ts` | 🔒 Congelado tras Fase 0 | Sólo S1, por pedido formal. |
-| `packages/ui/src/tokens.css` | 🔒 Congelado tras Fase 0 | Sólo S1, por pedido formal. |
-| `apps/*/src/nucleo/registro-vistas.ts` | 🔒 Completo desde Fase 0 | Nadie. Ya trae las seis rutas. |
+| `apps/escritorio/src/nucleo/rutas.ts` | 🔒 Completo desde Fase 0 | Nadie. Ya trae las seis rutas y sus roles. |
+| `apps/escritorio/src/nucleo/guardia-rol.ts` | 🔒 | Sólo S1. |
 | `docs/referencia/escritorio-referencia.html` | ⛔ Congelado permanente | Nadie. Es el insumo original. |
 
 ---
@@ -183,93 +174,87 @@ Antes de entregar, **cada sesión** corre esto y adjunta la salida:
 git diff --name-only origin/main...HEAD
 ```
 
-**Toda ruta listada tiene que estar en el ámbito de la sesión.** Una sola ruta fuera del ámbito es un rechazo de la entrega, aunque el cambio sea correcto: el problema no es el cambio, es que rompe la garantía de no-conflicto para las otras cinco.
-
-Comprobación por sesión:
+**Toda ruta listada tiene que estar en el ámbito de la sesión.** Una sola ruta fuera del ámbito es un rechazo de la entrega, aunque el cambio sea correcto: rompe la garantía de no-conflicto para las otras cinco.
 
 | Sesión | Prefijos permitidos |
 |---|---|
-| S1 | `package.json`, `tsconfig.base.json`, `.gitignore`, `.editorconfig`, `.nvmrc`, `README.md`, `packages/compartido/`, `packages/ui/`, `packages/mock/src/index.ts`, `packages/mock/src/nucleo.ts`, `packages/mock/package.json`, `packages/mock/tsconfig.json`, `apps/*/index.html`, `apps/*/package.json`, `apps/*/tsconfig.json`, `apps/*/vite.config.ts`, `apps/*/public/`, `apps/*/src/main.ts`, `apps/*/src/nucleo/`, `apps/*/src/datos/` |
-| S2 | `apps/escritorio/src/vistas/dia/`, `apps/escritorio/src/vistas/seguimiento/`, `packages/mock/src/datos-dia.ts`, `packages/mock/src/datos-seguimiento.ts` |
-| S3 | `apps/escritorio/src/vistas/cartera/`, `packages/mock/src/datos-cartera.ts` |
-| S4 | `apps/escritorio/src/vistas/portafolio/`, `packages/mock/src/datos-portafolio.ts`, `content/taxonomia/rubros.md` |
+| S1 | `package.json`, `tsconfig.base.json`, `.gitignore`, `.editorconfig`, `.nvmrc`, `README.md`, `packages/compartido/`, `packages/mock/{package.json,tsconfig.json,src/index.ts,src/nucleo.ts,src/datos-sesion.ts}`, `apps/escritorio/{package.json,tsconfig.json,vite.config.ts}`, `apps/escritorio/src/main.ts`, `apps/escritorio/src/nucleo/{rutas,guardia-rol,contrato-vista,formato}.ts`, `apps/escritorio/src/datos/`, `apps/escritorio/src/vistas/ingreso/`, `scripts/` |
+| S2 | `packages/ui/`, `apps/escritorio/index.html`, `apps/escritorio/public/`, `apps/escritorio/src/nucleo/{disposicion,estados}.ts`, `apps/escritorio/src/vistas/inicio/`, `packages/mock/src/datos-inicio.ts` |
+| S3 | `apps/escritorio/src/vistas/planificar/`, `packages/mock/src/datos-motor.ts`, `content/taxonomia/` |
+| S4 | `apps/escritorio/src/vistas/clientes/`, `packages/mock/src/datos-clientes.ts` |
 | S5 | `apps/escritorio/src/vistas/propuestas/`, `packages/mock/src/datos-propuestas.ts` |
-| S6 | `apps/escritorio/src/vistas/dinero/`, `apps/admin/src/vistas/`, `packages/mock/src/datos-dinero.ts`, `packages/mock/src/datos-admin.ts` |
+| S6 | `apps/escritorio/src/vistas/dinero/`, `apps/escritorio/src/vistas/administracion/`, `packages/mock/src/datos-finanzas.ts` |
 
 ---
 
 ## 6. Protocolo de pedido de cambio
 
-Cuando una sesión necesita algo que está fuera de su ámbito:
-
-1. **No lo edita.** Ni "rapidito", ni "sólo una línea".
-2. Abre un pedido en `docs/PEDIDOS.md` (archivo de sólo-agregar, cada sesión escribe en su propia sección; el formato de abajo evita el conflicto):
+1. ⛔ **No se edita** un archivo ajeno. Ni "rapidito", ni "sólo una línea".
+2. Se abre un pedido en `docs/PEDIDOS.md`, cada sesión en **su propia sección** (así el archivo no genera conflictos):
 
 ```
-## [S3] 2026-09-20 — Falta el rubro "Corralones" en la taxonomía
-Archivo: content/taxonomia/rubros.md   (dueño: S4)
-Necesito: el término aparece en "Dónde tiene más sentido" de Ruta IA.
+### [S4] 2026-09-20 — Falta la operación "atiende por WhatsApp"
+Archivo: content/taxonomia/operaciones.md   (dueña: S3)
+Necesito: la ficha de cliente muestra las operaciones confirmadas y ésa no existe.
 Bloqueante: no
 ```
 
-3. **Mientras tanto, sigue con lo que no depende del pedido.** Un pedido pendiente no detiene una sesión entera.
-4. El dueño del archivo resuelve y responde en la misma entrada.
-5. Un cambio de contrato (`api.ts`, tipos compartidos) **lo aplica siempre S1** y avisa a las seis.
-
-### Cambios aditivos vs. rompientes
+3. **Mientras tanto se sigue con lo que no depende del pedido.**
+4. El dueño resuelve y responde en la misma entrada.
+5. Un cambio de contrato lo aplica **siempre S1** y avisa a las seis.
 
 | Tipo | Ejemplo | Trámite |
 |---|---|---|
-| **Aditivo** | campo opcional nuevo, método nuevo, token nuevo | Pedido a S1, sin ceremonia. No rompe a nadie. |
-| **Rompiente** | renombrar un campo, cambiar un tipo, quitar un método | Acuerdo de las seis sesiones **antes** de aplicarlo. S1 lo aplica y avisa. |
+| **Aditivo** | campo opcional, método nuevo, token nuevo | Pedido a S1, sin ceremonia |
+| **Rompiente** | renombrar un campo, cambiar un tipo, quitar un método | Acuerdo de las seis antes de aplicarlo |
 
 ---
 
-## 7. Contratos que hacen posible el paralelismo
+## 7. Lo que hace posible el paralelismo
 
-Cinco decisiones, todas de Fase 0, sin las cuales este reparto no funciona:
-
-| # | Decisión | Qué conflicto evita |
+| # | Decisión de Fase 0 | Conflicto que evita |
 |---|---|---|
-| 1 | **`registro-vistas.ts` completo desde Fase 0**, con las seis rutas apuntando a stubs | El clásico: seis sesiones editando el registro de rutas. |
-| 2 | **Un archivo de mock por dominio**, nunca uno compartido | Seis sesiones editando el mismo archivo de datos de ejemplo. |
-| 3 | **Tokens y componentes CSS congelados en Fase 0** | Seis sesiones agregando colores y variantes que después no combinan. |
-| 4 | **`CapaDatos` como interfaz única**, con mock e HTTP | Que cada vista invente su forma de hablar con el servidor. |
-| 5 | **Tipos compartidos de sólo lectura para S2–S6** | Que dos sesiones definan la misma entidad con dos formas distintas. |
+| 1 | `rutas.ts` completo, con las seis rutas y su rol | Seis sesiones editando el registro de rutas |
+| 2 | Un archivo de mock por dominio | Seis sesiones editando el mismo archivo de datos |
+| 3 | Tokens y componentes CSS congelados por S2 en Fase 0 | Seis paletas que después no combinan |
+| 4 | `CapaDatos` como puerto único | Que cada vista invente cómo hablar con el servidor |
+| 5 | Tipos compartidos de sólo lectura para S2–S6 | Dos sesiones definiendo la misma entidad distinto |
+| 6 | Guardia de rol en el núcleo, no en cada vista | Seis implementaciones del mismo permiso, cinco mal |
 
 ---
 
-## 8. Definición de terminado por sesión
+## 8. Definición de terminado
 
 Una sesión entrega cuando:
 
-1. Sus vistas implementan los **cuatro estados** (`QA_CHECKLIST.md` §2).
-2. Pasa **accesibilidad** (`QA_CHECKLIST.md` §4) a 360px y a 1440px.
+1. Sus vistas implementan los **cuatro estados**.
+2. Pasan **accesibilidad** y **los cinco anchos** (360, 390, 768, 1024, 1440) sin scroll horizontal de página.
 3. No incumple ningún ⛔ que le corresponda de `QA_CHECKLIST.md`.
 4. `git diff --name-only` **no muestra una sola ruta fuera de su ámbito**.
 5. Compila sin advertencias y sin `any`.
-6. Su mock expone **datos con datos, vacío y error** para poder probar los tres estados.
+6. Su mock expone **con datos, vacío y error** para poder probar los tres estados.
 
 ---
 
-## 9. Orden de arranque sugerido
+## 9. Orden de arranque
 
 ```
-Fase 0   S1 ────────────────────────────────►  (secuencial, bloqueante)
-                                             │
-Fase 1                                       ├─► S2  Día + Seguimiento
-                                             ├─► S3  Cartera
-                                             ├─► S4  Portafolio
-                                             ├─► S5  Propuestas
-                                             ├─► S6  Dinero + Admin
-                                             └─► S1  capa HTTP y pulido del núcleo
-                                             │
-Fase 2   S1 ◄────────────────────────────────┘  integración + QA §7
+Fase 0   S1 ──────────────────────────────►  (secuencial, bloqueante)
+                                           │
+Fase 1                                     ├─► S2  Interfaz e inicio      ← publica tokens temprano
+                                           ├─► S3  Motor de planificación ← publica taxonomía temprano
+                                           ├─► S4  Clientes, voz y seguimiento
+                                           ├─► S5  Presentaciones y cotizaciones
+                                           ├─► S6  Finanzas y administración
+                                           └─► S1  capa HTTP y pulido
+                                           │
+Fase 2   S1 ◄──────────────────────────────┘  integración + QA §7
 ```
 
 **Dependencias blandas** (no bloquean, pero conviene el orden):
-- S3 (Cartera) consume la taxonomía de S4 (Portafolio) ⇒ S4 publica `rubros.md` temprano.
-- S5 (Propuestas) consume el catálogo y los precios de S4 ⇒ S4 publica el mock de catálogo temprano.
-- S2 (Mi Día) agrega señales de S3, S5 y S6 ⇒ S2 arranca por Seguimiento y cierra por Mi Día.
+- S4, S5 y S6 consumen los tokens y los estados de S2 ⇒ **S2 publica `tokens.css`, `marca-labia.css` y los tres estados en los primeros días.**
+- S4 consume la taxonomía de S3 ⇒ **S3 publica `content/taxonomia/` temprano.**
+- S5 consume catálogo y precios de S3 ⇒ **S3 publica el mock de catálogo temprano.**
+- S2 (Inicio) agrega cifras de S6 y seguimientos de S4 ⇒ **S2 arranca por el sistema visual y cierra por las cifras.**
 
-Ninguna de las tres es bloqueante: los contratos de tipos ya están congelados desde Fase 0, así que cada sesión puede trabajar contra el tipo aunque el dato todavía no exista.
+Ninguna es bloqueante: los contratos están congelados desde Fase 0, así que cada sesión trabaja contra el tipo aunque el dato todavía no exista.

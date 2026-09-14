@@ -9,7 +9,7 @@
  * Ver MASTER_SPEC.md §4 y content/copy/COPY_LOCK.md.
  */
 
-import type { Dinero, Id, ISODate, Moneda } from './core';
+import type { Id, ISODate, Moneda } from './core';
 
 // ---------------------------------------------------------------------------
 // Los 13 identificadores. Esta lista es el portafolio.
@@ -79,16 +79,16 @@ export interface Producto {
 }
 
 export interface ProductoDetalle extends Producto {
-  readonly precios: ReadonlyArray<PrecioCatalogo>;
-  readonly rubrosIds: ReadonlyArray<Id>;
-  readonly calificadoresIds: ReadonlyArray<Id>;
+  readonly precios: ReadonlyArray<PrecioLista>;
+  /** Necesidades que este producto atiende, según la taxonomía del motor. */
+  readonly necesidadesIds: ReadonlyArray<Id>;
 }
 
 // ---------------------------------------------------------------------------
 // Precios
 // ---------------------------------------------------------------------------
 
-export type ModalidadPrecio = 'implementacion' | 'mensualidad' | 'unica_vez' | 'prueba';
+export type ModalidadPrecio = 'setup' | 'mensualidad' | 'unica_vez' | 'prueba';
 
 /**
  * Estado documental de un precio. Se deriva de cómo lo expresa el copy aprobado.
@@ -100,7 +100,7 @@ export type EstadoPrecio =
   | 'documentado_desde'
   | 'no_documentado';
 
-export interface PrecioCatalogo {
+export interface PrecioLista {
   readonly id: Id;
   readonly productoId: ProductoId;
   readonly modalidad: ModalidadPrecio;
@@ -126,46 +126,10 @@ export interface PrecioCatalogo {
   readonly versionCatalogo: number;
 }
 
-// ---------------------------------------------------------------------------
-// Taxonomía de rubros — derivada de "Dónde tiene más sentido"
-// ---------------------------------------------------------------------------
-
-/**
- * `rubro`       = sector de actividad (Farmacias, Ferreterías, Distribuidoras…)
- * `calificador` = condición que atraviesa rubros (Comercios con varias sucursales…)
- *
- * ⛔ No se agrega ningún término que no aparezca en el copy aprobado.
- */
-export type ClaseTermino = 'rubro' | 'calificador';
-
-export interface Rubro {
-  readonly id: Id;
-  /** Literal del copy aprobado. */
-  readonly nombre: string;
-  readonly clase: ClaseTermino;
-  /** En qué productos aparece el término. */
-  readonly fuente: ReadonlyArray<ProductoId>;
-}
-
-/** Relación N:N producto × término. Única base de la recomendación. Mapeo literal, sin pesos. */
-export interface ProductoRubro {
-  readonly productoId: ProductoId;
-  readonly terminoId: Id;
-  readonly clase: ClaseTermino;
-}
-
-export interface ResumenRubro {
-  readonly rubro: Rubro;
-  readonly cuentasPropias: number;
-  readonly cuentasSinPropuesta: number;
-  readonly productosRecomendados: ReadonlyArray<ProductoId>;
-  readonly mensualidadesActivas: number;
-  readonly potencialPorMoneda: ReadonlyArray<Dinero>;
-}
-
 export interface FiltroProductos {
   readonly familia?: FamiliaProducto;
-  readonly rubroId?: Id;
+  /** Actividad de la taxonomía del motor (ver motor.ts). */
+  readonly actividadId?: Id;
   readonly soloPublicados?: boolean;
   readonly texto?: string;
 }

@@ -1,11 +1,11 @@
 /**
- * Punto de entrada del Escritorio del vendedor.
+ * Punto de entrada de la ÚNICA aplicación.
  *
  * ⛔ DUEÑO: SESIÓN 1.
  *
- * Responsabilidad: montar la cáscara (lateral, barra inferior, contenedor de
- * pantalla), inicializar el ruteo por hash y elegir la implementación de
- * `CapaDatos` (mock o http). Ninguna lógica de vista vive acá.
+ * Responsabilidad: montar la cáscara, inicializar el ruteo por hash con la
+ * guardia de rol, resolver la sesión y elegir la implementación de CapaDatos.
+ * Ninguna lógica de vista vive acá.
  */
 
 export {};

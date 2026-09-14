@@ -1,311 +1,338 @@
 /**
  * CapaDatos — contrato único entre las vistas y los datos.
  *
- * ⛔ Las vistas NUNCA llaman `fetch` directo. Todo pasa por esta interfaz.
- * ⛔ Este archivo es propiedad de la Sesión 1. Ninguna otra sesión lo edita.
+ * ⛔ Las vistas NUNCA llaman `fetch` directo.
+ * ⛔ Propiedad de la Sesión 1. Ninguna otra sesión edita este archivo.
  *    Protocolo de cambio: docs/PARALLEL_SESSIONS.md §6.
  *
- * Dos implementaciones del mismo contrato:
- *   - `packages/mock`              → desarrollo en paralelo, sin backend
- *   - `apps/<app>/src/datos/http.ts`   → producción
+ * UNA SOLA APLICACIÓN. DOS ROLES. El rol se verifica en el servidor:
+ * un método de administración llamado por un vendedor devuelve `sin_permiso`,
+ * siempre, aunque la interfaz haya ocultado el enlace.
  *
  * Ver docs/API_CONTRACTS.md.
  */
 
 import type {
-  ClaveIdempotencia,
-  Dinero,
-  Id,
-  ISODate,
-  OpcionesPagina,
-  Pagina,
-  PeriodoMensual,
-  Resultado,
-  TotalesPorMoneda,
-  Version,
+  ClaveIdempotencia, Dinero, Id, ISODate, OpcionesPagina, Pagina,
+  PeriodoMensual, Resultado, TotalesPorMoneda, Version,
 } from './core';
 
-import type {
-  FiltroProductos,
-  Producto,
-  ProductoDetalle,
-  ProductoId,
-  PrecioCatalogo,
-  ResumenRubro,
-  Rubro,
-} from './catalogo';
-
-import type { Sesion, Usuario } from './identidad';
+import type { FiltroProductos, PrecioLista, Producto, ProductoDetalle, ProductoId } from './catalogo';
+import type { Capacidades, FiltroUsuarios, NuevoUsuario, Rol, Sesion, Usuario } from './identidad';
 
 import type {
-  Contacto,
-  Cuenta,
-  CuentaDetalle,
-  EventoLineaTiempo,
-  FiltroCuentas,
-  FiltroPlanes,
-  MotivoCierrePlan,
-  NuevaCuenta,
-  NuevoPlan,
-  ObjetivoSugerido,
-  PlanDeAccion,
-} from './cartera';
+  Actividad, AjustePerfil, CambioTaxonomia, EjePlan, EntradaPlan, FiltroPlanes,
+  MotivoCierrePlan, Necesidad, ObjetivoSugerido, Operacion, Plan, PlanDeRubro, PlanRecalculado,
+} from './motor';
 
 import type {
-  CompromisoAgenda,
-  FiltroPendientes,
-  GraficosDia,
-  IndicadorDia,
-  Pendiente,
-  RespuestaConsulta,
-  SenalAtencion,
-} from './dia';
+  Cliente, ClienteDetalle, Contacto, EventoLineaTiempo, FiltroClientes, NuevoCliente,
+} from './clientes';
+
+import type { ProximoSeguimiento, ResumenInicio } from './inicio';
 
 import type {
-  AudioSeguimiento,
-  CapturaSeguimiento,
-  EstadoPaso,
-  FiltroSeguimientos,
-  PasoSugerido,
-  PropuestaDeSeguimiento,
-  Seguimiento,
-  SeguimientoConfirmado,
+  AudioSeguimiento, CapturaSeguimiento, EstadoPaso, FiltroSeguimientos,
+  PasoSugerido, PropuestaDeSeguimiento, Seguimiento, SeguimientoConfirmado, SoporteDictado,
 } from './seguimiento';
 
 import type {
-  AccesoEnlace,
-  AccionAprobacion,
-  Cotizacion,
-  CotizacionDetalle,
-  DocumentoEmitido,
-  EnlaceCompartido,
-  FiltroAccesos,
-  FiltroColaAprobacion,
-  FiltroCotizaciones,
-  ItemCotizacionEntrada,
-  NuevaCotizacion,
-  NuevaPresentacion,
-  OpcionesEnlace,
-  Presentacion,
-  PropuestaPublica,
-  SolicitudAprobacion,
-  VersionCotizacion,
+  AccesoEnlace, AccionRevision, ComparacionConLista, Cotizacion, CotizacionDetalle,
+  DocumentoEmitido, EnlaceCompartido, FiltroAperturas, FiltroColaRevision, FiltroCotizaciones,
+  ItemCotizacionEntrada, NuevaCotizacion, NuevaPresentacion, OpcionesEnlace, Presentacion,
+  PropuestaPublica, VersionCotizacion,
 } from './propuestas';
 
 import type {
-  Discrepancia,
-  FiltroMensualidades,
-  LineaComision,
-  Liquidacion,
-  LiquidacionDetalle,
-  Mensualidad,
-  NuevaDiscrepancia,
-  NuevaReglaComision,
-  NuevoAjuste,
-  AjusteComision,
-  ReglaComision,
-  ResumenDinero,
-  SimulacionComision,
-  VerificacionCierre,
+  Ajuste, EstadoObservacion, FiltroMensualidades, LineaParticipacion, LineaPorCobrar,
+  Liquidacion, LiquidacionDetalle, Mensualidad, NuevaObservacion, NuevaParticipacion,
+  NuevoAjuste, NuevoPresupuesto, Observacion, ParticipacionProducto, Presupuesto,
+  ResumenDinero, VerificacionCierre,
 } from './dinero';
 
 import type {
-  AgregadoSugerencias,
-  FiltroSugerencias,
-  NuevaSugerencia,
-  ResolucionSugerencia,
-  SugerenciaProducto,
-} from './sugerencias';
-
-import type { FiltroAuditoria, RegistroAuditoria } from './registros';
+  ControlFinanciero, FilaRanking, ParametrosSistema, PrecioListaEntrada,
+  ReasignacionCartera, ResultadoReasignacion, UsoPorVendedor,
+} from './administracion';
 
 import type {
-  FiltroUsuarios,
-  PanelAdmin,
-  ParametrosSistema,
-  PrecioCatalogoEntrada,
-  ReasignacionCartera,
-  ResultadoReasignacion,
-} from './admin';
+  AgregadoSugerencias, FiltroSugerencias, NuevaSugerencia, ResolucionSugerencia, SugerenciaProducto,
+} from './sugerencias';
 
-// ---------------------------------------------------------------------------
+import type { FiltroRegistroAcceso, RegistroAcceso } from './registros';
 
 type R<T> = Promise<Resultado<T>>;
 
-/** Sesión e identidad. */
+// ===========================================================================
+// S1 · Sesión y autenticación
+// ===========================================================================
+
 export interface CapaSesion {
+  /** Un solo login, usuario y contraseña. */
+  ingresar(usuario: string, clave: string): R<Sesion>;
   sesionActual(): R<Sesion>;
   cerrarSesion(): R<void>;
+  cambiarClave(actual: string, nueva: string): R<void>;
+  /** Qué dibuja la interfaz. ⛔ NO reemplaza a la guardia del servidor. */
+  capacidades(): R<Capacidades>;
 }
 
-/** Vista 01 — Mi Día. Dueño: Sesión 2. */
-export interface CapaDia {
-  indicadoresDelDia(): R<ReadonlyArray<IndicadorDia>>;
-  agendaDelDia(fecha?: ISODate): R<ReadonlyArray<CompromisoAgenda>>;
-  pendientes(filtro?: FiltroPendientes, pagina?: OpcionesPagina): R<Pagina<Pendiente>>;
-  requierenAtencion(): R<ReadonlyArray<SenalAtencion>>;
-  graficosDelDia(): R<GraficosDia>;
-  resolverPendiente(id: Id, clave: ClaveIdempotencia): R<Pendiente>;
-  /** ⛔ Sólo lectura. No crea, no modifica, no dispara acciones. Siempre cita fuentes. */
-  consultarMiDia(pregunta: string): R<RespuestaConsulta>;
+// ===========================================================================
+// S2 · Inicio
+// ===========================================================================
+
+/**
+ * ⛔ No existe ningún método de analítica: sin embudos, sin tasas de conversión,
+ *    sin mezcla de productos, sin series para gráficos decorativos.
+ *    Lo que no está en el contrato no se puede dibujar.
+ */
+export interface CapaInicio {
+  /** Las cuatro cifras. */
+  resumenInicio(): R<ResumenInicio>;
+  proximosSeguimientos(limite?: number): R<ReadonlyArray<ProximoSeguimiento>>;
 }
 
-/** Vista 02 — Mi Cartera. Dueño: Sesión 3. */
-export interface CapaCartera {
-  listarCuentas(filtro: FiltroCuentas, pagina?: OpcionesPagina): R<Pagina<Cuenta>>;
-  obtenerCuenta(id: Id): R<CuentaDetalle>;
-  crearCuenta(datos: NuevaCuenta, clave: ClaveIdempotencia): R<Cuenta>;
-  actualizarCuenta(id: Id, cambios: Partial<NuevaCuenta>, version: Version): R<Cuenta>;
-  listarContactos(cuentaId: Id): R<ReadonlyArray<Contacto>>;
-  lineaDeTiempo(cuentaId: Id, pagina?: OpcionesPagina): R<Pagina<EventoLineaTiempo>>;
+// ===========================================================================
+// S3 · Motor de planificación
+// ===========================================================================
 
-  listarRubros(): R<ReadonlyArray<Rubro>>;
-  resumenPorRubro(rubroId: Id): R<ResumenRubro>;
+export interface CapaMotor {
+  buscarActividad(texto: string): R<ReadonlyArray<Actividad>>;
+  /**
+   * ⛔ NUNCA devuelve `no_encontrado`: si el término no existe, lo crea como
+   *    `pendiente_de_revision` y lo devuelve usable. El motor no frena al vendedor.
+   */
+  resolverActividad(texto: string, clave: ClaveIdempotencia): R<Actividad>;
+  listarOperaciones(): R<ReadonlyArray<Operacion>>;
+  listarNecesidades(): R<ReadonlyArray<Necesidad>>;
 
-  listarPlanes(filtro: FiltroPlanes, pagina?: OpcionesPagina): R<Pagina<PlanDeAccion>>;
-  /** ⛔ `eje: 'rubro'` con `cuentaId` ⇒ error `validacion`. */
-  crearPlan(datos: NuevoPlan, clave: ClaveIdempotencia): R<PlanDeAccion>;
-  /** ⛔ Sin motivo ⇒ error `validacion`. */
-  cerrarPlan(id: Id, motivo: MotivoCierrePlan, comentario: string): R<PlanDeAccion>;
+  /** ⛔ NO persiste. Devuelve el plan para que el vendedor lo ajuste. */
+  generarPlan(entrada: EntradaPlan, eje: EjePlan): R<Plan>;
+  /** Devuelve además qué cambió y por qué. */
+  recalcularPlan(plan: Plan, ajustes: ReadonlyArray<AjustePerfil>): R<PlanRecalculado>;
+  guardarPlan(plan: Plan, clave: ClaveIdempotencia): R<Plan>;
+  obtenerPlan(id: Id): R<Plan>;
+  listarPlanes(filtro: FiltroPlanes, pagina?: OpcionesPagina): R<Pagina<Plan>>;
+  crearPlanDeRubro(
+    plan: Plan,
+    periodoDesde: ISODate,
+    periodoHasta: ISODate,
+    metaGuaranies: Dinero,
+    clave: ClaveIdempotencia,
+  ): R<PlanDeRubro>;
+  /** ⛔ Sin motivo ⇒ `validacion`. */
+  cerrarPlan(id: Id, motivo: MotivoCierrePlan, comentario: string): R<PlanDeRubro>;
   objetivosSugeridos(planId: Id): R<ReadonlyArray<ObjetivoSugerido>>;
+  /** ⛔ Genera una tarea, NO un cliente. */
   aceptarObjetivo(objetivoId: Id, clave: ClaveIdempotencia): R<ObjetivoSugerido>;
-}
 
-/** Vista 03 — Mi Portafolio. Dueño: Sesión 4. */
-export interface CapaPortafolio {
-  /** ⛔ Devuelve como máximo 13 ítems, todos del catálogo cerrado. */
+  /** ⛔ Siempre ≤ 13 ítems, todos del catálogo cerrado. */
   listarProductos(filtro?: FiltroProductos): R<ReadonlyArray<Producto>>;
   /** ⛔ Trae `claveCopy`, NO el texto del copy. */
   obtenerProducto(id: ProductoId): R<ProductoDetalle>;
-  preciosDeProducto(id: ProductoId): R<ReadonlyArray<PrecioCatalogo>>;
-  /** Mapeo literal contra "Dónde tiene más sentido". Sin scoring. */
-  productosRecomendados(cuentaId: Id): R<ReadonlyArray<ProductoId>>;
-  crearSugerenciaProducto(datos: NuevaSugerencia, clave: ClaveIdempotencia): R<SugerenciaProducto>;
+  preciosDeProducto(id: ProductoId): R<ReadonlyArray<PrecioLista>>;
+
+  crearSugerencia(datos: NuevaSugerencia, clave: ClaveIdempotencia): R<SugerenciaProducto>;
   listarMisSugerencias(pagina?: OpcionesPagina): R<Pagina<SugerenciaProducto>>;
 }
 
-/** Vista 04 — Mis Propuestas. Dueño: Sesión 5. */
-export interface CapaPropuestas {
-  listarPresentaciones(filtro: FiltroCotizaciones, pagina?: OpcionesPagina): R<Pagina<Presentacion>>;
-  crearPresentacion(datos: NuevaPresentacion, clave: ClaveIdempotencia): R<Presentacion>;
-  actualizarPresentacion(id: Id, cambios: Partial<NuevaPresentacion>, version: Version): R<Presentacion>;
+// ===========================================================================
+// S4 · Clientes, voz y seguimiento
+// ===========================================================================
 
-  listarCotizaciones(filtro: FiltroCotizaciones, pagina?: OpcionesPagina): R<Pagina<Cotizacion>>;
-  obtenerCotizacion(id: Id): R<CotizacionDetalle>;
-  crearCotizacion(datos: NuevaCotizacion, clave: ClaveIdempotencia): R<Cotizacion>;
-  /** ⛔ Sobre estado `aprobada` crea versión nueva en borrador y caduca la aprobación. */
-  actualizarCotizacion(id: Id, cambios: Partial<NuevaCotizacion>, version: Version): R<Cotizacion>;
-  /** ⛔ Devuelve un `Dinero` por moneda. Nunca un total consolidado. */
-  previsualizarTotales(items: ReadonlyArray<ItemCotizacionEntrada>): R<TotalesPorMoneda>;
-  enviarAAprobacion(id: Id, comentario: string, clave: ClaveIdempotencia): R<Cotizacion>;
-  /** ⛔ Falla si la cotización requiere aprobación y no la tiene. */
-  enviarAlCliente(id: Id, clave: ClaveIdempotencia): R<Cotizacion>;
-  marcarDesenlace(id: Id, desenlace: 'aceptada' | 'perdida', motivo?: string): R<Cotizacion>;
-  historialVersiones(id: Id): R<ReadonlyArray<VersionCotizacion>>;
+export interface CapaClientes {
+  listarClientes(filtro: FiltroClientes, pagina?: OpcionesPagina): R<Pagina<Cliente>>;
+  obtenerCliente(id: Id): R<ClienteDetalle>;
+  crearCliente(datos: NuevoCliente, clave: ClaveIdempotencia): R<Cliente>;
+  actualizarCliente(id: Id, cambios: Partial<NuevoCliente>, version: Version): R<Cliente>;
+  listarContactos(clienteId: Id): R<ReadonlyArray<Contacto>>;
+  lineaDeTiempo(clienteId: Id, pagina?: OpcionesPagina): R<Pagina<EventoLineaTiempo>>;
 
-  /** Idempotente por `(propuestaId, versionPropuesta)`: dos llamadas, el mismo documento. */
-  emitirPdf(propuestaId: Id, clave: ClaveIdempotencia): R<DocumentoEmitido>;
-  crearEnlace(propuestaId: Id, opciones: OpcionesEnlace, clave: ClaveIdempotencia): R<EnlaceCompartido>;
-  revocarEnlace(enlaceId: Id, motivo: string): R<EnlaceCompartido>;
-  accesosDePropuesta(propuestaId: Id, pagina?: OpcionesPagina): R<Pagina<AccesoEnlace>>;
-}
-
-/** Vista 05 — Mi Seguimiento. Dueño: Sesión 2. */
-export interface CapaSeguimiento {
-  listarSeguimientos(filtro: FiltroSeguimientos, pagina?: OpcionesPagina): R<Pagina<Seguimiento>>;
-  /** ⛔ NO persiste nada. Devuelve una propuesta para que el usuario confirme. */
-  procesarCaptura(entrada: CapturaSeguimiento): R<PropuestaDeSeguimiento>;
-  /** ⛔ Exige `confirmadoPorUsuario: true`; sin eso devuelve `validacion`. */
-  guardarSeguimiento(datos: SeguimientoConfirmado, clave: ClaveIdempotencia): R<Seguimiento>;
+  /** Sin soporte, la vista informa y ofrece texto. ⛔ Nunca un botón inerte. */
+  soporteDictado(): R<SoporteDictado>;
   subirAudio(archivo: Blob, clave: ClaveIdempotencia): R<AudioSeguimiento>;
+  /** ⛔ NO persiste nada: devuelve una propuesta para que el usuario confirme. */
+  procesarCaptura(entrada: CapturaSeguimiento): R<PropuestaDeSeguimiento>;
+  /** ⛔ Exige `confirmadoPorUsuario: true`; sin eso ⇒ `validacion`. */
+  guardarSeguimiento(datos: SeguimientoConfirmado, clave: ClaveIdempotencia): R<Seguimiento>;
+  listarSeguimientos(filtro: FiltroSeguimientos, pagina?: OpcionesPagina): R<Pagina<Seguimiento>>;
   /** Borra el audio. ⛔ NO borra la transcripción ni el seguimiento. */
   borrarAudio(audioId: Id, motivo: string): R<void>;
   actualizarPaso(pasoId: Id, estado: EstadoPaso): R<PasoSugerido>;
 }
 
-/** Vista 06 — Mi Dinero. Dueño: Sesión 6. ⛔ Sin ninguna ruta de escritura sobre comisiones. */
+// ===========================================================================
+// S5 · Presentaciones y cotizaciones
+// ===========================================================================
+
+/**
+ * ⛔ NO existe `aprobarCotizacion` en esta capa. Aprobar es de administración.
+ * ⛔ `emitirPdfDefinitivo` y `enviarAlCliente` sobre una cotización que no está
+ *    `aprobada` devuelven `requiere_aprobacion`. Es la regla comercial central
+ *    y se defiende en el contrato, no en una validación de interfaz.
+ */
+export interface CapaPropuestas {
+  // A · Presentación: sin precio definitivo, sin aprobación
+  listarPresentaciones(filtro: FiltroCotizaciones, pagina?: OpcionesPagina): R<Pagina<Presentacion>>;
+  crearPresentacion(datos: NuevaPresentacion, clave: ClaveIdempotencia): R<Presentacion>;
+  actualizarPresentacion(id: Id, cambios: Partial<NuevaPresentacion>, version: Version): R<Presentacion>;
+  emitirPresentacion(id: Id, clave: ClaveIdempotencia): R<DocumentoEmitido>;
+
+  // B · Cotización: precio propuesto por el vendedor
+  listarCotizaciones(filtro: FiltroCotizaciones, pagina?: OpcionesPagina): R<Pagina<Cotizacion>>;
+  obtenerCotizacion(id: Id): R<CotizacionDetalle>;
+  crearCotizacion(datos: NuevaCotizacion, clave: ClaveIdempotencia): R<Cotizacion>;
+  /** Sobre `aprobada` crea versión nueva en borrador y CADUCA la aprobación. */
+  actualizarCotizacion(id: Id, cambios: Partial<NuevaCotizacion>, version: Version): R<Cotizacion>;
+  /** ⛔ Un Dinero por moneda. Nunca un total consolidado. */
+  previsualizarTotales(items: ReadonlyArray<ItemCotizacionEntrada>): R<TotalesPorMoneda>;
+  compararConLista(items: ReadonlyArray<ItemCotizacionEntrada>): R<ComparacionConLista>;
+  enviarARevision(id: Id, comentario: string, clave: ClaveIdempotencia): R<Cotizacion>;
+  historialVersiones(id: Id): R<ReadonlyArray<VersionCotizacion>>;
+
+  // Sólo después de aprobar
+  /** ⛔ Estado distinto de `aprobada` ⇒ `requiere_aprobacion`. Idempotente por (id, version). */
+  emitirPdfDefinitivo(cotizacionId: Id, clave: ClaveIdempotencia): R<DocumentoEmitido>;
+  /** ⛔ Estado distinto de `aprobada` ⇒ `requiere_aprobacion`. */
+  enviarAlCliente(cotizacionId: Id, clave: ClaveIdempotencia): R<Cotizacion>;
+  marcarDesenlace(id: Id, desenlace: 'aceptada' | 'perdida', motivo?: string): R<Cotizacion>;
+
+  // Enlaces y aperturas
+  crearEnlace(propuestaId: Id, opciones: OpcionesEnlace, clave: ClaveIdempotencia): R<EnlaceCompartido>;
+  revocarEnlace(enlaceId: Id, motivo: string): R<EnlaceCompartido>;
+  aperturasDePropuesta(propuestaId: Id, pagina?: OpcionesPagina): R<Pagina<AccesoEnlace>>;
+}
+
+// ===========================================================================
+// S6 · Dinero del vendedor
+// ===========================================================================
+
+/**
+ * ⛔ NO existe ningún método de escritura sobre participaciones, líneas ni
+ *    liquidaciones en esta capa. El vendedor observa; no edita.
+ */
 export interface CapaDinero {
+  /** Las ocho cifras, por moneda. */
   resumenDinero(periodo: PeriodoMensual): R<ResumenDinero>;
   listarMensualidades(filtro: FiltroMensualidades, pagina?: OpcionesPagina): R<Pagina<Mensualidad>>;
-  listarComisiones(periodo: PeriodoMensual, pagina?: OpcionesPagina): R<Pagina<LineaComision>>;
+  listarLineasParticipacion(periodo: PeriodoMensual, pagina?: OpcionesPagina): R<Pagina<LineaParticipacion>>;
   listarLiquidaciones(pagina?: OpcionesPagina): R<Pagina<Liquidacion>>;
   obtenerLiquidacion(id: Id): R<LiquidacionDetalle>;
   /** ⛔ No modifica ningún importe: abre una observación para el administrador. */
-  abrirDiscrepancia(datos: NuevaDiscrepancia, clave: ClaveIdempotencia): R<Discrepancia>;
+  abrirObservacion(datos: NuevaObservacion, clave: ClaveIdempotencia): R<Observacion>;
 }
 
-/**
- * Administración. Dueño: Sesión 6.
- *
- * Métodos que deliberadamente NO EXISTEN, y no deben agregarse:
- *   crearProducto · eliminarProducto   → el portafolio está cerrado en 13
- *   editarReglaComision                → sólo se publica una versión nueva
- *   reabrirPeriodo                     → sólo se crea un ajuste
- *   escribirAuditoria · borrarAcceso   → los registros son append-only
- */
-export interface CapaAdmin {
-  panel(periodo: PeriodoMensual): R<PanelAdmin>;
+// ===========================================================================
+// S6 · Administración — sólo rol `administrador`
+// ===========================================================================
 
-  listarUsuarios(filtro: FiltroUsuarios, pagina?: OpcionesPagina): R<Pagina<Usuario>>;
-  crearUsuario(datos: Omit<Usuario, 'id' | 'creadoEn' | 'creadoPor' | 'actualizadoEn' | 'actualizadoPor' | 'version' | 'ultimoIngresoEn'>, clave: ClaveIdempotencia): R<Usuario>;
-  actualizarUsuario(id: Id, cambios: Partial<Usuario>, version: Version): R<Usuario>;
-  desactivarUsuario(id: Id, motivo: string): R<Usuario>;
-  fijarLimiteDescuento(usuarioId: Id, limite: Dinero | null, motivo: string): R<Usuario>;
+/**
+ * Métodos que deliberadamente NO EXISTEN, y no deben agregarse:
+ *
+ *   crearProducto · eliminarProducto     → el portafolio está cerrado en 13
+ *   editarParticipacion                  → sólo se publica una versión nueva
+ *   reabrirPeriodo                       → sólo se crea un ajuste
+ *   autoaprobarCotizacion                → toda cotización pasa por una persona
+ *   editarCopy · editarPrecioLista       → son sólo lectura
+ *   cualquier escritura sobre RegistroAcceso o AccesoEnlace → son append-only
+ */
+export interface CapaAdministracion {
+  // Control financiero
+  controlFinanciero(periodo: PeriodoMensual): R<ControlFinanciero>;
+  porCobrar(vendedorId: Id | null, pagina?: OpcionesPagina): R<Pagina<LineaPorCobrar>>;
+  /** ⛔ Ordenado por monto en guaraníes. */
+  rankingVendedores(periodo: PeriodoMensual): R<ReadonlyArray<FilaRanking>>;
+
+  // Presupuesto
+  listarPresupuestos(periodo: PeriodoMensual): R<ReadonlyArray<Presupuesto>>;
+  definirPresupuesto(datos: NuevoPresupuesto, clave: ClaveIdempotencia): R<Presupuesto>;
+
+  // Comisiones
+  listarParticipacionesTodas(periodo: PeriodoMensual, pagina?: OpcionesPagina): R<Pagina<LineaParticipacion>>;
+  verificarCierrePeriodo(periodo: PeriodoMensual): R<VerificacionCierre>;
+  /** ⛔ Exige verificación en verde. Irreversible: el período no se reabre. */
+  cerrarPeriodo(periodo: PeriodoMensual, clave: ClaveIdempotencia): R<ReadonlyArray<Liquidacion>>;
+  crearAjuste(datos: NuevoAjuste, clave: ClaveIdempotencia): R<Ajuste>;
+  resolverObservacion(id: Id, estado: EstadoObservacion, comentario: string): R<Observacion>;
+
+  // Todos los clientes
+  listarTodosLosClientes(filtro: FiltroClientes, pagina?: OpcionesPagina): R<Pagina<Cliente>>;
+  lineaDeTiempoDeCualquierCliente(clienteId: Id, pagina?: OpcionesPagina): R<Pagina<EventoLineaTiempo>>;
+
+  // Aprobación de cotizaciones
+  colaDeRevision(filtro: FiltroColaRevision, pagina?: OpcionesPagina): R<Pagina<CotizacionDetalle>>;
+  /**
+   * ⛔ `actorId === cotizacion.vendedorId` ⇒ `sin_permiso`.
+   * ⛔ Comentario vacío ⇒ `validacion`.
+   */
+  revisarCotizacion(
+    id: Id,
+    accion: Extract<AccionRevision, 'aprobar' | 'corregir' | 'rechazar'>,
+    comentario: string,
+    clave: ClaveIdempotencia,
+  ): R<Cotizacion>;
+
+  // Configuración comercial
+  listarParticipaciones(): R<ReadonlyArray<ParticipacionProducto>>;
+  /** ⛔ Porcentajes que no suman 100 ⇒ `validacion`. Publica versión nueva. */
+  publicarParticipacion(datos: NuevaParticipacion, clave: ClaveIdempotencia): R<ParticipacionProducto>;
+  cargarPreciosLista(precios: ReadonlyArray<PrecioListaEntrada>, motivo: string): R<{ readonly versionCatalogo: number }>;
+  publicarProducto(id: ProductoId, publicado: boolean, motivo: string): R<Producto>;
+
+  listarActividadesPendientes(pagina?: OpcionesPagina): R<Pagina<Actividad>>;
+  confirmarActividad(id: Id): R<Actividad>;
+  fusionarActividad(origenId: Id, destinoId: Id, motivo: string): R<Actividad>;
+  editarTaxonomia(cambio: CambioTaxonomia, clave: ClaveIdempotencia): R<void>;
+
+  listarVendedores(filtro: FiltroUsuarios, pagina?: OpcionesPagina): R<Pagina<Usuario>>;
+  crearVendedor(datos: NuevoUsuario, clave: ClaveIdempotencia): R<Usuario>;
+  cambiarRol(usuarioId: Id, rol: Rol, motivo: string): R<Usuario>;
+  desactivarVendedor(id: Id, motivo: string): R<Usuario>;
   reasignarCartera(datos: ReasignacionCartera, clave: ClaveIdempotencia): R<ResultadoReasignacion>;
 
-  publicarProducto(id: ProductoId, publicado: boolean, motivo: string): R<Producto>;
-  cargarPrecios(precios: ReadonlyArray<PrecioCatalogoEntrada>, motivo: string): R<{ readonly versionCatalogo: number }>;
+  obtenerParametros(): R<ParametrosSistema>;
+  actualizarParametros(cambios: Partial<ParametrosSistema>, motivo: string): R<ParametrosSistema>;
 
-  colaAprobacion(filtro: FiltroColaAprobacion, pagina?: OpcionesPagina): R<Pagina<SolicitudAprobacion>>;
-  /** ⛔ `actorId === solicitanteId` ⇒ `sin_permiso`. Comentario obligatorio. */
-  resolverAprobacion(id: Id, accion: AccionAprobacion, comentario: string, clave: ClaveIdempotencia): R<SolicitudAprobacion>;
-  delegarAprobacion(id: Id, aprobadorId: Id, motivo: string): R<SolicitudAprobacion>;
+  // Accesos y frecuencia de uso — ⛔ dos registros, nunca mezclados
+  usoPorVendedor(periodo: PeriodoMensual): R<ReadonlyArray<UsoPorVendedor>>;
+  listarRegistroAcceso(filtro: FiltroRegistroAcceso, pagina?: OpcionesPagina): R<Pagina<RegistroAcceso>>;
+  listarAperturasEnlace(filtro: FiltroAperturas, pagina?: OpcionesPagina): R<Pagina<AccesoEnlace>>;
 
-  listarReglasComision(pagina?: OpcionesPagina): R<Pagina<ReglaComision>>;
-  /** ⛔ Publica una versión nueva. Una regla vigente nunca se edita. */
-  publicarReglaComision(datos: NuevaReglaComision, clave: ClaveIdempotencia): R<ReglaComision>;
-  simularRegla(datos: NuevaReglaComision, periodo: PeriodoMensual): R<SimulacionComision>;
-  verificarCierrePeriodo(periodo: PeriodoMensual): R<VerificacionCierre>;
-  /** ⛔ Exige `verificarCierrePeriodo` en verde. Irreversible. */
-  cerrarPeriodo(periodo: PeriodoMensual, clave: ClaveIdempotencia): R<ReadonlyArray<Liquidacion>>;
-  crearAjuste(datos: NuevoAjuste, clave: ClaveIdempotencia): R<AjusteComision>;
-  resolverDiscrepancia(id: Id, resolucion: Discrepancia['estado'], comentario: string): R<Discrepancia>;
-
+  // Sugerencias
   listarSugerencias(filtro: FiltroSugerencias, pagina?: OpcionesPagina): R<Pagina<SugerenciaProducto>>;
   /** ⛔ Resolución obligatoria: el silencio no es una respuesta válida. */
   resolverSugerencia(id: Id, resolucion: ResolucionSugerencia): R<SugerenciaProducto>;
   agregadoSugerencias(): R<ReadonlyArray<AgregadoSugerencias>>;
-
-  /** Registro de material compartido. Sólo lectura. */
-  listarAccesosEnlace(filtro: FiltroAccesos, pagina?: OpcionesPagina): R<Pagina<AccesoEnlace>>;
-  /** Registro de auditoría del sistema. Sólo lectura. Nunca se mezcla con el anterior. */
-  listarAuditoria(filtro: FiltroAuditoria, pagina?: OpcionesPagina): R<Pagina<RegistroAuditoria>>;
-  /** ⛔ Se registra a sí misma en auditoría. */
-  exportarAuditoria(filtro: FiltroAuditoria): R<DocumentoEmitido>;
-
-  obtenerParametros(): R<ParametrosSistema>;
-  actualizarParametros(cambios: Partial<ParametrosSistema>, motivo: string): R<ParametrosSistema>;
 }
 
+// ===========================================================================
+// Enlace público — sin sesión
+// ===========================================================================
+
 /**
- * Enlace público — sin sesión.
- * ⛔ Superficie mínima: sin datos de otras cuentas, sin navegación, sin listados.
- * ⛔ Nunca revela cuántos accesos hubo.
+ * ⛔ Superficie mínima: sin datos de otros clientes, sin navegación, sin listados.
+ * ⛔ Nunca revela cuántas aperturas hubo.
  */
 export interface CapaPublica {
   obtenerPropuestaPublica(token: string, codigo?: string): R<PropuestaPublica>;
   descargarPdfPublico(token: string): R<{ readonly url: string; readonly venceEn: ISODate }>;
 }
 
-/** El puerto completo. Toda vista consume esto y sólo esto. */
+// ===========================================================================
+// El puerto
+// ===========================================================================
+
+/**
+ * Una sola aplicación ⇒ un solo puerto.
+ * La administración está incluida: el servidor la protege por rol, no por
+ * tener una capa aparte. Un vendedor que llama un método de `CapaAdministracion`
+ * recibe `sin_permiso`.
+ */
 export interface CapaDatos
   extends CapaSesion,
-    CapaDia,
-    CapaCartera,
-    CapaPortafolio,
+    CapaInicio,
+    CapaMotor,
+    CapaClientes,
     CapaPropuestas,
-    CapaSeguimiento,
-    CapaDinero {}
-
-/** Puerto de la app de administración. */
-export interface CapaDatosAdmin extends CapaSesion, CapaAdmin {}
+    CapaDinero,
+    CapaAdministracion {}

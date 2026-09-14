@@ -4,12 +4,12 @@
  * ⛔ Regla dura: nada derivado de voz o texto se persiste sin confirmación humana.
  *    El sistema propone; la persona guarda.
  *
- * Ver MASTER_SPEC.md §2.5 y §9, USER_FLOWS.md F9/F10.
+ * Ver MASTER_SPEC.md §2.3, USER_FLOWS.md F6/F7.
  */
 
 import type { Adjunto, Id, ISODate } from './core';
 import type { ProductoId } from './catalogo';
-import type { EtapaCuenta } from './cartera';
+import type { EtapaCliente } from './clientes';
 
 /** Voz y texto producen la **misma** entidad y el **mismo** procesamiento. */
 export type OrigenSeguimiento = 'voz' | 'texto';
@@ -37,7 +37,7 @@ export interface PasoSugerido {
 
 export interface Seguimiento {
   readonly id: Id;
-  readonly cuentaId: Id;
+  readonly clienteId: Id;
   readonly vendedorId: Id;
   readonly origen: OrigenSeguimiento;
   /** Cuándo pasó (puede diferir de cuándo se registró). */
@@ -63,7 +63,7 @@ export interface Seguimiento {
 // ---------------------------------------------------------------------------
 
 export interface CapturaSeguimiento {
-  readonly cuentaId: Id;
+  readonly clienteId: Id;
   readonly origen: OrigenSeguimiento;
   readonly texto: string;
   /** Referencia a un audio ya subido. Sólo para `origen === 'voz'`. */
@@ -78,7 +78,7 @@ export interface CapturaSeguimiento {
 export interface PropuestaDeSeguimiento {
   readonly notaEstructurada: string;
   readonly pasosPropuestos: ReadonlyArray<Omit<PasoSugerido, 'id' | 'seguimientoId' | 'estado' | 'resueltoEn'>>;
-  readonly etapaSugerida: EtapaCuenta | null;
+  readonly etapaSugerida: EtapaCliente | null;
   /** Sólo ids del catálogo cerrado. */
   readonly productosMencionados: ReadonlyArray<ProductoId>;
   /**
@@ -91,7 +91,7 @@ export interface PropuestaDeSeguimiento {
 
 /** Lo que el usuario confirmó guardar, ítem por ítem. */
 export interface SeguimientoConfirmado {
-  readonly cuentaId: Id;
+  readonly clienteId: Id;
   readonly origen: OrigenSeguimiento;
   readonly texto: string;
   readonly audioId: Id | null;
@@ -104,7 +104,7 @@ export interface SeguimientoConfirmado {
 }
 
 export interface FiltroSeguimientos {
-  readonly cuentaId?: Id;
+  readonly clienteId?: Id;
   readonly origen?: OrigenSeguimiento;
   readonly desde?: ISODate;
   readonly hasta?: ISODate;
