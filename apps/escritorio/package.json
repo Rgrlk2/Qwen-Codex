@@ -1,0 +1,17 @@
+{
+  "name": "@labia/escritorio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Escritorio del vendedor: seis vistas",
+  "type": "module",
+  "dependencies": {
+    "@labia/compartido": "0.1.0",
+    "@labia/mock": "0.1.0",
+    "@labia/ui": "0.1.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --force"
+  }
+}

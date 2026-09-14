@@ -1,0 +1,26 @@
+/*
+ * Estilos base y componentes compartidos.
+ *
+ * ⛔ DUEÑO: SESIÓN 1. Las sesiones 2 a 6 consumen estas clases; no las editan.
+ *    Una variante propia de una vista va con prefijo de vista (.cartera-…)
+ *    en el archivo CSS de esa vista.
+ *
+ * Los componentes de docs/DESIGN_SYSTEM.md §4 se implementan acá durante Fase 0,
+ * transcriptos de docs/referencia/escritorio-referencia.html:
+ *
+ *   .tarjeta · .rejilla(-2/-3/-4) · .indicadores/.indicador · .lista
+ *   .btn(-borde/-texto/-chico) · .campo/.entrada · .pestanas/.pestana
+ *   .segmentos/.segmento · .chips/.chip · .zona · .mensajes/.mensaje
+ *   .compositor · dialog/.dialogo · .aviso · .definiciones · .grafico
+ *   .cargando/.hueso/.rueda · .vacio · .error · .reveal
+ *   .lateral · .inferior · .principal · .pantalla · .encabezado · .saltar
+ *
+ * Reglas que no se debilitan (docs/DESIGN_SYSTEM.md §6):
+ *   - área táctil mínima 44×44 px
+ *   - :focus-visible { outline: 2px solid var(--oro); outline-offset: 3px }
+ *   - @media (prefers-reduced-motion: reduce) anula toda animación
+ *   - html, body { max-width: 100%; overflow-x: hidden }
+ *   - min-width: 0 en hijos de flex y grid
+ */
+
+@import url('./tokens.css');

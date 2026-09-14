@@ -1,0 +1,57 @@
+/*
+ * Tokens del Escritorio Vendedores Lab.IA.
+ *
+ * ⛔ DUEÑO: SESIÓN 1. Ninguna otra sesión edita este archivo.
+ * ⛔ Ningún valor de este archivo es inventado: todos están transcriptos de
+ *    docs/referencia/escritorio-referencia.html.
+ * ⛔ Ninguna vista escribe un color, una fuente ni una curva literal. Sólo tokens.
+ *
+ * Si la identidad visual de Lab.IA exige otra paleta, el cambio ocurre acá y
+ * en ningún otro lado. Ver docs/DESIGN_SYSTEM.md §0 y docs/ASSET_SOURCES.md §3.
+ */
+
+:root {
+  /* --- Fondos --- */
+  --bg: #040D19;
+  --bg-2: #071322;
+  --superficie: #0B1727;
+  --superficie-2: #10203A;
+
+  /* --- Líneas --- */
+  --linea: rgba(226, 235, 245, .12);
+  --linea-2: rgba(226, 235, 245, .22);
+
+  /* --- Texto (jerarquía descendente) --- */
+  --texto: #F4F1EA;
+  --texto-2: #C6CCD5;
+  --texto-3: #96A0AD;
+  --mudo: #7C8694;
+
+  /* --- Acento --- */
+  --oro: #E1B864;
+  --oro-claro: #EFD293;
+  --oro-linea: #C79A46;
+  --oro-suave: rgba(225, 184, 100, .12);
+
+  /* --- Estado --- */
+  --ok: #8FD3A6;
+  --peligro: #F0857A;
+  --peligro-suave: rgba(240, 133, 122, .12);
+
+  /* --- Tipografía --- */
+  --fuente-titulo: Newsreader, Georgia, serif;
+  --fuente-texto: Archivo, system-ui, -apple-system, sans-serif;
+  --fuente-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- Estructura --- */
+  --lateral: 248px;
+  --inferior: 64px;
+  --compositor: 96px;
+
+  /* --- Movimiento --- */
+  --suave: cubic-bezier(.16, .8, .24, 1);
+}
+
+@media (max-width: 899px) {
+  :root { --lateral: 0px; }
+}
