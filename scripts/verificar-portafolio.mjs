@@ -139,20 +139,44 @@ for (const m of METODOS_PROHIBIDOS) {
   }
 }
 
-// --- 6. Identidad: Inter, sin serif, sin dorado ---------------------------
+// --- 6. Identidad oficial Lab.IA -----------------------------------------
+/** Los ocho colores oficiales. Ninguno se cambia ni se "ajusta". */
+const COLORES_OFICIALES = [
+  '#020711', '#06162F', '#0A55D9', '#098CFF',
+  '#00D9FF', '#12D9FF', '#F2F7FF', '#AEB8C8',
+];
+const marca = join(RAIZ, 'packages/ui/src/marca-labia.css');
+if (!existsSync(marca)) {
+  fallos.push('Falta packages/ui/src/marca-labia.css: unico archivo con los hex de marca.');
+} else {
+  // Sin comentarios: el hex tiene que estar DECLARADO, no sólo mencionado en la
+  // tabla de contraste del encabezado.
+  const css = codigoEfectivo(readFileSync(marca, 'utf8'), '.css').toUpperCase();
+  for (const hex of COLORES_OFICIALES) {
+    if (!css.includes(hex)) {
+      fallos.push(`marca-labia.css: falta el color oficial ${hex} declarado (MASTER_SPEC §14.1).`);
+    }
+  }
+  if (!/--LABIA-FUENTE:\s*INTER/.test(css)) {
+    fallos.push('marca-labia.css: la tipografia oficial es Inter (MASTER_SPEC §14.1).');
+  }
+  if (/--MARCA-PENDIENTE:\s*1/.test(css)) {
+    fallos.push('marca-labia.css: --marca-pendiente sigue en 1, pero los ocho colores oficiales ya estan definidos.');
+  }
+}
 const tokens = join(RAIZ, 'packages/ui/src/tokens.css');
 if (!existsSync(tokens)) {
   fallos.push('Falta packages/ui/src/tokens.css.');
 } else {
   const css = readFileSync(tokens, 'utf8');
-  if (!/--fuente:\s*Inter/.test(css)) fallos.push('tokens.css: la tipografia debe ser Inter (DESIGN_SYSTEM §3).');
-  if (!css.includes('#030A1C')) fallos.push('tokens.css: falta el fondo navy documentado #030A1C (DESIGN_SYSTEM §1.1).');
-}
-const marca = join(RAIZ, 'packages/ui/src/marca-labia.css');
-if (!existsSync(marca)) {
-  fallos.push('Falta packages/ui/src/marca-labia.css: unico archivo con los hex de marca.');
-} else if (/--marca-pendiente:\s*1/.test(readFileSync(marca, 'utf8'))) {
-  avisos.push('marca-labia.css: faltan los hex oficiales de azul y cyan. La interfaz se ve monocromatica navy (esperado hasta que llegue la marca).');
+  if (!/--fuente:\s*var\(--labia-fuente\)/.test(css)) {
+    fallos.push('tokens.css: --fuente debe consumir --labia-fuente (Inter).');
+  }
+  // ⛔ #0A55D9 no alcanza AA para texto: 3.18 sobre #020711, 2.85 sobre #06162F.
+  //    Es color de relleno. --azul-texto y --cian son los de texto.
+  if (!/--azul-texto:/.test(css)) {
+    fallos.push('tokens.css: falta --azul-texto. #0A55D9 no puede usarse como color de texto (MASTER_SPEC §14.2).');
+  }
 }
 
 // --- 7. Responsive: overflow-x hidden como parche -------------------------
@@ -171,6 +195,55 @@ if (!existsSync(join(RAIZ, 'content/taxonomia/LEEME.md'))) {
   fallos.push('Falta content/taxonomia/LEEME.md (unico lugar que declara taxonomia).');
 }
 
+// --- 9. Las siete rutas, con la agenda protegida --------------------------
+const RUTAS_ESPERADAS = [
+  'inicio', 'planificar', 'clientes', 'agenda', 'propuestas', 'dinero', 'administracion',
+];
+const rutas = readFileSync(join(RAIZ, 'apps/escritorio/src/nucleo/rutas.ts'), 'utf8');
+for (const r of RUTAS_ESPERADAS) {
+  if (!rutas.includes(`ruta: '${r}'`)) fallos.push(`rutas.ts no declara la ruta '${r}'.`);
+}
+if (!/ruta: 'administracion'[\s\S]{0,200}roles: \['administrador'\]/.test(rutas)) {
+  fallos.push("rutas.ts: #/administracion debe estar restringida al rol administrador (MASTER_SPEC §1.1).");
+}
+
+// --- 10. Investigacion: proveedores en el servidor ------------------------
+const inv = readFileSync(join(RAIZ, 'packages/compartido/src/investigacion.ts'), 'utf8');
+for (const t of ['InvestigacionObjetivo', 'DatoInvestigado', 'FuenteInvestigacion', 'NivelConfianza', 'EstadoInvestigacion']) {
+  if (!inv.includes(t)) fallos.push(`investigacion.ts no declara ${t} (MASTER_SPEC §3).`);
+}
+if (!sinComentarios.includes('investigarObjetivo(')) {
+  fallos.push('api.ts no declara investigarObjetivo() (API_CONTRACTS §2.3).');
+}
+/** Ninguna clave ni endpoint de proveedor puede vivir en el cliente. */
+const SECRETOS = /(apiKey|api_key|secret|bearer\s|sk-[A-Za-z0-9]|token:\s*['"][A-Za-z0-9]{12})/i;
+for (const archivo of archivos(join(RAIZ, 'apps'))) {
+  const texto = codigoEfectivo(readFileSync(archivo, 'utf8'), extname(archivo));
+  if (SECRETOS.test(texto)) {
+    fallos.push(`${rel(archivo)}: posible credencial en el cliente. Investigacion y modelo de lenguaje viven en el servidor (MASTER_SPEC §3.5).`);
+  }
+}
+
+// --- 11. Agenda: existe y es de S4 ---------------------------------------
+const ag = join(RAIZ, 'packages/compartido/src/agenda.ts');
+if (!existsSync(ag)) fallos.push('Falta packages/compartido/src/agenda.ts (MASTER_SPEC §4).');
+if (!existsSync(join(RAIZ, 'apps/escritorio/src/vistas/agenda'))) {
+  fallos.push('Falta la vista apps/escritorio/src/vistas/agenda/.');
+}
+
+// --- 12. Cotizacion estructurada ------------------------------------------
+const prop = readFileSync(join(RAIZ, 'packages/compartido/src/propuestas.ts'), 'utf8');
+for (const campo of ['HitoPagoSetup', 'mesesIncluidos', 'mesesCongelamientoPrecio', 'CondicionHabilitante', 'descuentoSetupPorcentaje']) {
+  if (!prop.includes(campo)) {
+    fallos.push(`propuestas.ts no declara ${campo} (COMMERCIAL_RULES §6).`);
+  }
+}
+
+// --- 13. Inventario de activos --------------------------------------------
+if (!existsSync(join(RAIZ, 'docs/INVENTARIO_ACTIVOS.md'))) {
+  fallos.push('Falta docs/INVENTARIO_ACTIVOS.md: los activos se buscan en Drive, no se declaran pendientes.');
+}
+
 // --- Resultado -------------------------------------------------------------
 if (avisos.length) {
   console.log('Avisos:');
@@ -185,5 +258,8 @@ if (fallos.length) {
 console.log(`OK — portafolio cerrado en 13 productos (${ESPECIFICOS.length} especificas + ${INTEGRALES.length} integrales).`);
 console.log('OK — una sola aplicacion, dos roles (vendedor, administrador).');
 console.log('OK — sin terminos prohibidos, sin copy duplicado, sin metodos prohibidos en la API.');
-console.log('OK — identidad Lab.IA: Inter, navy documentado, sin serif, sin paleta dorada.');
+console.log('OK — identidad Lab.IA: ocho colores oficiales + Inter, sin serif, sin paleta dorada.');
 console.log('OK — sin overflow-x: hidden usado como parche de desborde.');
+console.log('OK — siete rutas, #/administracion restringida al administrador.');
+console.log('OK — investigacion automatica declarada, sin credenciales en el cliente.');
+console.log('OK — agenda operativa y cotizacion estructurada declaradas.');

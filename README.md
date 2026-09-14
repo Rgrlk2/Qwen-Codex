@@ -3,7 +3,7 @@
 Una sola aplicación para el equipo comercial de Lab.IA. Un login, dos roles.
 La planificación es el comienzo: el vendedor abre el sistema y lo primero que ve es su plata y dos formas de empezar a vender.
 
-**Estado: especificación v2.0 y esqueleto.** Define *qué* se construye y *con qué reglas*. Las vistas finales todavía no se construyen — arrancan con los límites de `docs/PARALLEL_SESSIONS.md`.
+**Estado: especificación v3.0 y esqueleto.** Define *qué* se construye y *con qué reglas*. Las vistas finales todavía no se construyen — arrancan con los límites de `docs/PARALLEL_SESSIONS.md`.
 
 ---
 
@@ -18,8 +18,11 @@ La planificación es el comienzo: el vendedor abre el sistema y lo primero que v
 | R5 | **No se inventan precios de lista, logos ni imágenes.** |
 | R6 | **Toda cotización pasa por aprobación del administrador.** Sin excepción. |
 | R7 | **50 % Lab.IA / 50 % vendedor**, sobre setup y mensualidades. Configurable por producto. |
-| R8 | **Identidad Lab.IA**: dark/navy, azul y cyan, Inter. |
+| R8 | **Identidad Lab.IA**: ocho colores oficiales + Inter. ⛔ `#0A55D9` es relleno, no texto. |
 | R9 | **Responsive por causa.** `overflow-x: hidden` no es una solución. |
+| R10 | **El vendedor no investiga a mano.** Escribe un RUC o un nombre; el sistema investiga y devuelve el perfil. |
+| R11 | **La agenda se puebla sola.** El vendedor ajusta fechas; no reconstruye. |
+| R12 | **Investigación y modelo de lenguaje viven en el servidor.** ⛔ Sin claves en el navegador. |
 
 ---
 
@@ -30,9 +33,10 @@ La planificación es el comienzo: el vendedor abre el sistema y lo primero que v
 | 01 | `#/inicio` | **Inicio** | ambos | ¿Cómo voy y qué hago ahora? |
 | 02 | `#/planificar` | **Planificar** | ambos | ¿Qué le vendo a este negocio y por qué? |
 | 03 | `#/clientes` | **Clientes** | ambos | ¿Con quién hablo y qué se dijo? |
-| 04 | `#/propuestas` | **Propuestas** | ambos | ¿Qué le presenté y qué le cotizo? |
-| 05 | `#/dinero` | **Dinero** | ambos | ¿Cuánto vendí, cuánto se cobró y cuánto me toca? |
-| 06 | `#/administracion` | **Administración** | **sólo admin** | ¿Cómo va la operación y qué tengo que aprobar? |
+| 04 | `#/agenda` | **Agenda** | ambos | ¿Qué tengo que hacer, cuándo, y qué se me pasó? |
+| 05 | `#/propuestas` | **Propuestas** | ambos | ¿Qué le presenté y qué le cotizo? |
+| 06 | `#/dinero` | **Dinero** | ambos | ¿Cuánto vendí, cuánto se cobró y cuánto me toca? |
+| 07 | `#/administracion` | **Administración** | **sólo admin** | ¿Cómo va la operación y qué tengo que aprobar? |
 
 ### Inicio: la planificación es el comienzo
 
@@ -46,11 +50,30 @@ Cuatro cifras — dinero vendido · dinero cobrado · comisión acumulada · com
 
 ⛔ Sin gráficos decorativos, sin embudos, sin tasas de conversión.
 
-### Planificar: el motor comercial
+### Planificar: investigación automática + motor comercial
 
-Acepta **cualquier rubro escrito** — "motel", "gomería", "vivero" — y devuelve: cómo funciona ese negocio · dolores probables (como hipótesis, con su motivo) · **los 13 productos ordenados** · producto 1, 2 y 3 · combos · encaje (`directo` / `cercano` / `adaptable` / `no_recomendado`) · la adaptación necesaria · estrategia de entrada · argumentos · preguntas de confirmación.
+**El vendedor escribe el dato mínimo. El sistema investiga. El vendedor confirma, corrige o agrega.**
 
+| Entrada | Con qué alcanza |
+|---|---|
+| **Empresa** | RUC · razón social · nombre comercial — **uno solo** |
+| **Profesional** | Nombre + profesión. Matrícula y ciudad ⛔ sólo si están a mano |
+| **Rubro** | Texto libre: "motel", "gomería", "vivero" |
+
+Devuelve: actividad · ubicación · canales digitales · sitio web y redes · productos observables · señales operativas · posibles decisores · tamaño (⛔ sólo con evidencia) · dolores probables · **los 13 ordenados** con encaje y motivo · fuentes consultadas · fecha · **nivel de confianza de cada dato**.
+
+Cada dato viene marcado como **verificado**, **inferido** o **no encontrado**. ⛔ Un dato inferido nunca se presenta como verificado.
+
+⛔ Si las fuentes fallan, cae a la taxonomía y pide **uno a tres campos**, nunca un formulario vacío.
 ⛔ Nunca responde "rubro no encontrado". ⛔ Nunca propone un producto fuera de los 13.
+
+### Agenda: se puebla sola
+
+Hoy · Semana · Mes · Cronograma comercial · Atrasados.
+
+Se alimenta de planes, objetivos aceptados, seguimientos, presentaciones, cotizaciones, vencimientos y **aperturas de enlace** — cuando el cliente abre lo que se le mandó, es el momento de llamar.
+
+El vendedor ajusta fechas (con motivo) y completa acciones. ⛔ No reconstruye nada.
 
 ---
 
@@ -66,7 +89,8 @@ Acepta **cualquier rubro escrito** — "motel", "gomería", "vivero" — y devue
 | [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) | Identidad Lab.IA, componentes, responsive |
 | [`docs/ASSET_SOURCES.md`](docs/ASSET_SOURCES.md) | Activos disponibles, prohibidos y pendientes |
 | [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) | Verificaciones de entrega |
-| [`docs/PARALLEL_SESSIONS.md`](docs/PARALLEL_SESSIONS.md) | Límites exactos de archivos |
+| [`docs/PARALLEL_SESSIONS.md`](docs/PARALLEL_SESSIONS.md) | Seis ramas, cero esperas, límites exactos de archivos |
+| [`docs/INVENTARIO_ACTIVOS.md`](docs/INVENTARIO_ACTIVOS.md) | **Activos oficiales localizados en Drive**, con enlace, versión y estado |
 | [`docs/PROMPTS_SESIONES.md`](docs/PROMPTS_SESIONES.md) | **Prompts listos para las seis sesiones** |
 | [`content/taxonomia/LEEME.md`](content/taxonomia/LEEME.md) | Taxonomía editable de tres capas |
 | [`content/copy/COPY_LOCK.md`](content/copy/COPY_LOCK.md) | Copy congelado y sus huellas |
@@ -89,7 +113,7 @@ Acepta **cualquier rubro escrito** — "motel", "gomería", "vivero" — y devue
 ├── apps/
 │   └── escritorio/              LA ÚNICA APLICACIÓN
 │       └── src/vistas/          ingreso · inicio · planificar · clientes
-│                                propuestas · dinero · administracion
+│                                agenda · propuestas · dinero · administracion
 └── scripts/
     └── verificar-portafolio.mjs Verificaciones bloqueantes
 ```
@@ -116,7 +140,11 @@ Ocho cifras, siempre por moneda: vendido · cobrado · por cobrar · parte de La
 
 ---
 
-## Cotizaciones: el circuito
+## Cotizaciones: estructuradas, y con un solo circuito
+
+La estructura sale de la **Carta Oferta real de Agendar.IA**: hitos de pago del setup (*"50 % al aceptar · 50 % con versión conectada"*), meses incluidos, período de congelamiento del precio, descuento de setup, débito automático, compromiso de doce meses, pago anual anticipado, alcance, exclusiones, vigencia, cronograma, y **la condición que habilita cada beneficio**.
+
+⛔ Los hitos de pago tienen que cerrar. ⛔ Un beneficio sin condición escrita no se aprueba.
 
 ```
 borrador del vendedor → revisión del administrador → aprobada o corregida
@@ -139,26 +167,39 @@ npm run verificar
 | Comando | Verifica |
 |---|---|
 | `npm run verificar:copy` | Hash original de los dos archivos de copy |
-| `npm run verificar:portafolio` | 13 productos · una sola app · dos roles · sin términos prohibidos · sin copy duplicado · sin métodos prohibidos · identidad Lab.IA · sin `overflow-x: hidden` de parche |
+| `npm run verificar:portafolio` | 13 productos · una sola app · dos roles · siete rutas con `#/administracion` restringida · ocho colores oficiales + Inter · investigación declarada · **sin credenciales en el cliente** · agenda y cotización estructurada · sin términos prohibidos · sin copy duplicado · sin métodos prohibidos · sin `overflow-x: hidden` de parche |
 | `npm run typecheck` | Tipos compartidos sin `any` y sin advertencias |
 
 ---
 
 ## Seis sesiones paralelas
 
-| Sesión | Alcance |
-|---|---|
-| **S1** | Núcleo y autenticación |
-| **S2** | Interfaz e inicio |
-| **S3** | Motor de planificación |
-| **S4** | Clientes, voz y seguimiento |
-| **S5** | Presentaciones y cotizaciones |
-| **S6** | Finanzas y administración |
+**Las seis arrancan al mismo tiempo, desde el mismo commit base, cada una en su rama.**
 
-**Un archivo tiene un solo dueño.** Ámbitos exactos y protocolo: [`docs/PARALLEL_SESSIONS.md`](docs/PARALLEL_SESSIONS.md). Prompts listos: [`docs/PROMPTS_SESIONES.md`](docs/PROMPTS_SESIONES.md).
+| Sesión | Rama | Alcance |
+|---|---|---|
+| **S1** | `sesion/1-nucleo-autenticacion` | Núcleo y autenticación |
+| **S2** | `sesion/2-interfaz-inicio` | Interfaz e inicio |
+| **S3** | `sesion/3-motor-investigacion` | Motor de planificación e **investigación automática** |
+| **S4** | `sesion/4-clientes-agenda` | Clientes, voz, seguimiento y **agenda** |
+| **S5** | `sesion/5-propuestas-cotizaciones` | Presentaciones y cotizaciones |
+| **S6** | `sesion/6-finanzas-administracion` | Finanzas y administración |
+
+Cada una abre PR contra `integracion/escritorio`. ⛔ **Ninguna espera a otra**: contratos, tipos, rutas, catálogo, copy, identidad, inventario de activos e interfaces de investigación están congelados en la base.
+
+**Un archivo tiene un solo dueño.** Ámbitos exactos: [`docs/PARALLEL_SESSIONS.md`](docs/PARALLEL_SESSIONS.md). Prompts listos: [`docs/PROMPTS_SESIONES.md`](docs/PROMPTS_SESIONES.md).
 
 ---
 
-## Lo único pendiente de entrega
+## Lo que falta
 
-Los **hex oficiales de azul y cyan** y el **archivo del logotipo** de Lab.IA. Hasta que lleguen, la interfaz se ve monocromática navy y la marca aparece en texto: funciona, es legible, y se nota que le falta la marca. ⛔ No se inventan.
+Se buscó en Google Drive: el acceso funciona y los activos están inventariados en [`docs/INVENTARIO_ACTIVOS.md`](docs/INVENTARIO_ACTIVOS.md).
+
+| Falta | Estado |
+|---|---|
+| **Logo de Park.IA** | ⚠️ No existe en Drive. Es el único de los 13 sin logo. |
+| Versiones SVG de los logos | Todo es PNG de 1 a 2 MB. Se optimizan o se piden. |
+| Renders y mockups de producto | No existen como categoría. |
+| Datos societarios y términos comerciales | Para el encabezado legal de cotizaciones. |
+
+⛔ Nada de esto se genera ni se reconstruye.

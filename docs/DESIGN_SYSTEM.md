@@ -1,6 +1,6 @@
 # DESIGN_SYSTEM — Escritorio Vendedores Lab.IA
 
-> **Versión 2.0.** Identidad **Lab.IA**. ⛔ Se descarta la identidad dorada con serif de la referencia operativa.
+> **Versión 3.0.** Identidad **Lab.IA**. ⛔ Se descarta la identidad dorada con serif de la referencia operativa.
 > **De la referencia se reutiliza la arquitectura operativa, no la identidad visual.**
 
 ---
@@ -19,88 +19,79 @@
 
 ## 1. Identidad Lab.IA
 
-Fuente: skills de marca del usuario (`headerproductos`, `masivoslabia`, `rgrlk-brand-guardian`).
+### 1.1 Los ocho colores oficiales
 
-| Elemento | Definición |
-|---|---|
-| **Fondo** | Dark / **navy** |
-| **Acentos** | **Azul** y **cyan** |
-| **Tipografía** | **Inter** |
-| **Sistema** | dark · navy · cyan · azul · glass · profundidad · premium |
-| **Logos** | Archivos oficiales. ⛔ No redibujar, no recolorear, no deformar. `object-fit: contain`. |
-| **Imágenes** | ⛔ Ninguna inventada. |
+⛔ **Son los oficiales. No se cambian, no se "ajustan", no se derivan variantes nuevas sin autorización.**
 
-### 1.1 Valor documentado
+| Hex | Token | Rol |
+|---|---|---|
+| `#020711` | `--bg` | Fondo de la aplicación |
+| `#06162F` | `--bg-2` | Navy: superficies y barras |
+| `#0A55D9` | `--azul` | **Relleno y superficie** |
+| `#098CFF` | `--azul-texto` | Texto y bordes de acento |
+| `#00D9FF` | `--cian` | Acento principal |
+| `#12D9FF` | `--cian-claro` | Realce, estado activo |
+| `#F2F7FF` | `--texto` | Texto principal |
+| `#AEB8C8` | `--texto-2` | Texto de apoyo |
 
-El header Lab.IA usa fondo **`rgba(3, 10, 28, .94)`**, borde cian sutil y desenfoque de 18 px. De ahí sale la base navy del Escritorio: **`#030A1C`**.
+**Tipografía: Inter.** ⛔ Sin serif, en ningún elemento.
 
-### 1.2 Valores que faltan y cómo se resuelven
+### 1.2 Contraste medido
 
-Los hex exactos de azul y cyan viven en el design-system oficial de Lab.IA (`masivoslabia/references/design-system.md`). ⛔ **No se inventan.**
+WCAG 2.1, contra los dos fondos:
 
-**Mecanismo:** `packages/ui/src/marca-labia.css` es el archivo donde se copian los valores oficiales. `tokens.css` los consume con respaldo a la familia navy:
+| Color | vs `#020711` | vs `#06162F` | Veredicto |
+|---|---:|---:|---|
+| `#0A55D9` azul | **3.18** | **2.85** | ⛔ **NO es color de texto** |
+| `#098CFF` azul claro | 5.96 | 5.33 | AA texto |
+| `#00D9FF` cyan | 11.88 | 10.63 | AA texto |
+| `#12D9FF` cyan claro | 11.91 | 10.65 | AA texto |
+| `#F2F7FF` texto | 18.75 | 16.78 | AA texto |
+| `#AEB8C8` texto-2 | 10.08 | 9.02 | AA texto |
 
-```css
---azul:  var(--labia-azul,  #16305C);   /* respaldo navy mientras falta el oficial */
---cian:  var(--labia-cian,  #1E4C74);
+### 1.3 La regla que más se olvida
+
+> ⛔ **`#0A55D9` es color de RELLENO, no de texto.**
+>
+> No alcanza AA para texto (3.18) y ni siquiera llega a 3:1 sobre el navy (2.85), así que tampoco sirve para bordes finos ni para íconos informativos.
+>
+> **Para texto o borde de acento: `#098CFF` o `#00D9FF`.**
+
+Es el error más fácil de cometer con esta paleta, porque `#0A55D9` es el azul que más "se siente Lab.IA" y da ganas de usarlo para todo. Sirve para superficies elevadas, para el relleno de una barra, para un bloque de color. No para leer.
+
+### 1.4 Colores derivados
+
+Todo token de color es **uno de los ocho, o uno de los ocho con transparencia**. ⛔ No se inventa ningún hex nuevo.
+
+```
+--superficie:   rgba(6, 22, 47, .72)      navy al 72 %
+--superficie-2: rgba(10, 85, 217, .10)    azul al 10 %: tarjeta elevada
+--linea:        rgba(174, 184, 200, .16)  texto-2 al 16 %
+--linea-acento: rgba(0, 217, 255, .32)    cian al 32 %
+--cian-suave:   rgba(0, 217, 255, .14)
+--azul-suave:   rgba(10, 85, 217, .18)
 ```
 
-Mientras `marca-labia.css` esté sin completar, la interfaz se ve **monocromática navy**: funciona, es legible, y **se nota que le falta la marca**. Es deliberado — un respaldo que pareciera la marca real sería peor que uno que no lo parece.
+**Única excepción declarada:** `--peligro` (`#FF6B6B`). La paleta oficial no tiene un color de error, y un estado de error que no se distingue del acento es un error que nadie ve. Queda registrado acá para que se reemplace en cuanto la marca defina el suyo.
 
-`--marca-pendiente` vale `1` hasta que se carguen los valores oficiales; QA lo verifica (`QA_CHECKLIST.md` §7).
+### 1.5 Logos e imágenes
+
+Se usan los **archivos oficiales** de Google Drive, inventariados en `docs/INVENTARIO_ACTIVOS.md` con su enlace, versión elegida y estado.
+
+| # | Regla |
+|---|---|
+| B1 | ⛔ No se redibuja, no se recolorea, no se deforma. `object-fit: contain`. |
+| B2 | ⛔ No se genera ningún activo. Lo que falta, se pide. |
+| B3 | Los logos de producto en Drive son PNG de 1 a 2 MB: **se optimizan antes de usarlos**. Trece logos sin optimizar son medio segundo de carga en 3G. |
+| B4 | ⛔ El logo del producto excluido está en la misma carpeta de Drive que los 13. No se incorpora. |
 
 ---
 
 ## 2. Tokens
 
-```css
-:root {
-  /* Fondos — navy */
-  --bg:            #030A1C;   /* documentado: rgba(3,10,28,.94) */
-  --bg-2:          #071328;
-  --superficie:    #0B1A33;
-  --superficie-2:  #112445;
-  --glass:         rgba(11, 26, 51, .72);
+Definición completa: `packages/ui/src/marca-labia.css` (los ocho oficiales) y `packages/ui/src/tokens.css` (los derivados).
 
-  /* Líneas */
-  --linea:    rgba(226, 235, 245, .12);
-  --linea-2:  rgba(226, 235, 245, .22);
-  --linea-cian: var(--labia-cian-linea, rgba(126, 200, 227, .28));
-
-  /* Texto */
-  --texto:    #EAF2FB;
-  --texto-2:  #B8C7DA;
-  --texto-3:  #8497AF;
-  --mudo:     #6B7E96;
-
-  /* Acentos — de marca-labia.css */
-  --azul:        var(--labia-azul,       #16305C);
-  --azul-claro:  var(--labia-azul-claro, #1D4374);
-  --cian:        var(--labia-cian,       #1E4C74);
-  --cian-claro:  var(--labia-cian-claro, #2A6B9E);
-  --acento-suave: var(--labia-acento-suave, rgba(30, 76, 116, .18));
-
-  /* Estado */
-  --ok:            #6FCF97;
-  --peligro:       #F0857A;
-  --peligro-suave: rgba(240, 133, 122, .12);
-  --aviso:         #F2C94C;
-
-  /* Tipografía */
-  --fuente: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fuente-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  /* Estructura */
-  --lateral: 248px;
-  --inferior: 64px;
-
-  /* Movimiento */
-  --suave: cubic-bezier(.16, .8, .24, 1);
-
-  /* Bandera de marca: 1 = faltan los valores oficiales */
-  --marca-pendiente: 1;
-}
-```
+⛔ **Ninguna vista escribe un color, una fuente ni una curva literal. Sólo tokens.**
 
 ### 2.1 Uso semántico
 
@@ -109,7 +100,8 @@ Mientras `marca-labia.css` esté sin completar, la interfaz se ve **monocromáti
 | `--bg` | Fondo de la aplicación | Texto |
 | `--superficie`, `--glass` | Tarjetas, campos, barras | Fondo de pantalla completo |
 | `--cian` | Acento principal: ruta activa, foco, cifras destacadas, las dos acciones protagonistas | Fondos amplios |
-| `--azul` | Acento secundario, superficies elevadas, bordes activos | Texto pequeño |
+| `--azul` | **Relleno**: superficies elevadas, bloques de color, barras de progreso | ⛔ **Texto, bordes finos, íconos informativos** |
+| `--azul-texto` | Texto y bordes de acento secundario | Fondos amplios |
 | `--texto` → `--mudo` | Jerarquía descendente | Bordes |
 | `--peligro` | Vencidos, errores, acciones destructivas | Estados neutros |
 | `--ok` | Confirmación | Acción principal (ésa es `--cian`) |
@@ -122,7 +114,8 @@ Mientras `marca-labia.css` esté sin completar, la interfaz se ve **monocromáti
 | CO2 | ⛔ Ningún token de color nuevo sin acuerdo de Sesión 1. |
 | CO3 | El color **nunca** es el único portador de información: todo estado lleva texto o ícono. |
 | CO4 | Contraste mínimo AA: 4.5:1 texto normal, 3:1 texto grande y bordes de control. |
-| CO5 | ⛔ Sin neón excesivo. El sistema es premium y sobrio, no fluorescente. |
+| CO5 | ⛔ Sin neón excesivo. El sistema es premium y sobrio, no fluorescente. El cyan es acento, no fondo. |
+| CO6 | ⛔ `--azul` nunca es color de texto ni de borde fino (§1.3). |
 
 ---
 
@@ -139,6 +132,7 @@ Cortes: **400, 500, 600, 700**. Carga con `display=swap` y pila de respaldo comp
 | Elemento | Tamaño | Peso |
 |---|---|---|
 | Título de vista | `clamp(28px, 3.5vw, 44px)` | 600 |
+| Clasificación de dato investigado (`verificado` / `inferido` / `no encontrado`) | `11px`, mayúsculas, `letter-spacing: .12em` | 600 |
 | Cifra grande (las cuatro de Inicio) | `clamp(32px, 4vw, 48px)` | 600, `font-variant-numeric: tabular-nums` |
 | Título de tarjeta | `clamp(18px, 1.6vw, 22px)` | 600 |
 | Subtítulo | `clamp(15px, 1.3vw, 18px)` | 400 |
@@ -178,6 +172,11 @@ Son el elemento visual **dominante** de Inicio. No son botones en una barra: son
 | Lista | `.lista` | Próximos seguimientos, línea de tiempo |
 | Ranking | `.ranking` / `.ranking-fila` | Los 13 ordenados, con posición, encaje y motivo |
 | Encaje | `.encaje` + `--directo` / `--cercano` / `--adaptable` / `--no-recomendado` | Siempre con **texto**, no sólo color |
+| Dato investigado | `.dato` + `--verificado` / `--inferido` / `--no-encontrado` | ⛔ La clasificación se lee **en texto**, nunca sólo por color |
+| Confianza | `.confianza` + `--alta` / `--media` / `--baja` | Con texto |
+| Calendario | `.calendario` / `.calendario-dia` | Mes de la agenda |
+| Cronograma | `.cronograma` dentro de `.cronograma-contenedor` | ⛔ Gantt **siempre** en su contenedor con `overflow-x: auto` propio |
+| Entrada de agenda | `.entrada-agenda` + `--atrasada` | El atraso se lee en texto y en días, no sólo en color |
 | Botón | `.btn`, `.btn-borde`, `.btn-texto` | Altura mínima 48 px |
 | Campo | `.campo` + `.entrada` | Altura mínima 48 px, foco con borde `--cian` |
 | Pestañas | `.pestanas` / `.pestana` | `role="tablist"`, navegación con flechas |
@@ -222,6 +221,8 @@ Son el elemento visual **dominante** de Inicio. No son botones en una barra: son
 | `min-width` mayor que el viewport | Quitarlo o pasarlo a `min-width: 0` |
 | Hijo de flex/grid que no encoge | `min-width: 0` en el hijo (es el olvido más común) |
 | Tabla ancha | Envolver en `.tabla-contenedor { overflow-x: auto }` — el scroll es de la tabla, ⛔ nunca de la página |
+| **Cronograma / Gantt** | Igual: `.cronograma-contenedor { overflow-x: auto }`. Es el elemento más ancho del sistema y el que más tienta a taparlo |
+| **Calendario mensual** | Siete columnas fijas con `minmax(0, 1fr)`; a 360 px las celdas muestran densidad, no contenido |
 | Palabra o URL larga | `overflow-wrap: anywhere` en el contenedor de texto |
 | `padding` sumado a `width: 100%` | `box-sizing: border-box` global |
 | Grilla que no baja de columnas | `repeat(auto-fit, minmax(min(260px, 100%), 1fr))` |
@@ -276,6 +277,9 @@ Son el elemento visual **dominante** de Inicio. No son botones en una barra: son
 | AC9 | Contraste AA; el color nunca es el único portador de significado. |
 | AC10 | El estado de encaje (`directo` / `cercano` / `adaptable` / `no_recomendado`) se lee **en texto**, no sólo por color. |
 | AC11 | Toda la aplicación operable **sólo con teclado**. |
+| AC12 | La clasificación de un dato investigado (`verificado` / `inferido` / `no encontrado`) se lee **en texto**. ⛔ Nunca sólo por color. |
+| AC13 | El calendario mensual es navegable por teclado, con flechas entre días. |
+| AC14 | El cronograma tiene **alternativa en lista**: un Gantt no se lee con lector de pantalla. |
 
 ---
 
@@ -317,3 +321,5 @@ Detalle de activos: `docs/ASSET_SOURCES.md`.
 | S5 | Cada vista entrega sus cuatro estados. Sin estado vacío o sin estado de error, **no está terminada**. |
 | S6 | Antes de cerrar, cada vista se valida en **360, 390, 768, 1024 y 1440 px**, sin scroll horizontal de página. |
 | S7 | ⛔ Prohibido usar `overflow-x: hidden` para tapar un desbordamiento. Se corrige la causa. |
+| S8 | ⛔ Prohibido usar `--azul` (`#0A55D9`) como color de texto o de borde fino. |
+| S9 | Los logos se toman del inventario (`INVENTARIO_ACTIVOS.md`), optimizados. ⛔ No se generan. |

@@ -1,6 +1,6 @@
 # QA_CHECKLIST — Escritorio Vendedores Lab.IA
 
-> **Versión 2.0.** ⛔ Un ítem marcado ⛔ es **bloqueante**: si falla, no se entrega.
+> **Versión 3.0.** ⛔ Un ítem marcado ⛔ es **bloqueante**: si falla, no se entrega.
 > Cada sesión pasa §1 a §6 sobre lo suyo. §7 lo corre quien integra, sobre el repositorio completo.
 
 ---
@@ -57,6 +57,49 @@
 
 ---
 
+## 3b. Investigación automática ⛔
+
+| # | Verificación |
+|---|---|
+| 3b.1 ⛔ | La entrada de **empresa** funciona con **sólo el RUC**. Y con sólo la razón social. Y con sólo el nombre comercial. |
+| 3b.2 ⛔ | La entrada de **profesional** funciona con **sólo nombre + profesión**. ⛔ No se piden matrícula ni ciudad. |
+| 3b.3 ⛔ | ⛔ **Al vendedor no se le pide que describa el negocio.** No hay formulario de perfil en la entrada. |
+| 3b.4 ⛔ | Devuelve los trece datos: actividad · ubicación · canales · sitio web · redes · productos · señales operativas · decisores · tamaño · dolores · productos recomendados · fuentes · fecha. |
+| 3b.5 ⛔ | Cada dato trae su **nivel de confianza**. |
+| 3b.6 ⛔ | Cada dato se ve como **verificado**, **inferido** o **no encontrado** — ⛔ **en texto**, no sólo por color. |
+| 3b.7 ⛔ | `inferido` muestra **el razonamiento**. |
+| 3b.8 ⛔ | `no_encontrado` deja el valor **vacío**. ⛔ No se rellena, no se estima. |
+| 3b.9 ⛔ | **Tamaño aproximado** sólo aparece con evidencia. |
+| 3b.10 ⛔ | Se listan las fuentes consultadas, **incluidas las que fallaron**, con su motivo. |
+| 3b.11 ⛔ | **Con las fuentes caídas**: devuelve un plan usable por taxonomía y pide **uno a tres campos**. ⛔ **Nunca un formulario largo vacío.** |
+| 3b.12 ⛔ | El vendedor sólo **confirma, corrige o agrega**. |
+| 3b.13 ⛔ | Cada corrección **recalcula el plan y muestra qué cambió**. |
+| 3b.14 ⛔ | ⛔ **Ninguna clave, token ni endpoint de proveedor en el código del cliente.** `grep -riE "apiKey\|secret\|sk-\|bearer" apps/` ⇒ vacío. |
+| 3b.15 ⛔ | La entrada **independiente por rubro** sigue funcionando. |
+| 3b.16 | El progreso es visible desde el primer segundo, con las fuentes que se van consultando. |
+
+---
+
+## 3c. Agenda operativa ⛔
+
+| # | Verificación |
+|---|---|
+| 3c.1 ⛔ | La ruta `#/agenda` existe y está disponible para **vendedor y administrador**. |
+| 3c.2 ⛔ | Están las cinco vistas: **Hoy · Semana · Mes · Cronograma · Atrasados**. |
+| 3c.3 ⛔ | Hoy muestra **visitas, llamadas, próximos pasos, vencimientos y atrasados**. |
+| 3c.4 ⛔ | **La agenda se pobló sola**: hay entradas derivadas de planes, objetivos aceptados, seguimientos, presentaciones, cotizaciones, vencimientos y aperturas de enlace, **sin que nadie las cargue**. |
+| 3c.5 ⛔ | Una **apertura de enlace** genera una entrada que dice por qué está. |
+| 3c.6 ⛔ | Ajustar una fecha **exige motivo**. |
+| 3c.7 ⛔ | ⛔ **No existe borrar.** Se descarta con motivo y queda en la historia. |
+| 3c.8 ⛔ | Un atraso **no se oculta ni se reprograma solo**; muestra sus días de atraso. |
+| 3c.9 ⛔ | Crear a mano sólo admite **visita, llamada o próximo paso**. |
+| 3c.10 ⛔ | **Inicio conserva sólo la lista corta** (3 a 5) y el acceso a Agenda con dos contadores. ⛔ No duplica la agenda. |
+| 3c.11 ⛔ | El **cronograma** va en su propio contenedor con `overflow-x: auto`. ⛔ La página no hace scroll horizontal. |
+| 3c.12 ⛔ | El cronograma tiene **alternativa en lista** para lector de pantalla. |
+| 3c.13 | El calendario mensual es navegable por teclado. |
+
+---
+
 ## 4. Portafolio y copy ⛔
 
 | # | Verificación | Cómo |
@@ -105,18 +148,27 @@
 | 6.1.2 ⛔ | **No requiere aprobación.** |
 | 6.1.3 | Es personalizada, visual y compartible por PDF y enlace. |
 
-### 6.2 Cotización
+### 6.2 Cotización estructurada
 | # | Verificación |
 |---|---|
-| 6.2.1 ⛔ | Están **todos** los campos: setup · mensualidad · descuento de implementación · débito automático · compromiso de doce meses · pago anual anticipado · alcance · vigencia · cronograma · condiciones. |
-| 6.2.2 ⛔ | El vendedor **propone** el precio; el sistema muestra al lado el de lista y la desviación. |
-| 6.2.3 ⛔ | Totales **por moneda**. |
+| 6.2.1 ⛔ | **Hitos de pago del setup**: porcentaje o importe **al aceptar** y **al entregar/conectar**, cada uno con su descripción visible. |
+| 6.2.2 ⛔ | Si los hitos son porcentuales, **suman exactamente 100**. Si son importes, **suman el setup con descuento**. |
+| 6.2.3 ⛔ | Una cotización cuyos hitos **no cierran** ⛔ **no se puede enviar a revisión**. |
+| 6.2.4 ⛔ | **Meses incluidos** y **período de congelamiento del precio** están y se muestran. |
+| 6.2.5 ⛔ | **Descuento de setup**: porcentaje **o** importe, ⛔ nunca los dos. |
+| 6.2.6 ⛔ | Están **débito automático**, **compromiso de doce meses** y **pago anual anticipado**. |
+| 6.2.7 ⛔ | **Cada beneficio declara la condición que lo habilita** y qué pasa si el cliente deja de cumplirla. ⛔ Sin condición escrita, no se aprueba. |
+| 6.2.8 ⛔ | Están **alcance**, **exclusiones**, **vigencia** y **cronograma** con entregable e importe por etapa. |
+| 6.2.9 ⛔ | **Límites incluidos** por ítem (consultas, usuarios, canales). |
+| 6.2.10 ⛔ | El vendedor **propone** el precio; el sistema muestra al lado el de lista y la desviación. |
+| 6.2.11 ⛔ | Totales **por moneda**. |
 
 ### 6.3 Aprobación — el circuito
 | # | Verificación |
 |---|---|
 | 6.3.1 ⛔ | El circuito es: **borrador → revisión del administrador → aprobada o corregida → PDF definitivo → envío al cliente**. |
 | 6.3.2 ⛔ | ⛔ **Ningún vendedor puede enviar una cotización final sin aprobación.** Probar todos los caminos: botón, URL directa, llamada a la capa de datos. |
+| 6.3.2b ⛔ | Al revisar se muestran **la suma de los hitos y si cierra**, los meses incluidos, el congelamiento y **qué habilita cada beneficio**. |
 | 6.3.3 ⛔ | `emitirPdfDefinitivo` sobre una cotización no aprobada ⇒ `requiere_aprobacion`. |
 | 6.3.4 ⛔ | `enviarAlCliente` sobre una cotización no aprobada ⇒ `requiere_aprobacion`. |
 | 6.3.5 ⛔ | **No hay autoaprobación** por tiempo, monto ni antigüedad. |
@@ -162,19 +214,25 @@
 | 7.1.5 ⛔ | Sin `any` en `packages/compartido` | `grep -rn ": any\|<any>" packages/compartido/src` |
 | 7.1.6 ⛔ | Compila sin errores ni advertencias | `npm run typecheck` |
 | 7.1.7 | Sin `console.log` ni `TODO` sin ticket | `grep -rn "console.log\|TODO" apps/ packages/` |
-| 7.1.8 ⛔ | Ninguna sesión modificó archivos fuera de su ámbito | `git diff --name-only` contra `PARALLEL_SESSIONS.md` §5 |
+| 7.1.8 ⛔ | Ninguna sesión modificó archivos fuera de su ámbito | `git diff --name-only` contra `PARALLEL_SESSIONS.md` §6 |
+| 7.1.9 ⛔ | Las **siete rutas** existen y `#/administracion` está restringida | `npm run verificar:portafolio` |
+| 7.1.10 ⛔ | Cada PR de sesión va contra `integracion/escritorio`, nunca contra `main` | Revisión del PR |
 
 ### 7.2 Identidad Lab.IA
 | # | Verificación | Comando |
 |---|---|---|
-| 7.2.1 ⛔ | **Sin serif.** Ni Newsreader, ni Georgia, ni `serif` | `grep -rn "Newsreader\|Georgia\|serif" apps/ packages/` |
+| 7.2.1 ⛔ | **Sin serif.** Ni Newsreader, ni Georgia, ni `serif` suelto | `npm run verificar:portafolio` |
 | 7.2.2 ⛔ | **Sin la paleta dorada** de la referencia | `grep -rni "E1B864\|EFD293\|C79A46\|--oro" apps/ packages/` |
 | 7.2.3 ⛔ | **Sin marcas de terceros** | `grep -rni "i-monograma" apps/ packages/ content/` |
-| 7.2.4 ⛔ | Tipografía **Inter** en el token de fuente | `grep -n "Inter" packages/ui/src/tokens.css` |
-| 7.2.5 ⛔ | Sin colores literales en CSS de vista | `grep -rEn "#[0-9a-fA-F]{3,8}\|rgba?\(" apps/escritorio/src` ⇒ vacío |
-| 7.2.6 ⛔ | Ningún logo redibujado, recoloreado ni deformado | Inspección + `object-fit: contain` |
-| 7.2.7 | `--marca-pendiente` vale `0` sólo cuando los hex oficiales están en `marca-labia.css` | `grep -n "marca-pendiente" packages/ui/src/*.css` |
-| 7.2.8 ⛔ | Todo activo binario tiene fila en `ASSET_SOURCES.md` §1 | Revisión de `apps/escritorio/public/` |
+| 7.2.4 ⛔ | **Los ocho colores oficiales** están en `marca-labia.css` | `npm run verificar:portafolio` |
+| 7.2.5 ⛔ | **Inter** como `--labia-fuente` y `--fuente` la consume | `grep -n "Inter" packages/ui/src/marca-labia.css` |
+| 7.2.6 ⛔ | ⛔ **`#0A55D9` no se usa como color de texto ni de borde fino.** Contraste 3.18 / 2.85 | Inspección + herramienta de contraste |
+| 7.2.7 ⛔ | Todo color derivado es uno de los ocho, o uno de los ocho con transparencia | Revisión de `tokens.css` |
+| 7.2.8 ⛔ | Sin colores literales en CSS de vista | `grep -rEn "#[0-9a-fA-F]{3,8}\|rgba?\(" apps/escritorio/src` ⇒ vacío |
+| 7.2.9 ⛔ | Ningún logo redibujado, recoloreado ni deformado | Inspección + `object-fit: contain` |
+| 7.2.10 ⛔ | Todo activo binario tiene fila en `INVENTARIO_ACTIVOS.md` con su enlace de Drive | Revisión de `apps/escritorio/public/` |
+| 7.2.11 ⛔ | **El logo del producto excluido no entró** al bajar la carpeta de Drive | `grep -rni "centinala" apps/ packages/` ⇒ vacío |
+| 7.2.12 | Los logos están **optimizados**: en Drive son PNG de 1 a 2 MB | Revisión de tamaños en `public/` |
 
 ### 7.3 Responsive — por causa, no por parche
 | # | Verificación | Cómo |
@@ -211,17 +269,17 @@
 
 ## 8. Matriz de cobertura por vista
 
-| Verificación | Ingreso | Inicio | Planificar | Clientes | Propuestas | Dinero | Admin |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| §7.5 Cuatro estados | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| §7.4 Accesibilidad | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| §7.3 Cinco anchos sin scroll | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| §7.2 Identidad Lab.IA | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| §5 Dinero con moneda | — | ☐ | ☐ | — | ☐ | ☐ | ☐ |
-| §4 Copy sin alterar | — | — | ☐ | — | ☐ | — | ☐ |
-| §1 Guardia de rol | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| Teclado completo | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| Lector de pantalla | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Verificación | Ingreso | Inicio | Planificar | Clientes | Agenda | Propuestas | Dinero | Admin |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| §7.5 Cuatro estados | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| §7.4 Accesibilidad | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| §7.3 Cinco anchos sin scroll | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| §7.2 Identidad Lab.IA | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| §5 Dinero con moneda | — | ☐ | ☐ | — | — | ☐ | ☐ | ☐ |
+| §4 Copy sin alterar | — | — | ☐ | — | — | ☐ | — | ☐ |
+| §1 Guardia de rol | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Teclado completo | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Lector de pantalla | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
 
 ---
 

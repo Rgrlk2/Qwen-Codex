@@ -1,6 +1,6 @@
 # DATA_MODEL — Escritorio Vendedores Lab.IA
 
-> **Versión 2.0.** Modelo conceptual y lógico. La expresión ejecutable son las interfaces de `packages/compartido/src/`.
+> **Versión 3.0.** Modelo conceptual y lógico. La expresión ejecutable son las interfaces de `packages/compartido/src/`.
 > Si este documento y el código difieren, **manda el código** y este documento se corrige.
 
 ---
@@ -23,6 +23,12 @@
 
 ```
 Usuario (rol: vendedor | administrador)
+   │
+   ├──< InvestigacionObjetivo ──< DatoInvestigado ──> FuenteInvestigacion
+   │            │
+   │            └──► Plan
+   │
+   ├──< EntradaAgenda   (derivada de plan, seguimiento, propuesta, vencimiento…)
    │
    ├──< Cliente >── Actividad ──< Operacion ──< Necesidad ──> Producto (13)
    │       │
@@ -192,14 +198,42 @@ Sólo un paso `aceptado` aparece en los próximos seguimientos de Inicio.
 `estado`: `"borrador" | "en_revision" | "aprobada" | "corregida" | "rechazada" | "enviada_al_cliente" | "aceptada" | "perdida" | "vencida"`.
 
 ### 7.3 `ItemCotizacion`
+Incluye `limitesIncluidos: string[]` — *"+400 consultas/mes"*, usuarios, canales.
 `id` · `productoId` · `plan` · `precioListaSetup: Dinero | null` · `precioListaMensualidad: Dinero | null` · **`setupPropuesto: Dinero`** · **`mensualidadPropuesta: Dinero`** · `descuentoImplementacionPorcentaje` · `alcance` · `notas`.
 
 **Invariantes:** `setupPropuesto.moneda === mensualidadPropuesta.moneda` · un producto aparece una sola vez · el precio de lista se guarda **junto** al propuesto, para poder explicar la desviación meses después.
 
 ### 7.4 `CondicionesCotizacion`
-`debitoAutomatico: boolean` · `compromisoDoceMeses: boolean` · `pagoAnualAnticipado: boolean` · `alcance: string` · `cronograma: EtapaCronograma[]` · `condicionesComerciales: string` · `tratamientoIva: string`.
 
-`EtapaCronograma`: `orden` · `titulo` · `duracionDias` · `entregable`.
+Estructura tomada de la **Carta Oferta real de Agendar.IA** (`INVENTARIO_ACTIVOS.md` §4).
+
+**Setup y sus hitos**
+`hitosPagoSetup: HitoPagoSetup[]` · `descuentoSetupPorcentaje` · `descuentoSetupImporte`.
+
+`HitoPagoSetup`: `orden` · `disparador` (`al_aceptar | al_entregar | al_conectar | al_iniciar_piloto | fecha_fija`) · `descripcion` · `porcentaje` · `importe` · `fecha`.
+
+| # | Invariante |
+|---|---|
+| HP1 | Cada hito lleva **porcentaje o importe**, ⛔ nunca los dos. |
+| HP2 | Si todos son porcentuales, ⛔ **suman exactamente 100**. |
+| HP3 | Si son importes, ⛔ **suman el setup con su descuento aplicado**. |
+| HP4 | `disparador === 'fecha_fija'` ⇒ `fecha !== null`. |
+| HP5 | `descuentoSetupPorcentaje` y `descuentoSetupImporte`: ⛔ uno de los dos, no ambos. |
+
+**Permanencia**
+`mesesIncluidos: number` · `mesesCongelamientoPrecio: number`.
+
+**Beneficios y lo que los habilita**
+`debitoAutomatico` · `compromisoDoceMeses` · `pagoAnualAnticipado` · `condicionesHabilitantes: CondicionHabilitante[]`.
+
+`CondicionHabilitante`: `beneficio` (`descuento_setup | congelamiento_precio | meses_incluidos | precio_mensual_especial`) · `condicion` · `descripcion` · `siNoSeCumple`.
+
+⛔ **Todo beneficio otorgado tiene su condición escrita.** Un descuento sin condición es un descuento que después nadie puede reclamar.
+
+**Alcance y plan**
+`alcance` · `exclusiones` · `cronograma: EtapaCronograma[]` · `condicionesComerciales` · `tratamientoIva`.
+
+`EtapaCronograma`: `orden` · `titulo` · `fechaEstimada` · `duracionDias` · `entregable` · `importeAsociado`.
 
 ### 7.5 `VersionCotizacion`
 `version` · `estado` · `creadaEn` · `creadaPor` · `totalesPorMoneda` · `motivoCambio`.
@@ -320,6 +354,68 @@ Es la sección **Accesos y frecuencia de uso** de Administración: sirve para sa
 
 ---
 
+## 10b. Investigación automática
+
+### 10b.1 `InvestigacionObjetivo`
+`id` · `entrada: EntradaObjetivo` · `estado` · `investigadoEn` · `vendedorId` · los trece datos (§10b.3) · `perfilOperativo` · `doloresProbables` · `productosRecomendados` · `fuentesConsultadas` · `confianzaGlobal` · `datosMinimosFaltantes` · `usoRespaldoTaxonomia` · `versionTaxonomia` · `versionCatalogo`.
+
+`estado`: `en_curso | completa | parcial | sin_resultados | fuentes_caidas | error`.
+
+### 10b.2 `EntradaObjetivo`
+| Tipo | Campos | Obligatorio |
+|---|---|---|
+| `empresa` | `ruc`, `razonSocial`, `nombreComercial`, `ciudad` | **Al menos uno** de los tres primeros |
+| `profesional` | `nombre`, `profesionOEspecialidad`, `matricula`, `ciudad` | Los dos primeros. ⛔ `matricula` y `ciudad` **sólo si están** |
+| `rubro` | `rubro`, `ciudad` | `rubro` |
+
+### 10b.3 `DatoInvestigado<T>`
+`campo` · `valor: T | null` · `clasificacion` · `confianza` · `fuentesIds` · `razonamiento` · `confirmadoPorVendedor` · `valorCorregido`.
+
+| # | Invariante |
+|---|---|
+| DI1 | `clasificacion === 'verificado'` ⇒ `fuentesIds` no vacío **y** `confianza !== null`. |
+| DI2 | `clasificacion === 'inferido'` ⇒ `razonamiento` no vacío **y** `confianza !== null`. |
+| DI3 | `clasificacion === 'no_encontrado'` ⇒ `valor === null` **y** `confianza === null`. ⛔ No se rellena. |
+| DI4 | `tamanoAproximado` sólo se completa con evidencia; si no, `no_encontrado`. |
+
+### 10b.4 `FuenteInvestigacion`
+`id` · `tipo` · `nombre` · `url` · `consultadaEn` · `exito` · `motivoFallo`.
+⛔ Se registran **también las fuentes que fallaron**: el vendedor tiene derecho a saber qué no se pudo mirar.
+
+### 10b.5 `CampoFaltante`
+`campo` · `pregunta` · `porQueHaceFalta` · `obligatorio` · `opciones`.
+⛔ **Uno a tres, nunca más.** Es lo mínimo para seguir, no un formulario.
+
+### 10b.6 Proveedores
+`ProveedorBusqueda` · `ProveedorRegistroPublico` · `ProveedorModeloLenguaje` · `EstadoProveedores`.
+⛔ **Se implementan únicamente en el servidor.** Ninguna clave ni llamada externa vive en el navegador.
+
+---
+
+## 10c. Agenda operativa
+
+### 10c.1 `EntradaAgenda`
+`id` · `vendedorId` · `tipo` · `origen` · `referenciaId` · `clienteId` · `titulo` · `detalle` · `productoId` · `inicioEn` · `finEn` · `venceEn` · `atrasada` · `diasDeAtraso` · `prioridad` · `estado` · `completadaEn` · `motivoReprogramacion` · `fechaAjustadaPorVendedor`.
+
+`tipo`: `visita | llamada | proximo_paso | vencimiento | seguimiento_atrasado | hito_plan | objetivo_aceptado | presentacion_enviada | cotizacion_en_revision | apertura_enlace`.
+
+`origen`: `plan | objetivo_aceptado | seguimiento | presentacion | cotizacion | vencimiento | apertura_enlace | manual`.
+
+| # | Invariante |
+|---|---|
+| AG1 | ⛔ La agenda **se deriva**. `origen === 'manual'` es la excepción, y sólo para `visita`, `llamada` y `proximo_paso`. |
+| AG2 | Mover una fecha exige `motivoReprogramacion` y marca `fechaAjustadaPorVendedor`. |
+| AG3 | `venceEn` pasado y `estado === 'pendiente'` ⇒ `atrasada: true` con `diasDeAtraso`. ⛔ No se reprograma sola. |
+| AG4 | ⛔ **No existe borrado.** `descartada` con motivo; queda en la historia. |
+| AG5 | Completar una entrada actualiza la línea de tiempo del cliente. |
+
+### 10c.2 Vistas derivadas
+`AgendaHoy` · `AgendaSemana` · `AgendaMes` · `CronogramaComercial` (con `BarraCronograma` e `HitoCronograma`) · `ResumenAgenda`.
+
+`ResumenAgenda` es lo único que consume Inicio: `pendientesHoy`, `atrasados`, `proximaEntrada`. ⛔ Inicio no duplica la agenda.
+
+---
+
 ## 12. Invariantes globales
 
 | # | Invariante | Por qué importa |
@@ -342,6 +438,14 @@ Es la sección **Accesos y frecuencia de uso** de Administración: sirve para sa
 | G16 | Toda relación de taxonomía guarda su `motivo`. | Sin motivo no se puede explicar un ranking. |
 | G17 | Una actividad desconocida se crea `pendiente_de_revision`, nunca se rechaza. | El motor no puede frenar al vendedor. |
 | G18 | El copy vive sólo en `content/copy/`. | Duplicarlo garantiza divergencia. |
+| G19 | Todo `DatoInvestigado` declara su clasificación, y `no_encontrado` deja el valor vacío. | Un dato inferido presentado como verificado es una mentira con formato de hecho. |
+| G20 | La investigación registra también las fuentes que fallaron. | Saber qué no se pudo mirar es parte del resultado. |
+| G21 | Ninguna clave de proveedor externo existe en código del cliente. | Una clave en el navegador es una clave publicada. |
+| G22 | Una investigación fallida devuelve como mucho tres campos faltantes. | Un formulario vacío tras un fallo es peor que no tener sistema. |
+| G23 | `origen === 'manual'` es la excepción en la agenda. | Una agenda que hay que cargar entera queda vacía. |
+| G24 | Una entrada de agenda nunca se borra: se descarta con motivo. | El atraso que desaparece solo es el que se repite. |
+| G25 | Los hitos de pago de una cotización cierran (100 % o el importe del setup). | Una cotización cuyos hitos no suman es una discusión con el cliente. |
+| G26 | Todo beneficio otorgado tiene su condición habilitante escrita. | Sin condición escrita, el beneficio no se puede reclamar ni revertir. |
 
 ---
 

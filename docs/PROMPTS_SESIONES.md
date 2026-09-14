@@ -1,8 +1,9 @@
 # PROMPTS_SESIONES — Escritorio Vendedores Lab.IA
 
-> Prompts listos para copiar y pegar, uno por sesión.
-> **Fase 0 (S1) es secuencial y bloqueante.** Las sesiones 2 a 6 arrancan recién cuando S1 termina.
-> ⛔ Ninguna sesión implementa la especificación anterior: las vistas `dia`, `cartera`, `portafolio`, `seguimiento` y la app `apps/admin` **ya no existen**.
+> **Versión 3.0.** Prompts listos para copiar y pegar, uno por sesión.
+> **Las seis arrancan al mismo tiempo, desde el mismo commit base, cada una en su rama.**
+> ⛔ Ninguna espera a otra. Todo lo que hace falta está congelado en la base (`PARALLEL_SESSIONS.md` §1).
+> ⛔ Ninguna sesión implementa una especificación anterior: las vistas `dia`, `cartera`, `portafolio`, `seguimiento` y la app `apps/admin` **no existen**.
 
 ---
 
@@ -42,6 +43,12 @@ REGLAS QUE NO SE NEGOCIAN, en ninguna sesión:
    síntoma. Toda causa se corrige en su origen. Validar en 360, 390, 768,
    1024 y 1440 px, sin scroll horizontal de página.
 
+6b. IDENTIDAD: los OCHO COLORES OFICIALES ya están en
+   packages/ui/src/marca-labia.css. No se cambian ni se "ajustan".
+   ⛔ #0A55D9 es color de RELLENO: no alcanza AA para texto (3.18 sobre el
+   fondo, 2.85 sobre el navy). Para texto o borde de acento: #098CFF o #00D9FF.
+   Los logos oficiales están inventariados en docs/INVENTARIO_ACTIVOS.md.
+
 7. CUATRO ESTADOS OBLIGATORIOS en toda vista y todo bloque asíncrono:
    cargando (esqueletos) · vacío (con la acción que lo resuelve) ·
    error (lenguaje claro + reintento) · con datos.
@@ -52,24 +59,31 @@ REGLAS QUE NO SE NEGOCIAN, en ninguna sesión:
    (en TU sección) y seguís con lo que no depende de eso. No lo editás.
    Ni "rapidito", ni "sólo una línea".
 
-ANTES DE ENTREGAR:
-   git diff --name-only origin/main...HEAD
+TU RAMA
+   Salís del commit base, trabajás en tu propia rama, y abrís UN PR contra
+   `integracion/escritorio`. ⛔ Nunca contra main. ⛔ Nunca mergeás la rama
+   de otra sesión. ⛔ No esperás a nadie: todo lo que necesitás está en la base.
+
+ANTES DE ABRIR EL PR:
+   git diff --name-only <commit-base>...HEAD
    Toda ruta tiene que estar en tu ámbito. Una sola ruta fuera = rechazo,
    aunque el cambio sea correcto: rompe la garantía para las otras cinco.
 
-   npm run verificar    (copy + portafolio + tipos)
+   npm run verificar    (copy + portafolio + identidad + rutas + tipos)
 ```
 
 ---
 
 # S1 · Núcleo y autenticación
 
-> **FASE 0 — SECUENCIAL Y BLOQUEANTE.** Las otras cinco sesiones esperan.
+> Rama: `sesion/1-nucleo-autenticacion`
 
 ```
 Sos la Sesión 1: núcleo y autenticación del Escritorio Vendedores Lab.IA.
 
-Tu entrega habilita a las otras cinco. Nadie arranca hasta que termines.
+Los contratos, los tipos y el registro de rutas YA ESTÁN congelados en el
+commit base. Tu trabajo es la autenticación, la guardia de rol y la capa HTTP
+—no volver a definir contratos. Las otras cinco sesiones ya están trabajando.
 
 TU ÁMBITO EXCLUSIVO
   package.json · tsconfig.base.json · .gitignore · .editorconfig · .nvmrc · README.md
@@ -99,9 +113,10 @@ QUÉ CONSTRUÍS
    El mock tiene que respetar la misma guardia: si el mock es permisivo,
    la guardia no se prueba nunca.
 
-3. RUTEO por hash, con rutas.ts ya completo desde el arranque:
-   inicio · planificar · clientes · propuestas · dinero · administracion
-   Cada ruta declara sus roles. NADIE vuelve a editar ese archivo.
+3. RUTEO por hash, con rutas.ts ya completo desde la base. Las SIETE rutas:
+   ingreso · inicio · planificar · clientes · agenda · propuestas · dinero ·
+   administracion
+   Cada ruta declara sus roles. ⛔ NADIE vuelve a editar ese archivo.
 
 4. TIPOS COMPARTIDOS congelados (packages/compartido/).
    Sin `any`. Modo estricto. Ese contrato es la barrera entre seis sesiones:
@@ -119,15 +134,18 @@ QUÉ CONSTRUÍS
    Moneda SIEMPRE explícita: "Gs." para PYG, "USD" para dólares.
    Nunca un número pelado. Importes con tabular-nums.
 
-8. ANTES DE CERRAR FASE 0, dejá CREADOS Y VACÍOS los archivos que después son
-   de otros (packages/ui/**, las seis carpetas de vista, los datos-*.ts del
-   mock, content/taxonomia/**). Es lo que hace que nadie tenga que editarlos.
+8. LA CAPA HTTP: traducir HTTP ⇄ Resultado<T> según API_CONTRACTS §1,
+   incluida la investigación automática (que corre en el servidor) y la agenda.
+
+9. ⛔ VERIFICÁ QUE NINGUNA CLAVE DE PROVEEDOR PUEDA LLEGAR AL CLIENTE.
+   El script scripts/verificar-portafolio.mjs ya lo chequea; mantenelo.
 
 PROHIBIDO
   Declarar un rol que no sea vendedor o administrador.
   Exponer en api.ts: crearProducto, eliminarProducto, editarParticipacion,
   reabrirPeriodo, autoaprobarCotizacion, editarCopy, editarPrecioLista,
-  o cualquier escritura sobre los registros de acceso.
+  borrarEntrada (de agenda), o cualquier escritura sobre los registros de acceso.
+  Poner una clave de proveedor externo en código del cliente.
   Construir lógica de vista.
 ```
 
@@ -135,12 +153,14 @@ PROHIBIDO
 
 # S2 · Interfaz e inicio
 
+> Rama: `sesion/2-interfaz-inicio`
+
 ```
 Sos la Sesión 2: sistema visual Lab.IA y vista Inicio.
 
-Sos la dueña del sistema visual: todo lo que las otras cuatro sesiones
-consumen en materia de estilo sale de vos. Publicá tokens y estados en los
-primeros días — las demás te están esperando.
+Los OCHO COLORES OFICIALES y Inter YA ESTÁN en la base, así que nadie te
+espera. Tu trabajo es construir los componentes, los cuatro estados y la
+vista Inicio sobre esa identidad ya definida.
 
 TU ÁMBITO EXCLUSIVO
   packages/ui/**
@@ -152,16 +172,35 @@ TU ÁMBITO EXCLUSIVO
 
 QUÉ CONSTRUÍS
 
-1. IDENTIDAD LAB.IA — dark/navy, azul y cyan, Inter.
-   El fondo navy documentado es #030A1C (de rgba(3,10,28,.94), header Lab.IA).
-   Los hex de azul y cyan NO los inventás: van en marca-labia.css, copiados
-   del design-system oficial de Lab.IA. Hasta que lleguen, la interfaz se ve
-   monocromática navy y --marca-pendiente vale 1. Eso es deliberado: un
-   respaldo que pareciera la marca real sería peor que uno que no lo parece.
+1. IDENTIDAD LAB.IA — los ocho colores oficiales, ya cargados:
+
+     #020711  fondo          #06162F  navy
+     #0A55D9  azul           #098CFF  azul claro
+     #00D9FF  cyan           #12D9FF  cyan claro
+     #F2F7FF  texto          #AEB8C8  texto secundario
+
+     Tipografía: Inter.
+
+   ⛔ LA REGLA QUE MÁS SE OLVIDA: #0A55D9 es color de RELLENO, no de texto.
+      Contraste 3.18 sobre el fondo y 2.85 sobre el navy: no llega ni a 3:1.
+      Sirve para superficies elevadas, bloques de color y barras.
+      Para texto o borde de acento: #098CFF (5.96) o #00D9FF (11.88).
+      Es el error más fácil de cometer, porque es el azul que más "se siente
+      Lab.IA" y da ganas de usarlo para todo.
+
+   Todo token derivado es uno de los ocho, o uno de los ocho con transparencia.
+   ⛔ No se inventa ningún hex nuevo.
+
+   LOS LOGOS están inventariados en docs/INVENTARIO_ACTIVOS.md con su enlace
+   de Drive, su versión elegida y su estado. Bajalos, OPTIMIZALOS (son PNG de
+   1 a 2 MB) y ponelos en apps/escritorio/public/.
+   ⛔ No redibujar, no recolorear, no deformar. object-fit: contain.
+   ⛔ El logo del producto EXCLUIDO está en la misma carpeta de Drive que los
+      13. No lo incorpores.
+   ⛔ Falta el logo de Park.IA: no lo generes. Está pedido.
 
    PROHIBIDO: serif (ni Newsreader, ni Georgia), la paleta dorada de la
-   referencia, cualquier marca de terceros, neón excesivo, y deducir hex de
-   marca de una captura o una landing. Deducir no es documentar.
+   referencia, cualquier marca de terceros, neón excesivo.
 
 2. LA CÁSCARA
    ≥ 900 px: barra lateral de 248 px con las vistas del rol (5 vendedor, 6 admin).
@@ -181,7 +220,11 @@ QUÉ CONSTRUÍS
    a) CUATRO CIFRAS, por moneda:
       dinero vendido · dinero cobrado · comisión acumulada · comisión pendiente
 
-   b) PRÓXIMOS SEGUIMIENTOS: con quién, cuándo, qué quedó pendiente.
+   b) PRÓXIMOS SEGUIMIENTOS: LISTA CORTA, tres a cinco entradas: con quién,
+      cuándo, qué quedó pendiente. Al pie, el ACCESO A AGENDA con dos
+      contadores: pendientes de hoy y atrasados.
+      ⛔ Inicio NO es la agenda. El calendario, el cronograma y el detalle
+         viven en #/agenda, que es de S4.
 
    c) DOS ACCIONES PROTAGONISTAS — el elemento visual DOMINANTE:
 
@@ -205,7 +248,12 @@ QUÉ CONSTRUÍS
    cierre, mezcla de productos. Cuatro cifras, una lista y dos acciones.
    (El contrato no expone métodos de analítica: no hay con qué dibujarlos.)
 
-5. RESPONSIVE — sos la responsable de los cinco anchos.
+5. LA BARRA INFERIOR de celular: 5 destinos + "Más".
+   Fijos los cuatro de uso diario: Inicio · Planificar · Clientes · Agenda.
+   "Más" agrupa Propuestas, Dinero y, si el rol lo permite, Administración.
+   Seis o siete íconos a 360 px dejan áreas táctiles bajo el mínimo de 44 px.
+
+6. RESPONSIVE — sos la responsable de los cinco anchos.
    PROHIBIDO overflow-x: hidden para tapar un desborde. Se corrige la causa:
    min-width de más · hijo de flex/grid sin min-width:0 · tabla sin contenedor ·
    palabra larga sin overflow-wrap · padding sumado a 100% · grilla que no baja ·
@@ -218,8 +266,9 @@ NO EDITÁS: rutas.ts (ya trae las seis rutas), api.ts, los tipos compartidos.
 
 ---
 
-# S3 · Motor de planificación
+# S3 · Motor de planificación e investigación automática
 
+> Rama: `sesion/3-motor-investigacion`
 > **La sesión más importante.** Es lo que diferencia al sistema de un CRM.
 
 ```
@@ -228,14 +277,75 @@ Sos la Sesión 3: el motor comercial del Escritorio Vendedores Lab.IA.
 TU ÁMBITO EXCLUSIVO
   apps/escritorio/src/vistas/planificar/**
   packages/mock/src/datos-motor.ts
+  packages/mock/src/datos-investigacion.ts
   content/taxonomia/**          (sos la única dueña de la taxonomía)
 
-Publicá content/taxonomia/ y el mock de catálogo temprano: S4 y S5 te esperan.
+Nadie te espera: la taxonomía semilla y el catálogo de 13 ya están en la base.
 
 EL PROBLEMA QUE RESOLVÉS
 
-Un vendedor llega y dice: "mi amigo tiene una repuestera". Tiene que salir con
-un plan. No con una búsqueda vacía.
+Un vendedor escribe un RUC, o "mi amigo tiene una repuestera", o simplemente
+"motel". Tiene que salir con un plan completo. No con un formulario vacío.
+
+════════════════════════════════════════════════════════════════════════
+PARTE 1 — INVESTIGACIÓN AUTOMÁTICA
+════════════════════════════════════════════════════════════════════════
+
+EL PRINCIPIO: el vendedor NO investiga ni completa el perfil a mano.
+Escribe el dato mínimo; vos investigás; él confirma, corrige o agrega.
+
+LO QUE RECIBÍS
+  Empresa:      RUC, razón social o nombre comercial — basta UNO
+  Profesional:  nombre + profesión o especialidad
+                matrícula y ciudad SÓLO SI LAS TIENE A MANO (⛔ no se le piden)
+  Rubro:        texto libre (se conserva la entrada por rubro tal cual estaba)
+
+LO QUE DEVOLVÉS, dato por dato
+  actividad/rubro · ubicación · canales digitales · sitio web y redes ·
+  productos o servicios observables · señales operativas · posibles decisores ·
+  tamaño aproximado (SÓLO si hay evidencia) · dolores probables ·
+  productos Lab.IA recomendados · fuentes consultadas · fecha de investigación ·
+  nivel de confianza de cada dato
+
+LAS TRES CLASIFICACIONES — obligatorias y visibles en pantalla
+  verificado     → aparece en una fuente pública identificable
+                   exige fuente y nivel de confianza
+  inferido       → lo dedujiste vos
+                   exige el razonamiento escrito y nivel de confianza
+                   ⛔ se muestra SIEMPRE como hipótesis
+  no encontrado  → no se halló
+                   ⛔ valor en blanco. No se rellena, no se estima
+
+⛔ TAMAÑO APROXIMADO: sólo con evidencia. Sin evidencia, "no encontrado".
+
+DÓNDE CORRE
+  ⛔ La investigación y TODO uso de modelo de lenguaje ocurren en el SERVIDOR,
+     detrás de proveedores intercambiables.
+  ⛔ NINGUNA clave de API, ningún token, ninguna llamada a un proveedor externo
+     puede vivir en el navegador. El cliente recibe el resultado ya resuelto.
+  Los proveedores se declaran como CONTRATO, no como elección: el proveedor
+  definitivo se decide después. Hay tres familias: búsqueda, registros
+  públicos y modelo de lenguaje.
+
+CUANDO FALLA — la parte que más importa
+  ⛔ NUNCA le entregues al vendedor un formulario largo vacío.
+  1. Caés a la TAXONOMÍA como respaldo: con la actividad sola ya podés armar
+     un perfil típico y un ranking.
+  2. Marcás usoRespaldoTaxonomia y lo decís en pantalla.
+  3. Pedís ÚNICAMENTE los datos mínimos faltantes: uno, dos, a lo sumo tres
+     campos, cada uno con su pregunta y con POR QUÉ HACE FALTA.
+  4. Entregás el plan igual, con menor confianza declarada.
+
+  Un sistema que falla y devuelve un formulario en blanco es peor que no tener
+  sistema: le hizo perder tiempo al vendedor y no le resolvió nada.
+
+QUÉ HACE EL VENDEDOR
+  Sólo tres cosas: confirmar · corregir · agregar.
+  Cada corrección RECALCULA el plan y MUESTRA QUÉ CAMBIÓ.
+
+════════════════════════════════════════════════════════════════════════
+PARTE 2 — EL MOTOR
+════════════════════════════════════════════════════════════════════════
 
 LA TAXONOMÍA ES EDITABLE Y AMPLIABLE — TRES CAPAS
 
@@ -258,16 +368,6 @@ LA TAXONOMÍA ES EDITABLE Y AMPLIABLE — TRES CAPAS
 
   Toda relación guarda su MOTIVO. Sin motivo no se guarda: es lo que permite
   responder "¿por qué éste primero?".
-
-DOS ENTRADAS
-
-  A) Empresa o profesional conocido
-     nombre + qué hace (texto libre, en las palabras del vendedor)
-     + ciudad, tamaño, relación, lo que ya sabe  ← todo esto OPCIONAL
-     Sólo nombre y "qué hace" son obligatorios.
-
-  B) Rubro escrito libremente
-     "motel", "gomería", "vivero", "kiosco de barrio", "criadero de pollos"
 
   PROHIBIDO responder "rubro no encontrado". Un término que no existe SE CREA
   como pendiente_de_revision, queda usable de inmediato y el administrador lo
@@ -304,21 +404,38 @@ PROHIBIDO
   Rechazar un rubro escrito por el vendedor.
   Presentar una inferencia como hecho verificado.
 
-PRUEBA MÍNIMA antes de entregar: que el motor devuelva un plan completo y
-coherente para "motel", "gomería" y "criadero de pollos" — tres rubros que el
-copy aprobado NO nombra.
+PRUEBAS MÍNIMAS antes de abrir el PR
+
+  1. El motor devuelve un plan completo y coherente para "motel", "gomería" y
+     "criadero de pollos" — tres rubros que el copy aprobado NO nombra.
+  2. Una investigación con las fuentes caídas devuelve un plan usable y pide
+     UNO O DOS campos, no un formulario.
+  3. Un dato inferido se ve claramente distinto de uno verificado, EN TEXTO,
+     no sólo por color.
+  4. Buscar "apiKey", "secret" o "token:" en tu diff no devuelve nada.
+
+TU MOCK (datos-investigacion.ts) debe cubrir CINCO escenarios:
+  completa · parcial · fuentes caídas · sin resultados · error
+  El tercero es el más importante: es el que prueba que no le tirás al
+  vendedor un formulario vacío cuando algo falla.
 ```
 
 ---
 
-# S4 · Clientes, voz y seguimiento
+# S4 · Clientes, voz, seguimiento y agenda
+
+> Rama: `sesion/4-clientes-agenda`
 
 ```
-Sos la Sesión 4: clientes, voz y seguimiento.
+Sos la Sesión 4: clientes, voz, seguimiento y AGENDA OPERATIVA.
 
 TU ÁMBITO EXCLUSIVO
   apps/escritorio/src/vistas/clientes/**
+  apps/escritorio/src/vistas/agenda/**
   packages/mock/src/datos-clientes.ts
+  packages/mock/src/datos-agenda.ts
+
+Nadie te espera: la taxonomía semilla, los tipos y los tokens ya están en la base.
 
 QUÉ CONSTRUÍS
 
@@ -356,18 +473,65 @@ QUÉ CONSTRUÍS
    El audio tiene retención configurable. Borrarlo NO borra la transcripción
    ni el seguimiento.
 
+4. LA AGENDA OPERATIVA — ruta #/agenda, para vendedor y administrador
+
+   EL PRINCIPIO: LA AGENDA SE PUEBLA SOLA.
+   El vendedor ajusta fechas y completa acciones. ⛔ No reconstruye nada.
+
+   Una agenda que hay que cargar entera es una agenda que nadie carga.
+   Y una agenda vacía no avisa de nada.
+
+   SE ALIMENTA AUTOMÁTICAMENTE DE:
+     planes (sus hitos) · objetivos aceptados · seguimientos (pasos
+     confirmados) · presentaciones (recordatorio tras el envío) ·
+     cotizaciones (vigencia, espera de revisión, espera del cliente) ·
+     vencimientos · APERTURAS DE ENLACE — cuando el cliente abre lo que se le
+     mandó, ése es el momento de llamar
+
+   CINCO VISTAS INTERNAS:
+     Hoy         visitas · llamadas · próximos pasos · vencimientos · atrasados
+     Semana      los siete días con su carga
+     Mes         calendario mensual con la densidad de cada día
+     Cronograma  Gantt comercial: la vida de cada cliente y cada plan
+     Atrasados   lo que se pasó de fecha y sigue pendiente, con días de atraso
+
+   LO QUE PUEDE HACER EL VENDEDOR:
+     · ajustar una fecha  → ⛔ EXIGE MOTIVO
+     · completar una acción
+     · descartar una entrada → con motivo; no se borra, queda descartada
+     · crear a mano → ⛔ SÓLO visitas, llamadas y próximos pasos. Es la
+       excepción. Si la mayoría de las entradas son manuales, la agenda no
+       está funcionando.
+
+   ⛔ Un atraso NO se oculta ni se reprograma solo. Se ve hasta que alguien lo
+      resuelve o lo descarta con motivo.
+   ⛔ NO existe borrarEntrada.
+
+   RESPONSIVE: el cronograma es el elemento más ancho del sistema y el que más
+   tienta a tapar con overflow-x: hidden. Va en su propio contenedor con
+   overflow-x: auto. El calendario a 360 px muestra densidad, no contenido.
+
+   ACCESIBILIDAD: el cronograma necesita ALTERNATIVA EN LISTA. Un Gantt no se
+   lee con lector de pantalla.
+
 PROHIBIDO
   Declarar actividades propias: se consumen de la taxonomía de S3.
   Si falta una, abrís un pedido en docs/PEDIDOS.md y seguís.
   Grabar sin avisar. Dejar un botón de dictado muerto. Persistir sin confirmar.
+  Hacer que el vendedor cargue la agenda a mano.
+  Ocultar o reprogramar un atraso automáticamente.
 ```
 
 ---
 
 # S5 · Presentaciones y cotizaciones
 
+> Rama: `sesion/5-propuestas-cotizaciones`
+
 ```
-Sos la Sesión 5: presentaciones y cotizaciones.
+Sos la Sesión 5: presentaciones y cotizaciones estructuradas.
+
+Nadie te espera: el catálogo de 13, los tipos y los tokens ya están en la base.
 
 TU ÁMBITO EXCLUSIVO
   apps/escritorio/src/vistas/propuestas/**
@@ -385,16 +549,53 @@ A) PRESENTACIÓN PARA DEJAR AL CLIENTE
    - NO REQUIERE APROBACIÓN;
    - salida: PDF y enlace compartible.
 
-B) COTIZACIÓN
+B) COTIZACIÓN ESTRUCTURADA
    - se prepara DESPUÉS, cuando el cliente ya vio la presentación;
-   - el vendedor PROPONE el precio personalizado:
-       setup · mensualidad · descuento de implementación ·
-       débito automático (sí/no) · compromiso de doce meses (sí/no) ·
-       pago anual anticipado (sí/no) · alcance · vigencia · cronograma ·
-       condiciones;
-   - al lado se muestra el precio de lista documentado y la desviación, en
+   - al lado del precio propuesto se muestra el de lista y la desviación, en
      guaraníes y en porcentaje. Es información, no un bloqueo;
    - totales POR MONEDA. Nunca se suma PYG con USD.
+
+   LA ESTRUCTURA NO LA INVENTAMOS: sale de la Carta Oferta real de Agendar.IA
+   para la Dra. Claudia Leguizamón (docs/INVENTARIO_ACTIVOS.md §4, y
+   COMMERCIAL_RULES §6 con el desglose completo). Leé esa sección antes de
+   modelar la pantalla.
+
+   PRECIO PROPUESTO
+     · setup + descuento de setup (porcentaje O importe, nunca los dos)
+     · mensualidad
+     · límites incluidos por ítem: "+400 consultas/mes", usuarios, canales
+
+   HITOS DE PAGO DEL SETUP — cada uno por porcentaje O por importe
+     · al aceptar                "50 % al aceptar"
+     · al entregar / al conectar "50 % con versión conectada"
+     · fecha fija                "27 JUL · Gs. 1.425.000 · Reserva"
+     ⛔ Si todos son porcentuales, DEBEN SUMAR 100.
+     ⛔ Si son importes, DEBEN SUMAR el setup con su descuento aplicado.
+     ⛔ Una cotización cuyos hitos no cierran NO se envía a revisión.
+
+   PERMANENCIA
+     · meses incluidos            "primer mes operativo incluido" → 1
+     · congelamiento del precio   "congelado 12 meses" → 12
+
+   BENEFICIOS Y LO QUE LOS HABILITA
+     · débito automático (sí/no)
+     · compromiso de doce meses (sí/no)
+     · pago anual anticipado (sí/no)
+     ⛔ CADA beneficio declara la CONDICIÓN que lo habilita y QUÉ PASA SI EL
+        CLIENTE DEJA DE CUMPLIRLA. Un descuento sin condición escrita es un
+        descuento que después nadie puede reclamar: si el cliente da de baja
+        al cuarto mes y el descuento estaba atado a doce, hay que poder
+        mostrarlo en el documento que firmó.
+     ⛔ Un beneficio sin condición habilitante no se aprueba.
+
+   ALCANCE Y PLAN DE TRABAJO
+     · alcance: qué incluye
+     · EXCLUSIONES: qué NO incluye ("comisiones de pasarela y consumos
+       extraordinarios se cobran aparte")
+     · vigencia de la oferta
+     · cronograma por etapas, con fecha estimada, entregable e IMPORTE
+       ASOCIADO si esa etapa dispara un cobro
+     · condiciones comerciales y tratamiento del IVA
 
 EL CIRCUITO, SIN DESVÍOS
 
@@ -430,14 +631,21 @@ TAMBIÉN CONSTRUÍS
 PROHIBIDO
   Implementar la aprobación (es de S6). Implementar reglas de participación
   (son de S6). Poner precio definitivo en una presentación. Sumar monedas.
+  Enviar a revisión una cotización cuyos hitos de pago no suman.
+  Otorgar un beneficio sin escribir la condición que lo habilita.
+  Tratar el precio de una Carta Oferta anterior como precio de lista.
 ```
 
 ---
 
 # S6 · Finanzas y administración
 
+> Rama: `sesion/6-finanzas-administracion`
+
 ```
 Sos la Sesión 6: finanzas del vendedor y vista de Administración.
+
+Nadie te espera: los tipos, los tokens y el catálogo ya están en la base.
 
 TU ÁMBITO EXCLUSIVO
   apps/escritorio/src/vistas/dinero/**
@@ -489,6 +697,10 @@ VISTA ADMINISTRACIÓN — UNA sola vista con SECCIONES INTERNAS
      participación, presupuestos, taxonomía pendiente, vendedores, vigencias
    · Sugerencias de nuevos productos — backlog y resolución
 
+   Y además, en Configuración: ESTADO DE LOS PROVEEDORES de investigación y
+   de modelo de lenguaje — cuáles responden, y si el sistema está en modo
+   respaldo por taxonomía. ⛔ SÓLO LECTURA: las claves viven en el servidor.
+
    PROHIBIDO EN ADMINISTRACIÓN: analítica genérica de conversión, mezcla de
    productos, embudos, tasas de cierre y gráficos decorativos. Lo que no sirve
    para decidir hoy, no se muestra.
@@ -500,6 +712,11 @@ APROBACIÓN DE COTIZACIONES — el cuello de botella del negocio
 
    Tres acciones, LAS TRES CON COMENTARIO OBLIGATORIO:
      aprobar · corregir (vuelve a borrador, versión +1) · rechazar
+
+   AL REVISAR se muestra, además del precio: la SUMA DE LOS HITOS DE PAGO y si
+   cierra · los meses incluidos y el congelamiento · las tres condiciones · y
+   QUÉ HABILITA cada beneficio. Una cotización cuyos hitos no suman, o con un
+   beneficio sin condición escrita, NO SE APRUEBA.
 
    Nadie aprueba su propia cotización.
    NO HAY AUTOAPROBACIÓN por tiempo, monto ni antigüedad.
@@ -520,26 +737,32 @@ PROHIBIDO
 
 ---
 
-## Orden de arranque
+## Arranque
 
 ```
-Fase 0   S1 ────────────────────────────────►  secuencial, bloqueante
-                                             │
-Fase 1                                       ├─► S2  publica tokens y estados TEMPRANO
-                                             ├─► S3  publica taxonomía y catálogo TEMPRANO
-                                             ├─► S4
-                                             ├─► S5
-                                             ├─► S6
-                                             └─► S1  capa HTTP y pulido
-                                             │
-Fase 2   S1 ◄────────────────────────────────┘  integración + QA §7
+                 COMMIT BASE  (contratos · tipos · rutas · catálogo ·
+                      │        copy · identidad · activos · investigación)
+      ┌───────┬───────┼───────┬───────┬───────┐
+      ▼       ▼       ▼       ▼       ▼       ▼
+     S1      S2      S3      S4      S5      S6      ← las seis, al mismo tiempo
+      │       │       │       │       │       │
+      └───────┴───────┴───┬───┴───────┴───────┘
+                          ▼
+              integracion/escritorio               ← un PR por sesión
+                          │
+                          ▼
+                     QA §7 completo
 ```
 
-| Dependencia blanda | Quién espera a quién |
+⛔ **Ninguna sesión espera a otra.** Lo que antes eran dependencias —tokens,
+taxonomía, catálogo, forma de la investigación— **está congelado en la base**.
+
+Cada sesión trabaja contra **su propio mock**. La integración cablea los datos
+reales entre vistas (Inicio consume cifras de S6 y agenda de S4).
+
+| Regla de rama | |
 |---|---|
-| Tokens y estados | S4, S5 y S6 esperan a **S2** |
-| Taxonomía | S4 espera a **S3** |
-| Catálogo y precios | S5 espera a **S3** |
-| Cifras y seguimientos de Inicio | S2 cierra con datos de **S6** y **S4** |
-
-Ninguna es bloqueante: los contratos están congelados desde Fase 0, así que cada sesión trabaja contra el tipo aunque el dato todavía no exista.
+| Sale de | el commit base |
+| Trabaja en | `sesion/<n>-<nombre>` |
+| Abre PR contra | `integracion/escritorio` |
+| ⛔ Nunca | contra `main`, ni mergeando la rama de otra sesión |

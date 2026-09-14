@@ -4,52 +4,56 @@
  * ⛔ DUEÑO: SESIÓN 2. Ninguna otra sesión edita este archivo.
  * ⛔ Ninguna vista escribe un color, una fuente ni una curva literal. Sólo tokens.
  *
- * IDENTIDAD: Lab.IA — dark/navy, azul y cyan, Inter.
+ * IDENTIDAD LAB.IA — ocho colores oficiales + Inter. Ver marca-labia.css.
  * ⛔ Se descarta la identidad dorada con serif de la referencia operativa.
  *    De la referencia se reutiliza la ARQUITECTURA, no la identidad visual.
  *
- * Los hex de azul y cyan viven en marca-labia.css. Mientras falten, el respaldo
- * mantiene la interfaz monocromática navy: legible, y visiblemente sin marca.
+ * Todo token de color deriva de los ocho oficiales: o es uno de ellos, o es
+ * uno de ellos con transparencia. ⛔ No se inventa ningún hex nuevo.
  *
- * Ver docs/DESIGN_SYSTEM.md §2.
+ * Ver docs/DESIGN_SYSTEM.md §1 y §2.
  */
 
 @import url('./marca-labia.css');
 
 :root {
-  /* --- Fondos: navy --- */
-  --bg:           #030A1C;   /* documentado: rgba(3, 10, 28, .94) */
-  --bg-2:         #071328;
-  --superficie:   #0B1A33;
-  --superficie-2: #112445;
-  --glass:        rgba(11, 26, 51, .72);
+  /* --- Fondos --- */
+  --bg:           var(--labia-negro-azulado);              /* #020711 */
+  --bg-2:         var(--labia-navy);                       /* #06162F */
+  --superficie:   rgba(6, 22, 47, .72);                    /* navy translúcido */
+  --superficie-2: rgba(10, 85, 217, .10);                  /* azul al 10 %: tarjeta elevada */
+  --glass:        rgba(6, 22, 47, .56);
 
   /* --- Líneas --- */
-  --linea:      rgba(226, 235, 245, .12);
-  --linea-2:    rgba(226, 235, 245, .22);
-  --linea-cian: var(--labia-cian-linea, rgba(126, 200, 227, .28));
+  --linea:        rgba(174, 184, 200, .16);                /* texto-2 al 16 % */
+  --linea-2:      rgba(174, 184, 200, .28);
+  --linea-acento: rgba(0, 217, 255, .32);                  /* cian al 32 % */
 
-  /* --- Texto: jerarquía descendente --- */
-  --texto:   #EAF2FB;
-  --texto-2: #B8C7DA;
-  --texto-3: #8497AF;
-  --mudo:    #6B7E96;
+  /* --- Texto --- */
+  --texto:   var(--labia-texto);                           /* #F2F7FF */
+  --texto-2: var(--labia-texto-2);                         /* #AEB8C8 */
+  --texto-3: rgba(174, 184, 200, .72);
+  --mudo:    rgba(174, 184, 200, .52);
 
-  /* --- Acentos: de marca-labia.css, con respaldo navy --- */
-  --azul:          var(--labia-azul,         #16305C);
-  --azul-claro:    var(--labia-azul-claro,   #1D4374);
-  --cian:          var(--labia-cian,         #1E4C74);
-  --cian-claro:    var(--labia-cian-claro,   #2A6B9E);
-  --acento-suave:  var(--labia-acento-suave, rgba(30, 76, 116, .18));
+  /* --- Acentos --- */
+  /* ⛔ --azul es RELLENO. Nunca texto ni borde fino: 3.18 contra el fondo. */
+  --azul:         var(--labia-azul);                       /* #0A55D9 */
+  --azul-suave:   rgba(10, 85, 217, .18);
+  /* Para texto y bordes de acento, éstos: */
+  --azul-texto:   var(--labia-azul-claro);                 /* #098CFF — 5.96 */
+  --cian:         var(--labia-cian);                       /* #00D9FF — 11.88 */
+  --cian-claro:   var(--labia-cian-claro);                 /* #12D9FF */
+  --cian-suave:   rgba(0, 217, 255, .14);
 
   /* --- Estado --- */
-  --ok:            #6FCF97;
-  --aviso:         #F2C94C;
-  --peligro:       #F0857A;
-  --peligro-suave: rgba(240, 133, 122, .12);
+  /* Sin color oficial propio: se apoyan en los de marca y en los mínimos
+     imprescindibles para peligro. ⛔ No se agregan sin autorización. */
+  --ok:            var(--labia-cian);
+  --peligro:       #FF6B6B;
+  --peligro-suave: rgba(255, 107, 107, .14);
 
   /* --- Tipografía: Inter. ⛔ Sin serif. --- */
-  --fuente: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fuente: var(--labia-fuente);
   --fuente-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* --- Estructura --- */

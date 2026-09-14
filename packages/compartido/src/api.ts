@@ -26,6 +26,16 @@ import type {
 } from './motor';
 
 import type {
+  CorreccionDato, EntradaObjetivo, EstadoProveedores,
+  InvestigacionCorregida, InvestigacionObjetivo,
+} from './investigacion';
+
+import type {
+  AgendaHoy, AgendaMes, AgendaSemana, AjusteEntrada, CronogramaComercial,
+  EntradaAgenda, FiltroAgenda, NuevaEntradaManual, ResumenAgenda,
+} from './agenda';
+
+import type {
   Cliente, ClienteDetalle, Contacto, EventoLineaTiempo, FiltroClientes, NuevoCliente,
 } from './clientes';
 
@@ -89,7 +99,10 @@ export interface CapaSesion {
 export interface CapaInicio {
   /** Las cuatro cifras. */
   resumenInicio(): R<ResumenInicio>;
+  /** ⛔ Lista CORTA. El detalle vive en #/agenda. */
   proximosSeguimientos(limite?: number): R<ReadonlyArray<ProximoSeguimiento>>;
+  /** Contador para el acceso a Agenda. ⛔ No es la agenda: es el acceso. */
+  resumenAgenda(): R<ResumenAgenda>;
 }
 
 // ===========================================================================
@@ -97,6 +110,33 @@ export interface CapaInicio {
 // ===========================================================================
 
 export interface CapaMotor {
+  // --- Investigación automática ---
+  /**
+   * Investiga un objetivo a partir del dato mínimo: un RUC, una razón social,
+   * un nombre comercial; o nombre + profesión para un profesional.
+   *
+   * ⛔ El vendedor NO investiga ni completa el perfil a mano: sólo confirma,
+   *    corrige o agrega sobre lo que vuelve de acá.
+   * ⛔ Toda la investigación y todo uso de modelo de lenguaje ocurren en el
+   *    SERVIDOR, detrás de proveedores intercambiables. Ninguna clave ni
+   *    llamada sensible vive en el navegador.
+   * ⛔ Si las fuentes externas fallan, cae a la taxonomía, marca
+   *    `usoRespaldoTaxonomia` y devuelve `datosMinimosFaltantes` — sólo los
+   *    campos imprescindibles, nunca un formulario largo vacío.
+   * ⛔ No persiste: el vendedor confirma primero.
+   */
+  investigarObjetivo(entrada: EntradaObjetivo): R<InvestigacionObjetivo>;
+  /** Estado de una investigación en curso (puede tardar). */
+  estadoInvestigacion(id: Id): R<InvestigacionObjetivo>;
+  /** El vendedor confirma, corrige o agrega; el sistema recalcula y dice qué cambió. */
+  corregirInvestigacion(
+    investigacion: InvestigacionObjetivo,
+    correcciones: ReadonlyArray<CorreccionDato>,
+  ): R<InvestigacionCorregida>;
+  /** Convierte una investigación confirmada en un plan. */
+  planDesdeInvestigacion(investigacion: InvestigacionObjetivo): R<Plan>;
+
+  // --- Taxonomía ---
   buscarActividad(texto: string): R<ReadonlyArray<Actividad>>;
   /**
    * ⛔ NUNCA devuelve `no_encontrado`: si el término no existe, lo crea como
@@ -159,6 +199,35 @@ export interface CapaClientes {
   /** Borra el audio. ⛔ NO borra la transcripción ni el seguimiento. */
   borrarAudio(audioId: Id, motivo: string): R<void>;
   actualizarPaso(pasoId: Id, estado: EstadoPaso): R<PasoSugerido>;
+}
+
+// ===========================================================================
+// S4 · Agenda operativa
+// ===========================================================================
+
+/**
+ * ⛔ La agenda SE POBLA SOLA desde planes, objetivos aceptados, seguimientos,
+ *    presentaciones, cotizaciones, vencimientos y aperturas de enlace.
+ *    El vendedor ajusta fechas y completa acciones; no reconstruye nada.
+ *
+ * Por eso la única escritura de creación es `crearEntradaManual`, y es la
+ * excepción: todo lo demás llega derivado.
+ */
+export interface CapaAgenda {
+  agendaHoy(fecha?: ISODate): R<AgendaHoy>;
+  agendaSemana(desde?: ISODate): R<AgendaSemana>;
+  agendaMes(anio: number, mes: number): R<AgendaMes>;
+  cronogramaComercial(desde: ISODate, hasta: ISODate): R<CronogramaComercial>;
+  listarEntradas(filtro: FiltroAgenda, pagina?: OpcionesPagina): R<Pagina<EntradaAgenda>>;
+  /** Seguimientos atrasados: lo que se pasó de fecha y sigue pendiente. */
+  entradasAtrasadas(pagina?: OpcionesPagina): R<Pagina<EntradaAgenda>>;
+
+  /** ⛔ Excepción: casi todas las entradas llegan solas. */
+  crearEntradaManual(datos: NuevaEntradaManual, clave: ClaveIdempotencia): R<EntradaAgenda>;
+  /** ⛔ Mover una fecha exige motivo. */
+  ajustarEntrada(ajuste: AjusteEntrada): R<EntradaAgenda>;
+  completarEntrada(entradaId: Id, clave: ClaveIdempotencia): R<EntradaAgenda>;
+  descartarEntrada(entradaId: Id, motivo: string): R<EntradaAgenda>;
 }
 
 // ===========================================================================
@@ -293,6 +362,13 @@ export interface CapaAdministracion {
   obtenerParametros(): R<ParametrosSistema>;
   actualizarParametros(cambios: Partial<ParametrosSistema>, motivo: string): R<ParametrosSistema>;
 
+  /**
+   * Estado de los proveedores de investigación y de modelo de lenguaje.
+   * ⛔ Sólo lectura: la configuración de proveedores y sus claves viven en el
+   *    servidor. Acá se ve si responden y si el sistema está en modo respaldo.
+   */
+  estadoProveedores(): R<EstadoProveedores>;
+
   // Accesos y frecuencia de uso — ⛔ dos registros, nunca mezclados
   usoPorVendedor(periodo: PeriodoMensual): R<ReadonlyArray<UsoPorVendedor>>;
   listarRegistroAcceso(filtro: FiltroRegistroAcceso, pagina?: OpcionesPagina): R<Pagina<RegistroAcceso>>;
@@ -333,6 +409,7 @@ export interface CapaDatos
     CapaInicio,
     CapaMotor,
     CapaClientes,
+    CapaAgenda,
     CapaPropuestas,
     CapaDinero,
     CapaAdministracion {}

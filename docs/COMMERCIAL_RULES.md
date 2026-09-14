@@ -1,6 +1,6 @@
 # COMMERCIAL_RULES — Escritorio Vendedores Lab.IA
 
-> **Versión 2.0.** Fuente única para todo cálculo de dinero. Si otro documento contradice a éste en materia comercial, manda éste.
+> **Versión 3.0.** Fuente única para todo cálculo de dinero. Si otro documento contradice a éste en materia comercial, manda éste.
 > **Regla cero:** los **precios de lista** están transcriptos literalmente del copy aprobado. Los **precios de una cotización** los propone el vendedor y los aprueba el administrador. Nunca se estima un precio de lista.
 
 ---
@@ -72,6 +72,21 @@ Se muestran junto al precio y ⛔ **no se convierten en fórmula**:
 - **Agendar.IA:** *"El valor final depende de la cantidad de usuarios, servicios, canales, reservas mensuales e integraciones requeridas."*
 - **Smart Commerce:** tamaño de la tienda, cantidad de productos, forma de compra, funciones especiales, integraciones y Dashboard Gerencial requerido.
 - **Exeq.IA:** salas, sedes, recursos y herramientas a integrar.
+
+### 2.5 Discrepancia detectada entre el copy y una oferta real
+
+⚠️ **Para revisar antes de cargar el catálogo.**
+
+La **Carta Oferta de Agendar.IA** (`INVENTARIO_ACTIVOS.md` §4) declara precios de lista muy distintos a los del copy aprobado:
+
+| Concepto | Copy aprobado | Carta Oferta |
+|---|---|---|
+| Implementación | Gs. 3.000.000 | **Gs. 12.190.000** |
+| Mensualidad | Gs. 790.000 | **Gs. 1.627.000** |
+
+Son documentos de naturaleza distinta —lista de referencia contra oferta personalizada— y es legítimo que difieran. Pero la diferencia es de **cuatro veces**, y eso no es un descuento: es otra lista.
+
+⛔ **No se resuelve por cuenta propia.** El catálogo carga lo que dice el copy aprobado (§2.2), que es la fuente congelada. Administración confirma cuál es el precio de lista vigente antes de que el primer vendedor cotice Agendar.IA.
 
 ### 2.4 IVA
 
@@ -170,30 +185,100 @@ Definiciones exactas. Todas **por moneda**.
 
 ---
 
-## 6. Cotización: precio personalizado
+## 6. Cotización estructurada
 
 El vendedor **propone**; el administrador **aprueba o corrige**.
 
-### 6.1 Qué propone el vendedor
+La estructura de abajo está tomada de la **Carta Oferta real de Agendar.IA para la Dra. Claudia Leguizamón** (`INVENTARIO_ACTIVOS.md` §4). No se inventó un formato: se leyó el que Lab.IA ya usa y se convirtió en campos.
+
+### 6.1 Cómo está armada una Carta Oferta real
+
+| Bloque | Qué contiene en el documento original |
+|---|---|
+| **Encabezado** | Condición especial ("Cliente fundadora"), cliente, tipo de negocio, fecha y **vigencia** |
+| **Qué incluye** | Bloques de alcance con título y detalle |
+| **Condición y precio** | Precio de lista **tachado** contra precio ofertado, para setup y para mensualidad |
+| **Hitos de pago** | *"50 % al aceptar · 50 % con versión conectada"* |
+| **Permanencia** | *"Congelado 12 meses"* · *"Primer mes operativo incluido"* |
+| **Límites incluidos** | *"+400 consultas/mes"*, usuarios nombrados, hosting, soporte |
+| **Exclusiones** | *"Comisiones de la pasarela y consumos extraordinarios se cobran aparte"* |
+| **Próximos pasos** | Cronograma fechado, con el importe de reserva en la primera etapa |
+| **Aceptación** | Firma, aclaración y fecha |
+| **Nota legal** | *"Oferta preliminar sujeta a contrato SaaS"* |
+
+### 6.2 Los campos estructurados
+
+#### Precio propuesto
 
 | Campo | Detalle |
 |---|---|
 | **Setup** | Importe de implementación, con moneda. |
+| **Descuento de setup** | Porcentaje **o** importe. ⛔ Uno de los dos, nunca los dos. |
 | **Mensualidad** | Importe recurrente, con moneda. |
-| **Descuento de implementación** | Porcentaje o importe sobre el setup. |
-| **Débito automático** | Sí / No. |
-| **Compromiso de doce meses** | Sí / No. |
-| **Pago anual anticipado** | Sí / No. |
-| **Alcance** | Qué incluye y qué no. |
+| **Límites incluidos** | Por ítem: consultas por mes, usuarios, canales, lo que corresponda. |
+
+#### Hitos de pago del setup
+
+Cada hito se expresa por **porcentaje** o por **importe**, con su disparador:
+
+| Disparador | Ejemplo del documento real |
+|---|---|
+| `al_aceptar` | *"50 % al aceptar"* |
+| `al_entregar` | — |
+| `al_conectar` | *"50 % con versión conectada"* |
+| `al_iniciar_piloto` | — |
+| `fecha_fija` | *"27 JUL · Gs. 1.425.000 · Reserva"* |
+
+| # | Regla |
+|---|---|
+| H1 | Cada hito lleva **porcentaje o importe**, nunca los dos. |
+| H2 | Si todos los hitos son porcentuales, ⛔ **deben sumar exactamente 100**. |
+| H3 | Si son importes, ⛔ **deben sumar el setup con su descuento aplicado**. |
+| H4 | `fecha_fija` exige fecha. |
+| H5 | Cada hito lleva la **descripción que ve el cliente**, tal como va a aparecer en el PDF. |
+
+#### Permanencia
+
+| Campo | Qué es | Ejemplo real |
+|---|---|---|
+| **Meses incluidos** | Meses de servicio sin cargo adicional | *"Primer mes operativo incluido"* → `1` |
+| **Período de congelamiento** | Meses durante los cuales el precio mensual no cambia | *"Congelado 12 meses"* → `12` |
+
+#### Beneficios y lo que los habilita
+
+| Beneficio | Sí / No |
+|---|---|
+| **Débito automático** | |
+| **Compromiso de doce meses** | |
+| **Pago anual anticipado** | |
+
+⛔ **Cada beneficio declara la condición que lo habilita y qué pasa si el cliente deja de cumplirla.**
+
+```
+beneficio:      descuento_setup
+condicion:      "Compromiso de doce meses"
+descripcion:    "Descuento de implementación por condición fundadora"
+siNoSeCumple:   "Se factura la diferencia contra el precio de lista vigente"
+```
+
+**Por qué es obligatorio.** Un descuento sin condición escrita es un descuento que después nadie puede reclamar. Si el cliente da de baja al cuarto mes y el descuento estaba atado a doce, hay que poder mostrarlo en el documento que firmó.
+
+#### Alcance y plan de trabajo
+
+| Campo | Regla |
+|---|---|
+| **Alcance** | Qué incluye. |
+| **Exclusiones** | ⛔ Qué **no** incluye. El documento real las tiene: comisiones de pasarela, consumos extraordinarios. |
 | **Vigencia** | Hasta cuándo vale la oferta. |
-| **Cronograma** | Etapas y plazos de implementación. |
-| **Condiciones** | Condiciones comerciales adicionales. |
+| **Cronograma** | Etapas con orden, título, fecha estimada o duración, entregable, e **importe asociado** si esa etapa dispara un cobro. |
+| **Condiciones comerciales** | Texto libre. |
+| **Tratamiento del IVA** | Se declara y se aprueba (§2.4). |
 
-### 6.2 Qué ve el administrador al revisar
+### 6.3 Qué ve el administrador al revisar
 
-Precio de lista documentado vs. precio propuesto · desviación en guaraníes y en porcentaje · impacto en la parte de Lab.IA · las tres condiciones (débito, compromiso, anual anticipado) · historial del cliente · versiones anteriores de la cotización.
+Precio de lista vs. propuesto · desviación en guaraníes y en porcentaje · **suma de los hitos de pago** y si cierra · meses incluidos y congelamiento · las tres condiciones · qué habilita cada beneficio · impacto en la parte de Lab.IA · historial del cliente · versiones anteriores.
 
-### 6.3 Reglas
+### 6.4 Reglas
 
 | # | Regla |
 |---|---|
@@ -202,8 +287,10 @@ Precio de lista documentado vs. precio propuesto · desviación en guaraníes y 
 | C3 | Una cotización aprobada es **inmutable**; editarla crea versión nueva y caduca la aprobación. |
 | C4 | El **PDF definitivo** se emite después de aprobar. ⛔ Nunca antes. |
 | C5 | Nadie aprueba su propia cotización. |
-| C6 | Los productos sin precio de lista (Smart Commerce, Exeq.IA) se cotizan íntegramente personalizados. |
+| C6 | Los productos sin precio de lista se cotizan íntegramente personalizados. |
 | C7 | Los totales van **por moneda**. |
+| C8 | ⛔ Los hitos de pago tienen que cerrar (H2, H3). Una cotización cuyos hitos no suman no se envía a revisión. |
+| C9 | ⛔ Un beneficio sin condición habilitante escrita no se aprueba. |
 
 ---
 
@@ -252,3 +339,6 @@ Precio de lista documentado vs. precio propuesto · desviación en guaraníes y 
 | X12 | Cotizar un producto fuera de los 13. |
 | X13 | Editar el texto documentado de un precio "para aclararlo". |
 | X14 | Dar al vendedor cualquier ruta de escritura sobre comisiones, participaciones o liquidaciones. |
+| X15 | Enviar a revisión una cotización cuyos hitos de pago no suman el setup. |
+| X16 | Otorgar un beneficio sin escribir la condición que lo habilita. |
+| X17 | Tratar el precio de una Carta Oferta anterior como precio de lista. |

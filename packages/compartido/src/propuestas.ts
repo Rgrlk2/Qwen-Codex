@@ -89,28 +89,110 @@ export interface ItemCotizacion {
   readonly mensualidadPropuesta: Dinero;
   readonly descuentoImplementacionPorcentaje: number;
   readonly alcance: string;
+  /** Límites de uso incluidos: "+400 consultas/mes", usuarios, canales. */
+  readonly limitesIncluidos: ReadonlyArray<string>;
   readonly notas: string | null;
 }
 
 export type ItemCotizacionEntrada = Omit<ItemCotizacion, 'id' | 'precioListaSetup' | 'precioListaMensualidad'>;
 
-/** Las condiciones comerciales que el vendedor propone y el administrador aprueba. */
+// ---------------------------------------------------------------------------
+// Hitos de pago del setup
+// ---------------------------------------------------------------------------
+
+/**
+ * Un hito de pago del setup.
+ *
+ * Estructura tomada de la Carta Oferta real de Agendar.IA:
+ *   "50 % al aceptar · 50 % con versión conectada"
+ *
+ * Cada hito se expresa por PORCENTAJE o por IMPORTE, nunca por los dos a la vez.
+ */
+export type DisparadorHitoPago =
+  | 'al_aceptar'
+  | 'al_entregar'
+  | 'al_conectar'
+  | 'al_iniciar_piloto'
+  | 'fecha_fija';
+
+export interface HitoPagoSetup {
+  readonly orden: number;
+  readonly disparador: DisparadorHitoPago;
+  /** Texto que ve el cliente: "50 % al aceptar", "50 % con versión conectada". */
+  readonly descripcion: string;
+  /** Exactamente uno de los dos. El otro va en `null`. */
+  readonly porcentaje: number | null;
+  readonly importe: Dinero | null;
+  /** Sólo cuando `disparador === 'fecha_fija'`. */
+  readonly fecha: ISODate | null;
+}
+
+/**
+ * Condiciones comerciales de la cotización.
+ * Estructura derivada de la Carta Oferta de Agendar.IA (ver COMMERCIAL_RULES §6).
+ */
 export interface CondicionesCotizacion {
+  // --- Setup y sus hitos de pago ---
+  /** ⛔ Los porcentajes deben sumar 100 cuando todos los hitos son porcentuales. */
+  readonly hitosPagoSetup: ReadonlyArray<HitoPagoSetup>;
+  /** Descuento sobre el setup: porcentaje o importe, uno de los dos. */
+  readonly descuentoSetupPorcentaje: number | null;
+  readonly descuentoSetupImporte: Dinero | null;
+
+  // --- Mensualidad y su compromiso ---
+  /** Meses de servicio incluidos sin cargo adicional (p. ej. "primer mes operativo incluido"). */
+  readonly mesesIncluidos: number;
+  /** Meses durante los cuales el precio mensual no cambia. */
+  readonly mesesCongelamientoPrecio: number;
+
+  // --- Beneficios y lo que los habilita ---
   readonly debitoAutomatico: boolean;
   readonly compromisoDoceMeses: boolean;
   readonly pagoAnualAnticipado: boolean;
+  /**
+   * ⛔ Cada beneficio declara QUÉ CONDICIÓN lo habilita.
+   * Un descuento sin condición escrita es un descuento que después nadie puede reclamar.
+   */
+  readonly condicionesHabilitantes: ReadonlyArray<CondicionHabilitante>;
+
+  // --- Alcance, vigencia y plan de trabajo ---
   readonly alcance: string;
+  /** Qué NO incluye. En la Carta Oferta: comisiones de pasarela y consumos extraordinarios. */
+  readonly exclusiones: string;
   readonly cronograma: ReadonlyArray<EtapaCronograma>;
   readonly condicionesComerciales: string;
   /** El copy sólo documenta "+ IVA" en un producto: acá se declara y se aprueba. */
   readonly tratamientoIva: string;
 }
 
+/** Qué beneficio se otorga y a cambio de qué. */
+export interface CondicionHabilitante {
+  readonly beneficio:
+    | 'descuento_setup'
+    | 'congelamiento_precio'
+    | 'meses_incluidos'
+    | 'precio_mensual_especial';
+  /** "Débito automático", "Compromiso de 12 meses", "Pago anual anticipado". */
+  readonly condicion: string;
+  readonly descripcion: string;
+  /** Qué pasa si el cliente deja de cumplirla. */
+  readonly siNoSeCumple: string | null;
+}
+
+/**
+ * Una etapa del cronograma de implementación.
+ * En la Carta Oferta: reserva → versión personalizada → piloto supervisado →
+ * inicio estimado → primera mensualidad.
+ */
 export interface EtapaCronograma {
   readonly orden: number;
   readonly titulo: string;
-  readonly duracionDias: number;
+  /** Fecha estimada, o duración en días desde la etapa anterior. */
+  readonly fechaEstimada: ISODate | null;
+  readonly duracionDias: number | null;
   readonly entregable: string;
+  /** Importe asociado a esta etapa, si la etapa dispara un cobro. */
+  readonly importeAsociado: Dinero | null;
 }
 
 export interface Cotizacion extends Trazado {

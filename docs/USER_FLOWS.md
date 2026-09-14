@@ -1,6 +1,6 @@
 # USER_FLOWS — Escritorio Vendedores Lab.IA
 
-> **Versión 2.0.** Complementa `docs/MASTER_SPEC.md`.
+> **Versión 3.0.** Complementa `docs/MASTER_SPEC.md`.
 > **A** = acción del usuario · **S** = respuesta del sistema · **◆** = decisión · **⛔** = bloqueo duro.
 
 ---
@@ -10,13 +10,15 @@
 | # | Flujo | Vista | Rol |
 |---|---|---|---|
 | F1 | Ingreso y pantalla de arranque | Inicio | ambos |
-| F2 | Investigar una empresa o profesional conocido | Planificar | ambos |
+| F2 | **Investigar una empresa** (RUC · razón social · nombre comercial) | Planificar | ambos |
+| F2b | **Investigar un profesional** (nombre · profesión) | Planificar | ambos |
 | F3 | Explorar oportunidades por rubro | Planificar | ambos |
 | F4 | Consultar un producto del portafolio | Planificar | ambos |
 | F5 | Guardar un cliente y su plan | Clientes | ambos |
 | F6 | Seguimiento por voz | Clientes | ambos |
 | F7 | Seguimiento por texto | Clientes | ambos |
-| F8 | Armar la presentación | Propuestas | ambos |
+| F8 | **Trabajar la agenda del día** | Agenda | ambos |
+| F8b | Armar la presentación | Propuestas | ambos |
 | F9 | Armar la cotización | Propuestas | vendedor |
 | F10 | Revisión y aprobación | Administración | administrador |
 | F11 | PDF definitivo y envío al cliente | Propuestas | vendedor |
@@ -53,39 +55,57 @@
 
 ---
 
-## F2 · Investigar una empresa o profesional conocido
+## F2 · Investigar una empresa
 
 1. **A** Inicio → *Investigar una empresa o un profesional que conozco*.
-2. **A** Carga lo que sabe:
-   - nombre ("la repuestera de Jorge", "Dra. Benítez, odontóloga");
-   - **qué hace**, en texto libre y en sus palabras;
-   - ciudad, tamaño aproximado;
-   - su relación con esa persona;
-   - lo que ya sabe del negocio.
-3. ⛔ **Sólo el nombre y el "qué hace" son obligatorios.** El resto mejora el plan, no lo bloquea.
-4. **S** Resuelve la actividad contra la taxonomía.
-5. ◆ **¿La actividad existe en la taxonomía?**
+2. **A** Escribe **lo que tiene**. Basta con uno de los tres:
+   - **RUC** — `80012345-6`
+   - **Razón social** — *Comercial San Miguel S.A.*
+   - **Nombre comercial** — *Repuestera del Este*
+
+   Opcional: ciudad.
+3. ⛔ **Y eso es todo lo que se le pide.** No hay formulario de perfil. No se le pide que describa el negocio, ni que averigüe el rubro, ni que busque el sitio web.
+4. **S** Estado **investigando**, con progreso visible desde el primer segundo y **las fuentes que va consultando**.
+5. **S** Devuelve el perfil armado, dato por dato, cada uno con su **clasificación**, su **confianza** y sus **fuentes**:
+
+   | Dato | |
+   |---|---|
+   | actividad / rubro | resuelto contra la taxonomía |
+   | ubicación | |
+   | canales digitales | |
+   | sitio web y redes encontrados | |
+   | productos o servicios observables | |
+   | señales operativas | cómo funciona por dentro |
+   | posibles decisores | nombre y cargo, con su fuente |
+   | tamaño aproximado | ⛔ **sólo si hay evidencia** |
+   | dolores probables | siempre como hipótesis |
+   | productos Lab.IA recomendados | los 13 ordenados |
+   | fuentes consultadas | incluidas **las que fallaron**, con su motivo |
+   | fecha de investigación | |
+
+6. **S** Cada dato se ve claramente como **verificado**, **inferido** o **no encontrado**. ⛔ En texto, no sólo por color.
+7. ◆ **¿Las fuentes externas respondieron?**
    - **Sí** → sigue.
-   - **No** → **S** la crea como `pendiente_de_revision`, la deja usable y avisa al administrador. ⛔ **Nunca** dice "rubro no encontrado".
-6. **S** Arma el plan y lo muestra completo:
-   1. **cómo funciona ese negocio** (perfil operativo inferido);
-   2. **dolores probables**, cada uno marcado como hipótesis y con su motivo;
-   3. **los 13 ordenados**, del 1.º al 13.º, con el top 10 como lista de trabajo y el "por qué" de cada posición;
-   4. **producto 1, 2 y 3** destacados;
-   5. **combos sugeridos**, con el argumento que los une;
-   6. **encaje** por producto: `directo` · `cercano` · `adaptable` · `no_recomendado`;
-   7. **adaptación necesaria**, en `cercano` y `adaptable`;
-   8. **estrategia de entrada**;
-   9. **argumentos**, citando el copy aprobado del producto;
-   10. **preguntas de confirmación** para validar cada dolor.
-7. **A** Puede ajustar el perfil operativo a mano (*"no, no tiene reparto propio"*).
-8. **S** Recalcula el plan y **muestra qué cambió**.
-9. ◆ **Qué hace con el plan:**
-   - guardar como cliente → F5;
-   - armar presentación → F8;
-   - registrar seguimiento → F6 / F7;
-   - ninguno de los 13 encaja → F18.
-10. ⛔ El motor **nunca** propone un producto fuera de los 13 ni inventa un precio.
+   - **No** → **S** cae a la **taxonomía**, lo dice en pantalla, y pide **únicamente los datos mínimos faltantes**: uno, dos, a lo sumo tres campos, cada uno con su pregunta y **por qué hace falta**.
+     ⛔ **Nunca un formulario largo vacío.** Un sistema que falla y devuelve un formulario en blanco le hizo perder tiempo al vendedor y además no le resolvió nada.
+8. **A** El vendedor hace **sólo tres cosas**: **confirmar** · **corregir** · **agregar**.
+9. **S** Cada corrección **recalcula el plan y muestra qué cambió**: qué producto subió, cuál bajó, y por qué.
+10. **S** El plan completo, con la misma estructura de siempre: perfil · dolores · los 13 ordenados · 1-2-3 · combos · encaje · adaptaciones · estrategia · argumentos · preguntas.
+11. ◆ Qué hace con el plan: guardar como cliente (F5) · armar presentación (F8b) · registrar seguimiento (F6/F7) · ninguno encaja (F18).
+12. ⛔ Toda la investigación corrió **en el servidor**. Ninguna clave ni llamada sensible tocó el navegador.
+
+---
+
+## F2b · Investigar un profesional
+
+1. **A** Inicio → *Investigar una empresa o un profesional que conozco* → **Profesional**.
+2. **A** Escribe:
+   - **Nombre** — obligatorio — *Dra. Claudia Leguizamón*
+   - **Profesión o especialidad** — obligatorio — *Pediatría*
+   - **Matrícula** — ⛔ **sólo si la tiene a mano**
+   - **Ciudad** — ⛔ **sólo si la tiene a mano**
+3. ⛔ **La matrícula y la ciudad no se le piden.** Si las sabe, mejoran la investigación. Si no, el sistema sigue igual.
+4. **S** Desde el paso 4 de F2, idéntico: mismo proceso, misma clasificación, mismo respaldo, mismas tres acciones del vendedor.
 
 ---
 
@@ -149,7 +169,26 @@ Idéntico a F6 desde el paso 5, con `origen: "texto"`, sin audio. **Misma entida
 
 ---
 
-## F8 · Armar la presentación
+## F8 · Trabajar la agenda del día
+
+1. **A** Agenda (o desde el acceso en Inicio).
+2. **S** Abre en **Hoy**: visitas · llamadas · próximos pasos · vencimientos · **atrasados**.
+3. ⛔ **Todo eso ya está ahí.** Se pobló solo desde planes, objetivos aceptados, seguimientos, presentaciones, cotizaciones, vencimientos y aperturas de enlace.
+4. **S** Una entrada de **apertura de enlace** dice explícitamente por qué está: *"El cliente abrió tu cotización ayer a las 19:40"*. Es el momento de llamar.
+5. ◆ **Qué hace el vendedor con una entrada:**
+   - **completar** → se marca hecha y actualiza la línea de tiempo del cliente;
+   - **ajustar la fecha** → ⛔ **exige motivo**; queda marcado que la movió una persona;
+   - **descartar** → con motivo. ⛔ No se borra: queda descartada.
+6. **A** Cambia de vista: **Semana** · **Mes** · **Cronograma** · **Atrasados**.
+7. **S · Cronograma** — Gantt comercial: la vida de cada cliente y de cada plan, con sus hitos y las barras **en riesgo** marcadas.
+   ⛔ Con alternativa en lista: un Gantt no se lee con lector de pantalla.
+8. **S · Atrasados** — lo que se pasó de fecha y sigue pendiente, con los días de atraso.
+   ⛔ Un atraso **no se oculta ni se reprograma solo**. Se ve hasta que alguien lo resuelve o lo descarta con motivo.
+9. **A** Opcional: *Nueva entrada* → ⛔ **sólo visita, llamada o próximo paso**. Es la excepción: si la mayoría de las entradas son manuales, la agenda no está funcionando.
+
+---
+
+## F8b · Armar la presentación
 
 1. **A** Propuestas → **Presentaciones** → *Nueva* → elegir cliente.
 2. **S** Precarga el plan: productos 1-2-3, dolores y argumentos.
@@ -169,9 +208,16 @@ Idéntico a F6 desde el paso 5, con `origen: "texto"`, sin audio. **Misma entida
 2. ◆ **¿Existe una presentación entregada a ese cliente?**
    - **No** → **S** advierte que el circuito esperado es presentación primero. No bloquea, pero lo deja asentado.
 3. **A** Elige productos de los 13 y **propone el precio personalizado**:
-   - setup · mensualidad · descuento de implementación;
-   - débito automático (sí/no) · compromiso de doce meses (sí/no) · pago anual anticipado (sí/no);
-   - alcance · vigencia · cronograma · condiciones.
+   - **setup** y su **descuento** (porcentaje o importe), **mensualidad**, **límites incluidos**;
+   - **hitos de pago del setup**: porcentaje o importe **al aceptar**, **al entregar o conectar**, y los que hagan falta;
+   - **meses incluidos** y **período de congelamiento del precio**;
+   - **débito automático** · **compromiso de doce meses** · **pago anual anticipado**;
+   - ⛔ **la condición que habilita cada beneficio**, y qué pasa si el cliente deja de cumplirla;
+   - **alcance**, **exclusiones**, **vigencia**, **cronograma** por etapas con su entregable e importe.
+3b. ◆ **¿Los hitos de pago cierran?**
+   - **Sí** → sigue.
+   - **No** → ⛔ **no se puede enviar a revisión.** Si son porcentuales deben sumar 100; si son importes, el setup con descuento aplicado.
+3c. ◆ **¿Cada beneficio tiene su condición escrita?** Si no, ⛔ no se aprueba después.
 4. **S** Muestra al lado el **precio de lista documentado** y la desviación, en guaraníes y en porcentaje. Es información, no un bloqueo.
 5. **S** Totaliza **por moneda**. ⛔ Nunca suma PYG con USD.
 6. **A** *Enviar a revisión*.
@@ -183,7 +229,7 @@ Idéntico a F6 desde el paso 5, con `origen: "texto"`, sin audio. **Misma entida
 ## F10 · Revisión y aprobación
 
 1. **A** Administración → **Aprobación de cotizaciones**.
-2. **S** Cola por antigüedad y monto. Por cada cotización: propuesto vs. lista, desviación, impacto en la parte de Lab.IA, las tres condiciones, historial del cliente, versiones anteriores.
+2. **S** Cola por antigüedad y monto. Por cada cotización: propuesto vs. lista, desviación en guaraníes y en porcentaje, **la suma de los hitos de pago y si cierra**, **meses incluidos y congelamiento**, las tres condiciones, **qué habilita cada beneficio**, impacto en la parte de Lab.IA, historial del cliente, versiones anteriores.
 3. ◆ **Decisión** — las tres exigen comentario:
    - **aprobar** → `aprobada`;
    - **corregir** → vuelve a `borrador` con versión +1 y los cambios pedidos, historial intacto;

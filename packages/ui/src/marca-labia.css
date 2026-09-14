@@ -1,43 +1,51 @@
 /*
- * Marca Lab.IA — valores oficiales.
+ * Marca Lab.IA — COLORES OFICIALES.
  *
- * ⛔ DUEÑO: SESIÓN 2 (interfaz). Es el ÚNICO archivo donde viven los hex de marca.
+ * ⛔ DUEÑO: SESIÓN 2. Único archivo donde viven los hex de marca.
+ * ⛔ Estos ocho colores son los oficiales. No se cambian, no se "ajustan",
+ *    no se derivan variantes nuevas sin autorización.
  *
- * QUÉ HAY QUE HACER ACÁ
- * ─────────────────────
- * Copiar los valores oficiales desde el design-system de Lab.IA
- * (masivoslabia/references/design-system.md) y poner --marca-pendiente en 0.
+ * Tipografía oficial: Inter.
  *
- * ⛔ NO se inventan estos valores. ⛔ No se deducen de una captura ni de una landing.
- *    Deducir no es documentar.
+ * Contraste medido contra los dos fondos (WCAG 2.1):
  *
- * QUÉ PASA MIENTRAS TANTO
- * ───────────────────────
- * tokens.css los consume con `var(--labia-azul, <respaldo navy>)`. Sin estos
- * valores, la interfaz se ve MONOCROMÁTICA NAVY: funciona, es legible, y se
- * nota que le falta la marca. Es deliberado — un respaldo que pareciera la
- * marca real sería peor que uno que no lo parece.
+ *   color                    vs #020711   vs #06162F   veredicto
+ *   --------------------------------------------------------------------
+ *   #0A55D9  azul                 3.18         2.85    ⛔ NO es color de texto
+ *   #098CFF  azul-claro           5.96         5.33    AA texto
+ *   #00D9FF  cian                11.88        10.63    AA texto
+ *   #12D9FF  cian-claro          11.91        10.65    AA texto
+ *   #F2F7FF  texto               18.75        16.78    AA texto
+ *   #AEB8C8  texto-2             10.08         9.02    AA texto
  *
- * LO QUE YA ESTÁ DOCUMENTADO (no hace falta pedirlo)
- * ──────────────────────────────────────────────────
- *   Sistema:    dark · navy · cyan · azul · glass · profundidad · premium
- *   Tipografía: Inter
- *   Fondo:      rgba(3, 10, 28, .94)  →  #030A1C   (header Lab.IA)
- *   Borde:      cian sutil sobre ese fondo, desenfoque 18 px
+ * ⛔ REGLA DURA: #0A55D9 es color de RELLENO y de SUPERFICIE.
+ *    No se usa para texto ni para bordes finos sobre fondo oscuro: no alcanza
+ *    AA para texto (3.18) y ni siquiera 3:1 sobre #06162F (2.85).
+ *    Para texto o borde de acento se usa #098CFF o #00D9FF.
  *
- * Ver docs/DESIGN_SYSTEM.md §1 y docs/ASSET_SOURCES.md §3.
+ * Ver docs/DESIGN_SYSTEM.md §1 y docs/ASSET_SOURCES.md.
  */
 
 :root {
-  /* Descomentar y completar con los valores oficiales:
-  --labia-azul:        #......;
-  --labia-azul-claro:  #......;
-  --labia-cian:        #......;
-  --labia-cian-claro:  #......;
-  --labia-cian-linea:  rgba(..., ..., ..., .28);
-  --labia-acento-suave: rgba(..., ..., ..., .18);
-  */
+  /* Fondos */
+  --labia-negro-azulado: #020711;
+  --labia-navy:          #06162F;
 
-  /* 1 = faltan los valores oficiales · 0 = marca completa. QA lo verifica. */
-  --marca-pendiente: 1;
+  /* Azules */
+  --labia-azul:          #0A55D9;   /* ⛔ relleno/superficie, NO texto */
+  --labia-azul-claro:    #098CFF;
+
+  /* Cyan */
+  --labia-cian:          #00D9FF;
+  --labia-cian-claro:    #12D9FF;
+
+  /* Texto */
+  --labia-texto:         #F2F7FF;
+  --labia-texto-2:       #AEB8C8;
+
+  /* Tipografía */
+  --labia-fuente: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* 0 = marca completa. Los ocho colores oficiales están cargados. */
+  --marca-pendiente: 0;
 }

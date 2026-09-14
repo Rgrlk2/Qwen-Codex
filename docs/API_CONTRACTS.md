@@ -1,6 +1,6 @@
 # API_CONTRACTS — Escritorio Vendedores Lab.IA
 
-> **Versión 2.0.** Contrato entre las vistas y la capa de datos. **Las vistas nunca llaman `fetch` directo.**
+> **Versión 3.0.** Contrato entre las vistas y la capa de datos. **Las vistas nunca llaman `fetch` directo.**
 > Expresión ejecutable: `packages/compartido/src/api.ts`. Dueño: **Sesión 1**.
 
 ---
@@ -81,7 +81,30 @@ proximosSeguimientos(limite?: number): R<ProximoSeguimiento[]>;
 
 ⛔ **No existe ningún método de analítica**: sin embudos, sin tasas de conversión, sin mezcla de productos, sin series para gráficos decorativos. Lo que no está en el contrato no se puede dibujar.
 
-### 2.3 Motor de planificación — S3
+### 2.3 Motor de planificación e investigación — S3
+```ts
+// --- Investigación automática ---
+// ⛔ Corre en el SERVIDOR. El cliente recibe el resultado ya clasificado.
+investigarObjetivo(entrada: EntradaObjetivo): R<InvestigacionObjetivo>;
+estadoInvestigacion(id: Id): R<InvestigacionObjetivo>;
+corregirInvestigacion(inv: InvestigacionObjetivo, correcciones: CorreccionDato[]): R<InvestigacionCorregida>;
+planDesdeInvestigacion(inv: InvestigacionObjetivo): R<Plan>;
+```
+
+**Reglas de la investigación:**
+
+| # | Regla |
+|---|---|
+| I1 | `EntradaObjetivo` admite **empresa** (RUC · razón social · nombre comercial), **profesional** (nombre · profesión; matrícula y ciudad opcionales) y **rubro** (texto libre). |
+| I2 | ⛔ **Nunca devuelve un formulario largo vacío.** Si falla, marca `usoRespaldoTaxonomia: true` y devuelve `datosMinimosFaltantes` con **uno a tres campos**, cada uno con su pregunta y su *por qué hace falta*. |
+| I3 | Todo dato es un `DatoInvestigado` con `clasificacion` (`verificado` · `inferido` · `no_encontrado`), `confianza` y `fuentesIds`. |
+| I4 | `clasificacion === 'inferido'` ⇒ `razonamiento` no vacío. `'no_encontrado'` ⇒ `valor === null` y `confianza === null`. |
+| I5 | `tamanoAproximado` sólo se completa con evidencia. Sin evidencia: `no_encontrado`. ⛔ No se estima. |
+| I6 | `fuentesConsultadas` incluye **también las que fallaron**, con su motivo. El vendedor tiene derecho a saber qué no se pudo mirar. |
+| I7 | ⛔ `investigarObjetivo` **no persiste**. El vendedor confirma primero. |
+| I8 | `corregirInvestigacion` devuelve `cambios`: qué producto se movió en el ranking y por qué. |
+| I9 | ⛔ **Ninguna clave, token ni endpoint de proveedor externo puede aparecer en el código del cliente.** Verificado por `scripts/verificar-portafolio.mjs`. |
+
 ```ts
 // Taxonomía
 buscarActividad(texto: string): R<Actividad[]>;
@@ -117,7 +140,33 @@ listarMisSugerencias(pagina?): R<Pagina<SugerenciaProducto>>;
 - `recalcularPlan` devuelve además `cambios: CambioPlan[]`: qué se movió y por qué.
 - `listarProductos` devuelve como máximo **13** ítems, todos del catálogo cerrado. Cualquier otro id es un fallo de contrato, no un dato.
 
-### 2.4 Clientes, voz y seguimiento — S4
+### 2.4 Agenda operativa — S4
+```ts
+agendaHoy(fecha?: ISODate): R<AgendaHoy>;
+agendaSemana(desde?: ISODate): R<AgendaSemana>;
+agendaMes(anio: number, mes: number): R<AgendaMes>;
+cronogramaComercial(desde: ISODate, hasta: ISODate): R<CronogramaComercial>;
+listarEntradas(filtro: FiltroAgenda, pagina?): R<Pagina<EntradaAgenda>>;
+entradasAtrasadas(pagina?): R<Pagina<EntradaAgenda>>;
+
+crearEntradaManual(datos: NuevaEntradaManual, clave: ClaveIdempotencia): R<EntradaAgenda>;
+ajustarEntrada(ajuste: AjusteEntrada): R<EntradaAgenda>;
+completarEntrada(entradaId: Id, clave: ClaveIdempotencia): R<EntradaAgenda>;
+descartarEntrada(entradaId: Id, motivo: string): R<EntradaAgenda>;
+```
+
+**Reglas de la agenda:**
+
+| # | Regla |
+|---|---|
+| A1 | ⛔ **La agenda se puebla sola.** El servidor deriva las entradas de planes, objetivos aceptados, seguimientos, presentaciones, cotizaciones, vencimientos y aperturas de enlace. |
+| A2 | `crearEntradaManual` es la **excepción**, y sólo admite `visita`, `llamada` y `proximo_paso`. |
+| A3 | ⛔ `ajustarEntrada` exige `motivo`. Sin motivo ⇒ `validacion`. |
+| A4 | Una entrada vencida y pendiente vuelve con `atrasada: true` y `diasDeAtraso`. ⛔ No se reprograma sola ni se oculta. |
+| A5 | ⛔ **No existe `borrarEntrada`.** Se descarta con motivo; queda en la historia. |
+| A6 | `resumenAgenda()` (en `CapaInicio`) devuelve sólo dos contadores. ⛔ Inicio no duplica la agenda. |
+
+### 2.5 Clientes, voz y seguimiento — S4
 ```ts
 listarClientes(filtro: FiltroClientes, pagina?): R<Pagina<Cliente>>;
 obtenerCliente(id: Id): R<ClienteDetalle>;
@@ -139,7 +188,7 @@ actualizarPaso(pasoId: Id, estado: EstadoPaso): R<PasoSugerido>;
 - `mencionesFueraDeCatalogo` sólo puede derivar a una sugerencia, ⛔ nunca a un producto.
 - `borrarAudio` borra el audio; ⛔ **no** borra la transcripción ni el seguimiento.
 
-### 2.5 Presentaciones y cotizaciones — S5
+### 2.6 Presentaciones y cotizaciones — S5
 ```ts
 // Presentación — sin precio definitivo, sin aprobación
 listarPresentaciones(filtro, pagina?): R<Pagina<Presentacion>>;
@@ -176,7 +225,7 @@ aperturasDePropuesta(propuestaId: Id, pagina?): R<Pagina<AccesoEnlace>>;
 - `actualizarCotizacion` sobre `aprobada` crea versión nueva en `borrador` y **caduca la aprobación**; la respuesta lo informa en `avisos[]`.
 - `emitirPdfDefinitivo` es idempotente por `(cotizacionId, version)`.
 
-### 2.6 Dinero del vendedor — S6
+### 2.7 Dinero del vendedor — S6
 ```ts
 resumenDinero(periodo: PeriodoMensual): R<ResumenDinero>;   // las ocho cifras, por moneda
 listarMensualidades(filtro, pagina?): R<Pagina<Mensualidad>>;
@@ -187,7 +236,7 @@ abrirObservacion(datos: NuevaObservacion, clave: ClaveIdempotencia): R<Observaci
 ```
 ⛔ **No existe ningún método de escritura sobre participaciones, líneas ni liquidaciones en esta capa.** El vendedor observa; no edita.
 
-### 2.7 Administración — S6 · sólo rol `administrador`
+### 2.8 Administración — S6 · sólo rol `administrador`
 ```ts
 // Control financiero
 controlFinanciero(periodo: PeriodoMensual): R<ControlFinanciero>;
@@ -254,7 +303,7 @@ Y las que se verifican en tiempo de ejecución:
 - `cerrarPeriodo` sin `verificarCierrePeriodo` en verde ⇒ `regla_comercial` con la lista de bloqueos.
 - Cualquier método de §2.7 llamado con rol `vendedor` ⇒ `sin_permiso`.
 
-### 2.8 Enlace público — sin sesión
+### 2.9 Enlace público — sin sesión
 ```ts
 obtenerPropuestaPublica(token: string, codigo?: string): R<PropuestaPublica>;
 descargarPdfPublico(token: string): R<{ url: string; venceEn: ISODate }>;
@@ -291,6 +340,9 @@ Mientras la app corra con mock, la interfaz muestra de forma permanente el chip 
 | Operación | Objetivo |
 |---|---|
 | Inicio (cuatro cifras + seguimientos) | p95 < 800 ms |
+| Agenda: Hoy, Semana, Mes | p95 < 800 ms |
+| `cronogramaComercial` | p95 < 2 s |
+| **`investigarObjetivo`** | p95 < 20 s, **asíncrono con estado consultable**. Progreso visible desde el primer segundo, con las fuentes que se van consultando. |
 | `generarPlan` | p95 < 4 s, con progreso visible desde el primer segundo |
 | `procesarCaptura` (voz/texto) | p95 < 6 s, con progreso |
 | `emitirPdfDefinitivo` | p95 < 10 s, asíncrono con estado consultable |

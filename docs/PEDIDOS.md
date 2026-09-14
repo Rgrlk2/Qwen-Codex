@@ -24,11 +24,11 @@ _(sin pedidos)_
 
 _(sin pedidos)_
 
-## S3 · Motor de planificación
+## S3 · Motor de planificación e investigación
 
 _(sin pedidos)_
 
-## S4 · Clientes, voz y seguimiento
+## S4 · Clientes, voz, seguimiento y agenda
 
 _(sin pedidos)_
 

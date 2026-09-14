@@ -1,6 +1,8 @@
 # ASSET_SOURCES — Escritorio Vendedores Lab.IA
 
-> **Versión 2.0.** Identidad **Lab.IA**.
+> **Versión 3.0.** Identidad **Lab.IA**.
+> 📋 **El inventario real de activos, con enlaces de Drive, versiones y estados, está en [`docs/INVENTARIO_ACTIVOS.md`](INVENTARIO_ACTIVOS.md).**
+> Este documento define las **reglas**; aquél, **qué hay y dónde**.
 > **Regla cero:** ⛔ no se inventa ningún activo. Ni logos, ni íconos de marca, ni ilustraciones, ni fotografías, ni capturas, ni paletas.
 > Todo lo que aparece en pantalla tiene que poder señalarse en esta tabla. Lo que no está acá, **no se usa**.
 
@@ -25,16 +27,25 @@ Copiados byte a byte. Verificación por hash en `content/copy/COPY_LOCK.md`.
 
 ⚠️ Esta referencia pertenece a **otra marca y otro proyecto**. Se mira cómo está armada, no cómo se ve.
 
-### 1.3 Identidad Lab.IA — parcialmente disponible
+### 1.3 Identidad Lab.IA — **completa**
 
-| Elemento | Estado | Fuente |
+| Elemento | Valor | Estado |
 |---|---|---|
-| Sistema: dark · navy · cyan · azul · glass · profundidad · premium | **Documentado** | `rgrlk-brand-guardian` |
-| Tipografía **Inter** | **Documentado** | `rgrlk-brand-guardian` → "Lab.IA UI: Inter" |
-| Fondo navy `rgba(3, 10, 28, .94)` | **Documentado** | `headerproductos` |
-| Borde cian sutil, desenfoque 18 px | **Documentado** | `headerproductos` |
-| Hex exactos de azul y cyan | **PENDIENTE** | `masivoslabia/references/design-system.md` |
-| Logo Lab.IA (archivo) | **PENDIENTE** | Archivo oficial de marca |
+| Fondo | `#020711` | **Oficial** |
+| Navy | `#06162F` | **Oficial** |
+| Azul (⛔ relleno, no texto) | `#0A55D9` | **Oficial** |
+| Azul claro | `#098CFF` | **Oficial** |
+| Cyan | `#00D9FF` | **Oficial** |
+| Cyan claro | `#12D9FF` | **Oficial** |
+| Texto | `#F2F7FF` | **Oficial** |
+| Texto secundario | `#AEB8C8` | **Oficial** |
+| Tipografía | **Inter** | **Oficial** |
+| Logo Lab.IA | `Logo_LabIA_T.png` | **Localizado en Drive** |
+| Logos de producto | 12 de 13 | **Localizados en Drive** |
+
+Definición: `packages/ui/src/marca-labia.css`. Inventario: `INVENTARIO_ACTIVOS.md`.
+
+⛔ **`#0A55D9` no alcanza AA para texto** (3.18 sobre el fondo, 2.85 sobre el navy). Es color de relleno. Para texto o borde de acento: `#098CFF` o `#00D9FF`.
 
 ### 1.4 Tipografía
 
@@ -72,31 +83,31 @@ SVG en línea. Sin biblioteca externa, sin descarga, sin dependencia.
 | P7 | Fotografías de comercios, personas o locales | Regla cero + derechos de imagen. |
 | P8 | Logos de clientes o de empresas citadas en los ejemplos del copy | Los ejemplos son ilustrativos. |
 | P9 | Capturas de producto simuladas | Un panel que no existe es una promesa falsa. |
-| P10 | Hex de marca "deducidos" de una landing o de una captura | Deducir no es documentar. Se copian del design-system oficial. |
+| P10 | Hex de marca "deducidos" de una landing o de una captura | Deducir no es documentar. Los ocho oficiales están en `marca-labia.css`. |
+| P10b | Usar `#0A55D9` como color de texto o de borde fino | No alcanza AA (3.18 / 2.85). Es color de relleno. |
+| P10c | Incorporar el logo del **producto excluido**, que está en la misma carpeta de Drive que los 13 | Portafolio cerrado. Ver `INVENTARIO_ACTIVOS.md` §3.1. |
 | P11 | Fondo blanco corporativo convencional · neón excesivo | `rgrlk-brand-guardian`, prohibiciones explícitas. |
 | P12 | Productos adicionales hallados en la web, en cualquier forma | Portafolio cerrado en 13. |
 
 ---
 
-## 3. Activos pendientes
+## 3. Lo que falta, y por qué no se inventa
 
-Lo que el Escritorio necesita y hoy no está. Cada fila tiene un comportamiento provisional que ⛔ **no inventa nada**.
+**Se buscó en Google Drive.** El acceso funciona y el inventario está en `INVENTARIO_ACTIVOS.md`. ⛔ Nada de esto se marca "pendiente" sin haberlo buscado.
 
-| # | Activo | Para qué | Mientras no llegue |
+| # | Activo | Estado tras la búsqueda | Mientras no llegue |
 |---|---|---|---|
-| 1 | **Hex oficiales de azul y cyan** | `packages/ui/src/marca-labia.css` | La interfaz se ve **monocromática navy**, con respaldo desde la familia `--bg`. Funciona, es legible y **se nota que le falta la marca**. `--marca-pendiente: 1`. |
-| 2 | **Logotipo Lab.IA** (SVG, claro y oscuro) | Barra lateral, cabecera, portada de presentaciones, membrete de PDF | **Lab.IA** en texto, Inter 600, con el espacio reservado en las proporciones finales. |
-| 3 | **Isotipo / marca reducida** | Favicon, ícono de aplicación | Favicon SVG en línea con la inicial sobre el fondo navy. Sin forma de marca. |
-| 4 | **Design-system completo de Lab.IA** | Confirmar radios, sombras, espaciados y breakpoints | Se usan los del sistema definido en `DESIGN_SYSTEM.md`. |
-| 5 | **Juego de íconos faltantes** (§1.5) | Navegación de las seis vistas | Ícono genérico más cercano o texto sin ícono. |
-| 6 | **Plantilla de presentación aprobada** | Presentaciones para dejar al cliente | Composición tipográfica con el copy aprobado, sin elementos gráficos. |
-| 7 | **Membrete y pie legal para PDF** | Cotizaciones y comprobantes | PDF tipográfico con folio, versión y fecha. Sin logo. |
-| 8 | **Datos societarios de Lab.IA** (razón social, RUC, domicilio) | Encabezado legal de cotizaciones | Campo vacío, marcado como pendiente. ⛔ No se completa con un dato supuesto. |
-| 9 | **Términos y condiciones comerciales** | Pie de cotización | Bloque ausente, marcado como pendiente. |
+| 1 | **Logo de Park.IA** | ⚠️ **No existe en Drive.** La numeración lo confirma: falta el `3` de las integrales. | El nombre en texto, con Inter 600. ⛔ No se genera. |
+| 2 | **Versiones SVG** | No encontradas. Todo es PNG/WebP de 1 a 2 MB. | Se usan los PNG optimizados. ⛔ No se vectoriza a mano. |
+| 3 | **Variantes claro/oscuro** de Lab.IA | Hay `Logo_LabIA_T` y `Logo_LabIA_V`; falta confirmar cuál funciona sobre `#020711`. | Se prueba la existente sobre el fondo real. |
+| 4 | **Renders y mockups de producto** | No existen como categoría. Lo más cercano: capturas de dashboard. | Composición tipográfica. ⛔ No se generan. |
+| 5 | **Datos societarios** (razón social, RUC, domicilio) | No buscados: no son un activo gráfico. | Campo vacío, marcado como pendiente. ⛔ No se supone ninguno. |
+| 6 | **Términos y condiciones comerciales** | Idem. | Bloque ausente, marcado. |
+| 7 | **Manual de marca completo** (radios, sombras, espaciados) | No encontrado. Los colores y la tipografía ya están. | Se usan los del `DESIGN_SYSTEM.md`. |
 
 ### 3.1 Cómo se piden
 
-Cada activo se solicita con: **formato** (SVG para marca e íconos), **variantes** (claro/oscuro, horizontal/reducido), **usos permitidos**, **quién lo aprueba** y **fecha**. Un activo sin origen documentado no entra al repositorio.
+Formato (SVG para marca e íconos) · variantes (claro/oscuro, horizontal/reducido) · usos permitidos · quién lo aprueba · fecha. ⛔ Un activo sin origen documentado no entra al repositorio.
 
 ---
 
@@ -123,9 +134,11 @@ Antes de cada entrega:
 1. Toda ruta de imagen del código tiene fila en §1.
 2. Ningún `<img>`, `background-image` ni `data:image` fuera de lo listado.
 3. Ningún binario sin origen documentado.
-4. Las cadenas `Newsreader`, `Georgia`, `serif`, `i-monograma`, `#E1B864` **no aparecen** en `apps/` ni en `packages/`.
+4. Las cadenas `Newsreader`, `Georgia`, `serif` suelto, `i-monograma`, `#E1B864` **no aparecen** en `apps/` ni en `packages/`.
 5. Las cadenas de la marca de la referencia **no aparecen** en `apps/`, `packages/` ni `content/`.
 6. Los dos archivos de copy conservan su hash original.
-7. Cuando llegue la marca oficial: `--marca-pendiente` pasa a `0` y §3 filas 1 y 2 se mueven a §1.
+7. `--marca-pendiente` vale `0`: los ocho colores oficiales están cargados.
+8. Ningún activo de `public/` sin fila en `INVENTARIO_ACTIVOS.md`.
+9. El logo del producto excluido **no** está en el repositorio.
 
 Los siete controles están en `docs/QA_CHECKLIST.md` §7 como bloqueantes de entrega.
