@@ -336,39 +336,21 @@ Las ocho cifras, cada una como `TotalesPorMoneda`: `vendido` · `cobrado` · `po
 
 ---
 
-## 11. Registro de accesos
+## 11. Investigación automática
 
-### 11.1 `RegistroAcceso` *(append-only)*
-`id` · `actorId` · `rol` · `accion` · `entidadTipo` · `entidadId` · `valorAnterior` · `valorPosterior` · `ocurridoEn` · `origenSesion: { tipoDispositivo, paisAproximado }`.
-
-**Acciones mínimas:** ingreso · cierre de sesión · intento fallido · alta/baja de vendedor · cambio de participación · cambio de presupuesto · cambio de taxonomía · aprobación · corrección · rechazo · cierre de período · ajuste · emisión de PDF · emisión de enlace · revocación de enlace · borrado de audio · reasignación de cartera.
-
-### 11.2 `UsoPorVendedor` *(derivado)*
-`vendedorId` · `ultimoIngresoEn` · `ingresosEnPeriodo` · `diasSinEntrar` · `planesCreados` · `seguimientosRegistrados` · `cotizacionesEnviadas`.
-
-Es la sección **Accesos y frecuencia de uso** de Administración: sirve para saber quién está trabajando.
-
-### 11.3 Distinción que no se pierde
-`AccesoEnlace` responde *"¿el cliente abrió lo que le mandé?"*. `RegistroAcceso` responde *"¿quién usa el sistema y qué tocó?"*.
-⛔ La interfaz **nunca** los mezcla en una misma lista.
-
----
-
-## 10b. Investigación automática
-
-### 10b.1 `InvestigacionObjetivo`
+### 11.1 `InvestigacionObjetivo`
 `id` · `entrada: EntradaObjetivo` · `estado` · `investigadoEn` · `vendedorId` · los trece datos (§10b.3) · `perfilOperativo` · `doloresProbables` · `productosRecomendados` · `fuentesConsultadas` · `confianzaGlobal` · `datosMinimosFaltantes` · `usoRespaldoTaxonomia` · `versionTaxonomia` · `versionCatalogo`.
 
 `estado`: `en_curso | completa | parcial | sin_resultados | fuentes_caidas | error`.
 
-### 10b.2 `EntradaObjetivo`
+### 11.2 `EntradaObjetivo`
 | Tipo | Campos | Obligatorio |
 |---|---|---|
 | `empresa` | `ruc`, `razonSocial`, `nombreComercial`, `ciudad` | **Al menos uno** de los tres primeros |
 | `profesional` | `nombre`, `profesionOEspecialidad`, `matricula`, `ciudad` | Los dos primeros. ⛔ `matricula` y `ciudad` **sólo si están** |
 | `rubro` | `rubro`, `ciudad` | `rubro` |
 
-### 10b.3 `DatoInvestigado<T>`
+### 11.3 `DatoInvestigado<T>`
 `campo` · `valor: T | null` · `clasificacion` · `confianza` · `fuentesIds` · `razonamiento` · `confirmadoPorVendedor` · `valorCorregido`.
 
 | # | Invariante |
@@ -378,23 +360,23 @@ Es la sección **Accesos y frecuencia de uso** de Administración: sirve para sa
 | DI3 | `clasificacion === 'no_encontrado'` ⇒ `valor === null` **y** `confianza === null`. ⛔ No se rellena. |
 | DI4 | `tamanoAproximado` sólo se completa con evidencia; si no, `no_encontrado`. |
 
-### 10b.4 `FuenteInvestigacion`
+### 11.4 `FuenteInvestigacion`
 `id` · `tipo` · `nombre` · `url` · `consultadaEn` · `exito` · `motivoFallo`.
 ⛔ Se registran **también las fuentes que fallaron**: el vendedor tiene derecho a saber qué no se pudo mirar.
 
-### 10b.5 `CampoFaltante`
+### 11.5 `CampoFaltante`
 `campo` · `pregunta` · `porQueHaceFalta` · `obligatorio` · `opciones`.
 ⛔ **Uno a tres, nunca más.** Es lo mínimo para seguir, no un formulario.
 
-### 10b.6 Proveedores
+### 11.6 Proveedores
 `ProveedorBusqueda` · `ProveedorRegistroPublico` · `ProveedorModeloLenguaje` · `EstadoProveedores`.
 ⛔ **Se implementan únicamente en el servidor.** Ninguna clave ni llamada externa vive en el navegador.
 
 ---
 
-## 10c. Agenda operativa
+## 12. Agenda operativa
 
-### 10c.1 `EntradaAgenda`
+### 12.1 `EntradaAgenda`
 `id` · `vendedorId` · `tipo` · `origen` · `referenciaId` · `clienteId` · `titulo` · `detalle` · `productoId` · `inicioEn` · `finEn` · `venceEn` · `atrasada` · `diasDeAtraso` · `prioridad` · `estado` · `completadaEn` · `motivoReprogramacion` · `fechaAjustadaPorVendedor`.
 
 `tipo`: `visita | llamada | proximo_paso | vencimiento | seguimiento_atrasado | hito_plan | objetivo_aceptado | presentacion_enviada | cotizacion_en_revision | apertura_enlace`.
@@ -409,14 +391,32 @@ Es la sección **Accesos y frecuencia de uso** de Administración: sirve para sa
 | AG4 | ⛔ **No existe borrado.** `descartada` con motivo; queda en la historia. |
 | AG5 | Completar una entrada actualiza la línea de tiempo del cliente. |
 
-### 10c.2 Vistas derivadas
+### 12.2 Vistas derivadas
 `AgendaHoy` · `AgendaSemana` · `AgendaMes` · `CronogramaComercial` (con `BarraCronograma` e `HitoCronograma`) · `ResumenAgenda`.
 
 `ResumenAgenda` es lo único que consume Inicio: `pendientesHoy`, `atrasados`, `proximaEntrada`. ⛔ Inicio no duplica la agenda.
 
 ---
 
-## 12. Invariantes globales
+## 13. Registro de accesos
+
+### 13.1 `RegistroAcceso` *(append-only)*
+`id` · `actorId` · `rol` · `accion` · `entidadTipo` · `entidadId` · `valorAnterior` · `valorPosterior` · `ocurridoEn` · `origenSesion: { tipoDispositivo, paisAproximado }`.
+
+**Acciones mínimas:** ingreso · cierre de sesión · intento fallido · alta/baja de vendedor · cambio de participación · cambio de presupuesto · cambio de taxonomía · aprobación · corrección · rechazo · cierre de período · ajuste · emisión de PDF · emisión de enlace · revocación de enlace · borrado de audio · reasignación de cartera.
+
+### 13.2 `UsoPorVendedor` *(derivado)*
+`vendedorId` · `ultimoIngresoEn` · `ingresosEnPeriodo` · `diasSinEntrar` · `planesCreados` · `seguimientosRegistrados` · `cotizacionesEnviadas`.
+
+Es la sección **Accesos y frecuencia de uso** de Administración: sirve para saber quién está trabajando.
+
+### 13.3 Distinción que no se pierde
+`AccesoEnlace` responde *"¿el cliente abrió lo que le mandé?"*. `RegistroAcceso` responde *"¿quién usa el sistema y qué tocó?"*.
+⛔ La interfaz **nunca** los mezcla en una misma lista.
+
+---
+
+## 14. Invariantes globales
 
 | # | Invariante | Por qué importa |
 |---|---|---|
@@ -449,7 +449,7 @@ Es la sección **Accesos y frecuencia de uso** de Administración: sirve para sa
 
 ---
 
-## 13. Índices y volumetría
+## 15. Índices y volumetría
 
 | Tabla | Índices | Volumen (año 1) |
 |---|---|---|

@@ -141,4 +141,4 @@ Antes de cada entrega:
 8. Ningún activo de `public/` sin fila en `INVENTARIO_ACTIVOS.md`.
 9. El logo del producto excluido **no** está en el repositorio.
 
-Los siete controles están en `docs/QA_CHECKLIST.md` §7 como bloqueantes de entrega.
+Los nueve controles están en `docs/QA_CHECKLIST.md` §7 como bloqueantes de entrega.

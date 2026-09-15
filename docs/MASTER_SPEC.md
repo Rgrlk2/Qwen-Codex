@@ -694,7 +694,7 @@ Detalle: `docs/DESIGN_SYSTEM.md` · Activos: `docs/ASSET_SOURCES.md` e `INVENTAR
 | La agenda se puebla sola desde siete orígenes | §0 R11, §4.2 |
 | Ajustar fechas y completar, sin reconstruir | §4.4 |
 | Inicio conserva sólo la lista corta y el acceso | §2.1 Bloque B, §4.6 |
-| Agenda asignada a S4 | `PARALLEL_SESSIONS.md` §3 |
+| Agenda asignada a S4 | `PARALLEL_SESSIONS.md` §3 y §4 |
 | **Ocho colores oficiales + Inter** | §14.1 |
 | `#0A55D9` no es color de texto | §14.2 |
 | **Inventario de activos de Drive** | `INVENTARIO_ACTIVOS.md` |

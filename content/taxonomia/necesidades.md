@@ -4,4 +4,4 @@
 > Arranca desde `semilla-copy.md` y crece con el uso.
 > Reglas: `LEEME.md`.
 
-_(pendiente de carga en Fase 1)_
+_(pendiente de carga por S3)_

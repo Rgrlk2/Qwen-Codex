@@ -239,7 +239,50 @@ for (const campo of ['HitoPagoSetup', 'mesesIncluidos', 'mesesCongelamientoPreci
   }
 }
 
-// --- 13. Inventario de activos --------------------------------------------
+// --- 13. Referencias cruzadas entre documentos ---------------------------
+/**
+ * Con cinco rondas de renumeracion, una referencia "MASTER_SPEC §12" que ya no
+ * existe es el defecto mas facil de dejar y el mas dificil de ver. Este chequeo
+ * valida que toda referencia apunte a una seccion real.
+ */
+const DOCS = [
+  'MASTER_SPEC', 'USER_FLOWS', 'DATA_MODEL', 'API_CONTRACTS', 'COMMERCIAL_RULES',
+  'DESIGN_SYSTEM', 'ASSET_SOURCES', 'QA_CHECKLIST', 'PARALLEL_SESSIONS',
+  'INVENTARIO_ACTIVOS', 'PROMPTS_SESIONES', 'PEDIDOS',
+];
+
+/** Secciones (## N.) y subsecciones (### N.M) que existen en cada documento. */
+const secciones = new Map();
+for (const doc of DOCS) {
+  const ruta = join(RAIZ, `docs/${doc}.md`);
+  if (!existsSync(ruta)) { fallos.push(`Falta docs/${doc}.md.`); continue; }
+  const texto = readFileSync(ruta, 'utf8');
+  const set = new Set();
+  // Encabezados: "## 5." / "### 5.2"
+  for (const m of texto.matchAll(/^#{2,4} ([0-9]+(?:\.[0-9]+)*)[. ]/gm)) set.add(m[1]);
+  // Items numerados en fila de tabla: "| 5.2 ⛔ |" — QA_CHECKLIST numera asi.
+  for (const m of texto.matchAll(/^\| ([0-9]+(?:\.[0-9]+)+)[a-z]? /gm)) set.add(m[1]);
+  secciones.set(doc, set);
+}
+
+const AMBITOS_REF = ['docs', 'packages/compartido/src', 'packages/ui/src', 'apps', 'content', 'scripts'];
+for (const ambito of AMBITOS_REF) {
+  for (const archivo of archivos(join(RAIZ, ambito))) {
+    const texto = readFileSync(archivo, 'utf8');
+    for (const m of texto.matchAll(/\b([A-Z_]{4,})(?:\.md)? §([0-9]+(?:\.[0-9]+)?)/g)) {
+      const [, doc, sec] = m;
+      if (!secciones.has(doc)) continue;          // no es un documento nuestro
+      const set = secciones.get(doc);
+      // Una referencia a §N vale si existe §N o alguna §N.M
+      const valida = set.has(sec) || [...set].some((x) => x.startsWith(`${sec}.`));
+      if (!valida) {
+        fallos.push(`${rel(archivo)}: referencia a ${doc} §${sec}, que no existe.`);
+      }
+    }
+  }
+}
+
+// --- 14. Inventario de activos --------------------------------------------
 if (!existsSync(join(RAIZ, 'docs/INVENTARIO_ACTIVOS.md'))) {
   fallos.push('Falta docs/INVENTARIO_ACTIVOS.md: los activos se buscan en Drive, no se declaran pendientes.');
 }
@@ -263,3 +306,4 @@ console.log('OK — sin overflow-x: hidden usado como parche de desborde.');
 console.log('OK — siete rutas, #/administracion restringida al administrador.');
 console.log('OK — investigacion automatica declarada, sin credenciales en el cliente.');
 console.log('OK — agenda operativa y cotizacion estructurada declaradas.');
+console.log('OK — todas las referencias cruzadas entre documentos apuntan a secciones reales.');

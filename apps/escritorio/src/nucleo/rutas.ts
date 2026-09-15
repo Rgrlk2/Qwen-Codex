@@ -1,13 +1,13 @@
 /**
  * Registro de rutas de la ÚNICA aplicación.
  *
- * ⛔ COMPLETO DESDE FASE 0. NADIE LO EDITA.
+ * ⛔ CONGELADO EN EL COMMIT BASE. NADIE LO EDITA.
  *    Éste es el archivo que, en un trabajo paralelo mal organizado, editan las
- *    seis sesiones a la vez. Acá ya trae las seis rutas con su rol: por eso
- *    nadie necesita tocarlo (docs/PARALLEL_SESSIONS.md §7).
+ *    seis sesiones a la vez. Acá ya trae las siete rutas con su rol: por eso
+ *    nadie necesita tocarlo (docs/PARALLEL_SESSIONS.md §1).
  *
  * UNA SOLA APLICACIÓN, UN SOLO LOGIN, DOS ROLES.
- * El administrador ve las mismas cinco vistas del vendedor, más #/administracion.
+ * El administrador ve las mismas seis vistas del vendedor, más #/administracion.
  *
  * ⛔ Ocultar el enlace de administración NO es protegerlo: la guardia vive en
  *    guardia-rol.ts Y en el servidor (ver api.ts).

@@ -1,7 +1,7 @@
 /**
  * Contrato que cumple toda vista.
  *
- * ⛔ DUEÑO: SESIÓN 1. Congelado tras Fase 0.
+ * ⛔ DUEÑO: SESIÓN 1. Congelado en el commit base.
  *
  * Los cuatro estados no son una recomendación: son parte del contrato.
  * Una vista sin estado vacío o sin estado de error no está terminada

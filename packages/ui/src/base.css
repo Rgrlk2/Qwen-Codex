@@ -5,9 +5,12 @@
  *    Una variante propia de una vista lleva prefijo (.planificar-…) y vive en
  *    el CSS de esa vista.
  *
- * COMPONENTES a implementar en Fase 0 (docs/DESIGN_SYSTEM.md §5):
+ * COMPONENTES a implementar (docs/DESIGN_SYSTEM.md §5):
  *   .tarjeta · .accion-protagonista · .cifra · .rejilla · .lista
  *   .ranking/.ranking-fila · .encaje(--directo|--cercano|--adaptable|--no-recomendado)
+ *   .dato(--verificado|--inferido|--no-encontrado) · .confianza(--alta|--media|--baja)
+ *   .calendario/.calendario-dia · .cronograma dentro de .cronograma-contenedor
+ *   .entrada-agenda(--atrasada)
  *   .btn(-borde|-texto) · .campo/.entrada · .pestanas/.pestana · .chips/.chip
  *   .tabla dentro de .tabla-contenedor · dialog/.dialogo · .aviso
  *   .cargando/.hueso · .vacio · .error
@@ -24,7 +27,8 @@
  *
  * ⛔ RESPONSIVE — PROHIBIDO `overflow-x: hidden` PARA TAPAR UN DESBORDAMIENTO.
  *    Esconde el síntoma, deja el problema y rompe position: sticky.
- *    El único overflow-x permitido es el de .tabla-contenedor, y es de la tabla.
+ *    El único overflow-x permitido es el de .tabla-contenedor y el de
+ *    .cronograma-contenedor, y es del elemento, no de la página.
  *    Toda causa se corrige en su origen (docs/DESIGN_SYSTEM.md §7.1):
  *      min-width de más · hijo de flex/grid sin min-width:0 · tabla sin
  *      contenedor · palabra larga sin overflow-wrap · padding sumado a 100% ·
