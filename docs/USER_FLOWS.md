@@ -22,7 +22,7 @@
 | F9 | Armar la cotización | Propuestas | vendedor |
 | F10 | Revisión y aprobación | Administración | administrador |
 | F11 | PDF definitivo y envío al cliente | Propuestas | vendedor |
-| F12 | El cliente abre el enlace | vista pública | cliente |
+| F12 | **El cliente abre el enlace y elige** | vista pública | cliente |
 | F13 | Consultar mi dinero | Dinero | ambos |
 | F14 | Observar una línea de comisión | Dinero → Administración | ambos |
 | F15 | Control financiero y ranking | Administración | administrador |
@@ -100,7 +100,7 @@
 
 1. **A** Inicio → *Investigar una empresa o un profesional que conozco* → **Profesional**.
 2. **A** Escribe:
-   - **Nombre** — obligatorio — *Dra. Claudia Leguizamón*
+   - **Nombre** — obligatorio — *Dra. Marta Ayala*
    - **Profesión o especialidad** — obligatorio — *Pediatría*
    - **Matrícula** — ⛔ **sólo si la tiene a mano**
    - **Ciudad** — ⛔ **sólo si la tiene a mano**
@@ -207,64 +207,113 @@ Idéntico a F6 desde el paso 5, con `origen: "texto"`, sin audio. **Misma entida
 1. **A** Propuestas → **Cotizaciones** → *Nueva* → elegir cliente y presentación previa.
 2. ◆ **¿Existe una presentación entregada a ese cliente?**
    - **No** → **S** advierte que el circuito esperado es presentación primero. No bloquea, pero lo deja asentado.
-3. **A** Elige productos de los 13 y **propone el precio personalizado**:
-   - **setup** y su **descuento** (porcentaje o importe), **mensualidad**, **límites incluidos**;
-   - **hitos de pago del setup**: porcentaje o importe **al aceptar**, **al entregar o conectar**, y los que hagan falta;
-   - **meses incluidos** y **período de congelamiento del precio**;
-   - **débito automático** · **compromiso de doce meses** · **pago anual anticipado**;
-   - ⛔ **la condición que habilita cada beneficio**, y qué pasa si el cliente deja de cumplirla;
-   - **alcance**, **exclusiones**, **vigencia**, **cronograma** por etapas con su entregable e importe.
-3b. ◆ **¿Los hitos de pago cierran?**
-   - **Sí** → sigue.
-   - **No** → ⛔ **no se puede enviar a revisión.** Si son porcentuales deben sumar 100; si son importes, el setup con descuento aplicado.
-3c. ◆ **¿Cada beneficio tiene su condición escrita?** Si no, ⛔ no se aprueba después.
-4. **S** Muestra al lado el **precio de lista documentado** y la desviación, en guaraníes y en porcentaje. Es información, no un bloqueo.
-5. **S** Totaliza **por moneda**. ⛔ Nunca suma PYG con USD.
-6. **A** *Enviar a revisión*.
-7. **S** Estado `en_revision`, versión congelada, entra a la cola del administrador.
-8. ⛔ **No hay ningún camino que lleve esta cotización al cliente sin pasar por F10.**
+3. **A** Elige **un producto** de los 13 y, si lo tiene, **su variante o plan**.
+4. **A** Escribe los dos únicos importes que le tocan:
+   - **precio especial del setup** (**S**);
+   - **precio mensual especial** (**M**).
+
+   > Internamente se llama *precio efectivo*. ⛔ En el PDF que recibe el cliente se muestra como **"Precio especial"**.
+5. **S** Trae del catálogo el **precio de lista** del setup y de la mensualidad, y **calcula los dos ahorros**. ⛔ El vendedor no escribe los ahorros.
+6. **A** Completa las condiciones:
+   - **permanencia mínima** — 12 meses por defecto;
+   - **condiciones de instalación** y **tiempo estimado**;
+   - ⛔ **insumos, accesos, cuentas, información y equipos que debe proporcionar el cliente**, marcando cuáles son bloqueantes;
+   - **qué incluye** y ⛔ **qué no incluye** — los dos obligatorios;
+   - **límites incluidos**: consultas por mes, usuarios, canales;
+   - **bases y condiciones** y **tratamiento del IVA**.
+7. **S** Calcula y muestra **las cuatro alternativas financieras**, ⛔ **no acumulables**:
+
+   | | Alternativa | Cálculo |
+   |---|---|---|
+   | **A** | Plan estándar | `S + (M × 12)` |
+   | **B** | Adelantado 12 meses, 10 % | `S + (M × 12 × 0,90)` |
+   | **C** | Adelantado 24 meses, 20 % | `S + (M × 24 × 0,80)` |
+   | **D** | Cheques diferidos o débito automático | `S + (M × 11 × 0,90)` |
+
+   De cada una: precio total de lista · precio especial sin promoción · descuento adicional · ahorro total · setup a pagar · mensualidades a pagar · meses de servicio · total final · valor mensual efectivo · forma y calendario de pago.
+8. ⛔ El descuento se aplica sobre **M**. El **setup se suma por separado** y nunca lo recibe.
+9. **S** Muestra al lado el **precio de lista documentado** y la desviación, en guaraníes y en porcentaje. Es información, no un bloqueo.
+10. **S** Totaliza **por moneda**. ⛔ Nunca suma PYG con USD; monedas distintas ⇒ error, no total.
+11. ◆ **¿Están los 25 campos obligatorios?** (`COMMERCIAL_RULES.md` §6.1)
+    - **No** → ⛔ no se puede enviar a revisión. **S** nombra los que faltan.
+12. **A** *Firmar como vendedor*. ⛔ La firma se registra **antes** de enviar a revisión.
+13. **A** *Enviar a revisión*.
+14. **S** Estado `en_revision`, versión congelada, entra a la cola del CEO.
+15. ⛔ **No hay ningún camino que lleve esta cotización al cliente sin pasar por F10.**
 
 ---
 
 ## F10 · Revisión y aprobación
 
 1. **A** Administración → **Aprobación de cotizaciones**.
-2. **S** Cola por antigüedad y monto. Por cada cotización: propuesto vs. lista, desviación en guaraníes y en porcentaje, **la suma de los hitos de pago y si cierra**, **meses incluidos y congelamiento**, las tres condiciones, **qué habilita cada beneficio**, impacto en la parte de Lab.IA, historial del cliente, versiones anteriores.
-3. ◆ **Decisión** — las tres exigen comentario:
-   - **aprobar** → `aprobada`;
+2. ◆ **¿Tiene firma del vendedor vigente?** → **No** → ⛔ `requiere_firma`, no entra a la cola.
+3. **S** ⛔ **Vuelve a ejecutar los cuatro cálculos en el servidor.** Si lo recalculado no coincide con lo enviado, manda lo del servidor y lo señala. El resultado del servidor prevalece.
+4. **S** Cola por antigüedad y monto. Por cada cotización: precio especial contra lista, desviación en guaraníes y en porcentaje, **los cuatro totales recalculados**, permanencia mínima, **aportes bloqueantes del cliente**, qué incluye y qué no, impacto en la parte de Lab.IA, historial del cliente, versiones anteriores.
+5. **A** Elige **cuáles alternativas quedan visibles** para el cliente. Vacío = las cuatro.
+6. ◆ **Decisión** — las tres exigen comentario:
+   - **aprobar** → `aprobada`, y **S** incorpora la **firma del CEO**;
    - **corregir** → vuelve a `borrador` con versión +1 y los cambios pedidos, historial intacto;
    - **rechazar** → `rechazada`.
-4. ⛔ Nadie aprueba su propia cotización.
-5. ⛔ **No hay autoaprobación** por tiempo, monto ni antigüedad.
-6. **S** Notifica al vendedor y deja registro.
+7. ⛔ Nadie aprueba su propia cotización.
+8. ⛔ **No hay autoaprobación** por tiempo, monto ni antigüedad.
+9. ⛔ La firma del CEO es un **activo protegido servido desde el servidor**. Su imagen original **no se expone por ninguna URL pública**: el PDF la incrusta al generarse.
+10. ◆ **¿Se edita la cotización después de aprobada?** → **S** anula la aprobación **y las dos firmas**. Hay que volver a firmar y volver a aprobar.
+11. **S** Notifica al vendedor y deja registro.
 
 ---
 
 ## F11 · PDF definitivo y envío al cliente
 
 1. ◆ **¿La cotización está `aprobada`?**
-   - **No** → ⛔ la acción no existe en la interfaz y la capa de datos la rechaza.
-   - **Sí** → sigue.
-2. **A** *Emitir PDF definitivo*.
-3. **S** Genera el PDF en servidor, determinístico, con folio, versión, fecha, vigencia y la marca oficial. **Inmutable.**
-4. **A** *Generar enlace* con vencimiento, tope de aperturas y revocación disponible.
-5. ⛔ El enlace lleva **token opaco**: no deriva de ningún dato del cliente ni de la cotización.
-6. **A** Envía por su canal. **S** Estado `enviada_al_cliente`.
-7. ◆ Desenlace: `aceptada` · `perdida` (motivo obligatorio) · `vencida` (automática; el enlace deja de mostrar importes).
-8. ◆ **`aceptada`** → **S** crea la mensualidad y habilita el cómputo de participación (F13).
-9. **A** *Revocar enlace* en cualquier momento → corte inmediato, con registro.
+   - **No** → ⛔ la acción no existe en la interfaz y la capa de datos la rechaza con `requiere_aprobacion`.
+2. ◆ **¿Están las dos firmas vigentes?**
+   - **No** → ⛔ `requiere_firma`.
+3. **A** *Emitir PDF definitivo*.
+4. **S** Genera el PDF **en el servidor**, determinístico, con folio, versión, fecha de emisión, fecha de validez, los **logos oficiales** de Lab.IA, RGrlk Group y del producto —y el de la variante si existe oficialmente—, las cuatro alternativas aprobadas y **las dos firmas incrustadas**. **Inmutable.**
+5. ⛔ En el PDF el importe negociado se rotula **"Precio especial"**, nunca "precio efectivo" ni "precio verdadero".
+6. ⛔ Los logos van con `object-fit: contain`, en su proporción original: no se generan, no se redibujan, no se recolorean, no se recortan y no se deforman.
+7. **A** *Generar enlace* con vencimiento, tope de aperturas y revocación disponible.
+8. ⛔ El enlace lleva **token opaco**: no deriva de ningún dato del cliente ni de la cotización.
+9. **A** Envía por su canal. **S** Estado `enviada_al_cliente`.
+10. ◆ Desenlace: `aceptada` · `perdida` (motivo obligatorio) · `vencida` (automática; el enlace deja de mostrar importes).
+11. ◆ **`aceptada`** → **S** crea la mensualidad y habilita el cómputo de participación (F13).
+12. **A** *Revocar enlace* en cualquier momento → corte inmediato, con registro.
 
 ---
 
-## F12 · El cliente abre el enlace
+## F12 · El cliente abre el enlace y elige
 
-1. **A** El cliente abre el enlace recibido.
+1. **A** El cliente abre el enlace recibido. ⛔ Privado y único.
 2. ◆ **Token:** `vencido` / `revocado` / `tope_superado` → mensaje neutro, ⛔ sin contenido ni datos del cliente. `ok` → sigue.
 3. ◆ **¿Requiere código?** → se pide; tras N intentos se bloquea y se registra.
-4. **S** Muestra la presentación o la cotización aprobada. ⛔ Sin navegación al Escritorio, sin otros clientes, sin precios de terceros.
-5. ◆ Cotización `vencida` → se muestra **sin importes**, con aviso de vigencia caducada.
-6. **S** Registra la apertura (§10.1 del MASTER_SPEC). ⛔ Sin identificar a la persona.
-7. **S** El vendedor ve la apertura en la ficha del cliente y en sus próximos seguimientos.
+4. **S** Muestra: **nombre del cliente** · **producto y variante** · **número y versión** · **las alternativas aprobadas con su total** · **vencimiento** · **bases y condiciones**.
+   ⛔ Sin navegación al Escritorio, sin otros clientes, sin precios de terceros, y nunca revela cuántas aperturas hubo.
+5. ◆ Cotización `vencida` → se muestra **sin importes**, con aviso de vigencia caducada, y ⛔ sin poder responder.
+6. **A** Elige **una** opción. ⛔ Como las alternativas son excluyentes, son **botones de opción, no casillas múltiples**:
+
+   1. Elijo el plan estándar.
+   2. Elijo pago adelantado por 12 meses.
+   3. Elijo pago adelantado por 24 meses.
+   4. Elijo cheques diferidos o débito automático.
+   5. Quiero que me contacten antes de elegir.
+   6. No continuar por ahora.
+
+7. **A** Marca la casilla obligatoria:
+   > He revisado la opción seleccionada y solicito que Lab.IA continúe con los próximos pasos.
+
+8. ◆ **¿Casilla marcada?** → **No** → ⛔ el botón **Enviar mi elección** queda deshabilitado. El tipo `aceptacionMarcada: true` lo hace imposible en código, y el servidor lo rechaza con `validacion`.
+9. **A** **Enviar mi elección**.
+10. **S** Guarda la **constancia inmutable**: cliente · cotización · **versión exacta** · opción seleccionada · importes aceptados · fecha y hora · vencimiento · texto de aceptación · identificación del enlace · **huella del documento aprobado**.
+11. ⛔ **Esta respuesta funciona como constancia comercial o aval de intención. No se presenta como contrato ni como firma electrónica legal.**
+12. **S** Avisa, en este orden, a los cuatro destinos:
+    - **celular del vendedor asignado**;
+    - **WhatsApp corporativo +595 984 355775**;
+    - **celular personal del CEO** — configurable y almacenado **solamente en el servidor**;
+    - **panel de Administración**.
+13. ⛔ El número personal del CEO **nunca** aparece en el enlace, el PDF ni el código del navegador.
+14. ◆ **¿Falla algún aviso?** → ⛔ **la constancia ya está guardada.** El aviso se reintenta. **Nunca se pierde la elección del cliente.**
+15. **S** Registra la apertura y la respuesta. ⛔ Sin identificar a la persona.
+16. **S** El vendedor ve la apertura y la elección en la ficha del cliente y en sus próximos seguimientos.
 
 ---
 

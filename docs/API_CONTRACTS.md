@@ -18,6 +18,8 @@
 | A7 | **Las respuestas nunca traen copy de producto.** Traen `productoId`. |
 | A8 | **Nada se persiste desde voz o texto sin `confirmadoPorUsuario: true`.** |
 | A9 | **El rol se verifica en el servidor.** Un método de administración llamado por un vendedor devuelve `sin_permiso`, siempre. |
+| A10 | **Los activos sensibles se sirven desde el servidor.** Firmas y números de contacto se referencian por un identificador que ⛔ sólo el servidor resuelve. Nunca viaja una URL pública ni el valor en claro. |
+| A11 | **Ninguna clave ni dato sensible vive en el navegador.** Proveedores de investigación y de modelo de lenguaje, firmas y destinos de notificación: todo pasa por el servidor. |
 
 ---
 
@@ -38,7 +40,8 @@ interface ErrorApi {
 
 type CodigoError =
   | "credenciales_invalidas" | "no_autenticado" | "sin_permiso" | "no_encontrado"
-  | "validacion" | "conflicto_version" | "regla_comercial" | "requiere_aprobacion"
+  | "validacion" | "conflicto_version" | "regla_comercial"
+  | "requiere_aprobacion" | "requiere_firma" | "monedas_mezcladas"
   | "enlace_vencido" | "enlace_revocado" | "tope_aperturas"
   | "limite_excedido" | "servicio_no_disponible" | "tiempo_agotado" | "desconocido";
 
@@ -47,13 +50,13 @@ interface Pagina<T> { items: T[]; cursor: string | null; total: number | null }
 
 | HTTP | Código |
 |---|---|
-| 400 | `validacion` |
+| 400 | `validacion` / `monedas_mezcladas` |
 | 401 | `no_autenticado` / `credenciales_invalidas` |
 | 403 | `sin_permiso` |
 | 404 | `no_encontrado` |
 | 409 | `conflicto_version` |
 | 410 | `enlace_vencido` / `enlace_revocado` |
-| 422 | `regla_comercial` / `requiere_aprobacion` |
+| 422 | `regla_comercial` / `requiere_aprobacion` / `requiere_firma` |
 | 429 | `limite_excedido` |
 | 5xx | `servicio_no_disponible` |
 
@@ -196,33 +199,44 @@ crearPresentacion(datos: NuevaPresentacion, clave: ClaveIdempotencia): R<Present
 actualizarPresentacion(id: Id, cambios, version: Version): R<Presentacion>;
 emitirPresentacion(id: Id, clave: ClaveIdempotencia): R<DocumentoEmitido>;
 
-// Cotización — precio propuesto por el vendedor
+// Cotización — el vendedor manda SÓLO los dos precios especiales
 listarCotizaciones(filtro, pagina?): R<Pagina<Cotizacion>>;
 obtenerCotizacion(id: Id): R<CotizacionDetalle>;
 crearCotizacion(datos: NuevaCotizacion, clave: ClaveIdempotencia): R<Cotizacion>;
 actualizarCotizacion(id: Id, cambios, version: Version): R<Cotizacion>;
-previsualizarTotales(items: ItemCotizacionEntrada[]): R<TotalesPorMoneda>;
-compararConLista(items: ItemCotizacionEntrada[]): R<ComparacionConLista>;
-enviarARevision(id: Id, comentario: string, clave: ClaveIdempotencia): R<Cotizacion>;
+previsualizarCotizacion(productoId: ProductoId, precios: PreciosEntrada,
+                        variante?: string): R<PrevisualizacionCotizacion>;
+previsualizarTotales(base: BaseCalculo): R<TotalesPorMoneda>;
+compararConLista(productoId: ProductoId, precios: PreciosEntrada): R<ComparacionConLista>;
 historialVersiones(id: Id): R<VersionCotizacion[]>;
+
+// Firma del vendedor, antes de revisión
+firmarComoVendedor(cotizacionId: Id, clave: ClaveIdempotencia): R<Firma>;
+enviarARevision(id: Id, comentario: string, clave: ClaveIdempotencia): R<Cotizacion>;
 
 // Sólo después de aprobar
 emitirPdfDefinitivo(cotizacionId: Id, clave: ClaveIdempotencia): R<DocumentoEmitido>;
 enviarAlCliente(cotizacionId: Id, clave: ClaveIdempotencia): R<Cotizacion>;
 marcarDesenlace(id: Id, desenlace: "aceptada" | "perdida", motivo?: string): R<Cotizacion>;
 
-// Enlaces y aperturas
+// Enlaces, aperturas y respuesta
 crearEnlace(propuestaId: Id, opciones: OpcionesEnlace, clave: ClaveIdempotencia): R<EnlaceCompartido>;
 revocarEnlace(enlaceId: Id, motivo: string): R<EnlaceCompartido>;
 aperturasDePropuesta(propuestaId: Id, pagina?): R<Pagina<AccesoEnlace>>;
+constanciaDeCotizacion(cotizacionId: Id): R<ConstanciaRespuesta | null>;
 ```
 
 **Reglas duras:**
-- ⛔ **No existe `aprobarCotizacion` en esta capa.** Aprobar es de administración (§2.7).
-- `emitirPdfDefinitivo` sobre una cotización que no está `aprobada` ⇒ `requiere_aprobacion`.
-- `enviarAlCliente` sobre una cotización que no está `aprobada` ⇒ `requiere_aprobacion`.
+- ⛔ **No existe `aprobarCotizacion` en esta capa.** Aprobar es de administración (§2.8).
+- `crearCotizacion` recibe **`PreciosEntrada`**: `setupEspecial` y `mensualEspecial`, nada más. ⛔ Precios de lista, ahorros, alternativas, totales y logos **no se envían**: salen del catálogo y del cálculo del servidor.
+- ⛔ **El servidor vuelve a ejecutar los cuatro cálculos antes de aprobar.** El navegador puede previsualizar con las funciones puras de `alternativas.ts`, pero **el resultado del servidor prevalece**.
+- Monedas distintas en la base ⇒ `monedas_mezcladas`. ⛔ Nunca un total mezclado.
 - `previsualizarTotales` devuelve **un `Dinero` por moneda**. ⛔ Nunca un total consolidado.
-- `actualizarCotizacion` sobre `aprobada` crea versión nueva en `borrador` y **caduca la aprobación**; la respuesta lo informa en `avisos[]`.
+- `firmarComoVendedor` manda **la intención de firmar**, ⛔ nunca la imagen ni su ubicación. El servidor resuelve `referenciaProtegida`.
+- `enviarARevision` sin firma de vendedor vigente ⇒ `requiere_firma`.
+- `emitirPdfDefinitivo` sobre una cotización que no está `aprobada` ⇒ `requiere_aprobacion`; sin las **dos** firmas vigentes ⇒ `requiere_firma`.
+- `enviarAlCliente` sobre una cotización que no está `aprobada` ⇒ `requiere_aprobacion`.
+- `actualizarCotizacion` sobre `aprobada` crea versión nueva en `borrador`, **caduca la aprobación y anula las firmas**; la respuesta lo informa en `avisos[]`.
 - `emitirPdfDefinitivo` es idempotente por `(cotizacionId, version)`.
 
 ### 2.7 Dinero del vendedor — S6
@@ -258,10 +272,17 @@ resolverObservacion(id: Id, estado, comentario: string): R<Observacion>;
 listarTodosLosClientes(filtro, pagina?): R<Pagina<Cliente>>;
 lineaDeTiempoDeCualquierCliente(clienteId: Id, pagina?): R<Pagina<EventoLineaTiempo>>;
 
-// Aprobación de cotizaciones
-colaDeRevision(filtro, pagina?): R<Pagina<Cotizacion>>;
+// Aprobación de cotizaciones, firmas y constancias
+colaDeRevision(filtro, pagina?): R<Pagina<CotizacionDetalle>>;
+recalcularCotizacion(id: Id): R<AlternativaCalculada[]>;      // ⛔ los cuatro cálculos, en servidor
 revisarCotizacion(id: Id, accion: "aprobar" | "corregir" | "rechazar",
-                  comentario: string, clave: ClaveIdempotencia): R<Cotizacion>;
+                  comentario: string, clave: ClaveIdempotencia,
+                  alternativasAprobadas?: CodigoAlternativa[]): R<Cotizacion>;
+firmarComoCeo(cotizacionId: Id, clave: ClaveIdempotencia): R<Firma>;
+firmasDeCotizacion(cotizacionId: Id): R<Firma[]>;
+anulacionesDeFirma(cotizacionId: Id, rol?: RolFirmante): R<Firma[]>;
+listarConstancias(pagina?): R<Pagina<ConstanciaRespuesta>>;
+reintentarNotificaciones(constanciaId: Id): R<ResultadoNotificaciones>;
 
 // Configuración comercial
 listarParticipaciones(): R<ParticipacionProducto[]>;
@@ -299,18 +320,38 @@ resolverSugerencia(id: Id, resolucion: ResolucionSugerencia): R<SugerenciaProduc
 Y las que se verifican en tiempo de ejecución:
 - `revisarCotizacion` con `actorId === cotizacion.vendedorId` ⇒ `sin_permiso`.
 - `revisarCotizacion` con comentario vacío ⇒ `validacion`.
+- `revisarCotizacion('aprobar', …)` ⛔ **recalcula las cuatro alternativas en el servidor antes de aprobar** e incorpora la firma del CEO.
+- `firmarComoCeo` ⛔ resuelve e incrusta la imagen **en el servidor**. No hay URL pública de la firma del CEO, ni en el enlace, ni en el PDF, ni en el navegador.
+- `reintentarNotificaciones` ⛔ **no vuelve a guardar la constancia**: ya está guardada. Sólo reenvía el aviso.
 - `publicarParticipacion` con porcentajes que no suman 100 ⇒ `validacion`.
 - `cerrarPeriodo` sin `verificarCierrePeriodo` en verde ⇒ `regla_comercial` con la lista de bloqueos.
 - Cualquier método de §2.7 llamado con rol `vendedor` ⇒ `sin_permiso`.
 
 ### 2.9 Enlace público — sin sesión
 ```ts
-obtenerPropuestaPublica(token: string, codigo?: string): R<PropuestaPublica>;
+obtenerPresentacionPublica(token: string, codigo?: string): R<PresentacionPublica>;
+obtenerCotizacionPublica(token: string, codigo?: string): R<CotizacionPublica>;
 descargarPdfPublico(token: string): R<{ url: string; venceEn: ISODate }>;
+
+responderCotizacion(token: string, respuesta: RespuestaDelCliente,
+                    clave: ClaveIdempotencia): R<ConstanciaRespuesta>;
+obtenerConstanciaPublica(token: string): R<ConstanciaRespuesta | null>;
 ```
 ⛔ Superficie mínima. Sin datos de otros clientes, sin navegación al Escritorio, sin listados.
-Una cotización `vencida` vuelve **sin importes**, con `avisoVigencia`.
+Una cotización `vencida` vuelve **sin importes** y ⛔ **no acepta respuesta**.
 Cada llamada genera un `AccesoEnlace`; ⛔ la respuesta **nunca** revela cuántas aperturas hubo.
+
+**`responderCotizacion`:**
+
+| # | Regla |
+|---|---|
+| P1 | ⛔ `RespuestaDelCliente.aceptacionMarcada` es **literal `true`**. Sin la casilla marcada el código no compila y el servidor devuelve `validacion`. |
+| P2 | ⛔ **Una sola opción**: las alternativas son excluyentes. La interfaz usa **botones de opción, no casillas múltiples**. |
+| P3 | ⛔ La **constancia se guarda antes** de intentar los avisos. |
+| P4 | ⛔ Si un aviso falla, `constanciaGuardada` sigue siendo `true` y el envío se reintenta. **Nunca se pierde la elección del cliente.** |
+| P5 | ⛔ Es una **constancia comercial**, no un contrato ni una firma electrónica legal. |
+| P6 | ⛔ El número personal del CEO **nunca** viaja en esta superficie. `DestinosNotificacion` expone **si** está configurado, nunca su valor. |
+| P7 | Idempotente por `(token, clave)`: un doble envío no genera dos constancias. |
 
 ---
 

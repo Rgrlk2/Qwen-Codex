@@ -11,7 +11,7 @@
  * ⛔ porcentajeLabIA + porcentajeVendedor === 100. Siempre.
  * ⛔ Ningún total consolidado entre monedas.
  *
- * Ver MASTER_SPEC.md §2.5 y §7, COMMERCIAL_RULES.md §3 y §4.
+ * Ver MASTER_SPEC.md §2.6 y §9, COMMERCIAL_RULES.md §3 y §4.
  */
 
 import type { Dinero, Id, ISODate, PeriodoMensual, TotalesPorMoneda } from './core';

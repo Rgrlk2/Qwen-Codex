@@ -151,31 +151,66 @@
 ### 6.2 Cotización estructurada
 | # | Verificación |
 |---|---|
-| 6.2.1 ⛔ | **Hitos de pago del setup**: porcentaje o importe **al aceptar** y **al entregar/conectar**, cada uno con su descripción visible. |
-| 6.2.2 ⛔ | Si los hitos son porcentuales, **suman exactamente 100**. Si son importes, **suman el setup con descuento**. |
-| 6.2.3 ⛔ | Una cotización cuyos hitos **no cierran** ⛔ **no se puede enviar a revisión**. |
-| 6.2.4 ⛔ | **Meses incluidos** y **período de congelamiento del precio** están y se muestran. |
-| 6.2.5 ⛔ | **Descuento de setup**: porcentaje **o** importe, ⛔ nunca los dos. |
-| 6.2.6 ⛔ | Están **débito automático**, **compromiso de doce meses** y **pago anual anticipado**. |
-| 6.2.7 ⛔ | **Cada beneficio declara la condición que lo habilita** y qué pasa si el cliente deja de cumplirla. ⛔ Sin condición escrita, no se aprueba. |
-| 6.2.8 ⛔ | Están **alcance**, **exclusiones**, **vigencia** y **cronograma** con entregable e importe por etapa. |
-| 6.2.9 ⛔ | **Límites incluidos** por ítem (consultas, usuarios, canales). |
-| 6.2.10 ⛔ | El vendedor **propone** el precio; el sistema muestra al lado el de lista y la desviación. |
-| 6.2.11 ⛔ | Totales **por moneda**. |
+| 6.2.1 ⛔ | **Plantilla genérica.** Se genera para cualquiera de los 13 productos, cualquier variante y cualquier cliente. ⛔ Ningún importe fijado en el código, ninguna propuesta anterior usada como modelo, ningún nombre de cliente en el repositorio. |
+| 6.2.2 ⛔ | **Los 25 campos obligatorios de `COMMERCIAL_RULES.md` §6.1 están**: folio · cliente · empresa o profesional · producto · variante · vendedor · emisión · validez · setup de lista · setup especial · ahorro de setup · mensual de lista · mensual especial · ahorro mensual · permanencia mínima · condiciones de instalación · tiempo estimado · aportes del cliente · qué incluye · qué no incluye · bases y condiciones · firma del vendedor · firma del CEO · logos oficiales · logo de la variante. |
+| 6.2.3 ⛔ | Falta alguno de los 25 ⇒ ⛔ **no se puede enviar a revisión**, y la interfaz nombra cuáles faltan. |
+| 6.2.4 ⛔ | El vendedor escribe **sólo dos importes**: setup especial y mensual especial. ⛔ Los ahorros **no se piden en un formulario**: se calculan. |
+| 6.2.5 ⛔ | **Permanencia mínima 12 meses** presente y visible. |
+| 6.2.6 ⛔ | **Qué no incluye** ⛔ no puede quedar vacío. |
+| 6.2.7 ⛔ | Los **aportes del cliente** (insumo, acceso, cuenta, información, equipo) están, cada uno marcado como bloqueante o no. |
+| 6.2.8 ⛔ | En la vista interna puede decir "precio efectivo"; ⛔ **en el PDF del cliente dice "Precio especial"**, nunca "precio verdadero" ni "precio efectivo". |
+| 6.2.9 ⛔ | El vendedor **propone** el precio; el sistema muestra al lado el de lista y la desviación en guaraníes y en porcentaje. |
+| 6.2.10 ⛔ | Totales **por moneda**. ⛔ Monedas distintas ⇒ error, no total. |
+| 6.2.11 ⛔ | **Logos oficiales** de Lab.IA, RGrlk Group y del producto, y el de la variante si existe. ⛔ No generados, no redibujados, no recoloreados, no recortados, sin quitarles el fondo, no deformados: `object-fit: contain`, proporción original. |
 
-### 6.3 Aprobación — el circuito
+### 6.2b Las cuatro alternativas financieras
 | # | Verificación |
 |---|---|
-| 6.3.1 ⛔ | El circuito es: **borrador → revisión del administrador → aprobada o corregida → PDF definitivo → envío al cliente**. |
+| 6.2b.1 ⛔ | Las **cuatro** están, con estos cálculos exactos — S = setup especial, M = mensual especial: `A: S + (M × 12)` · `B: S + (M × 12 × 0,90)` · `C: S + (M × 24 × 0,80)` · `D: S + (M × 11 × 0,90)`. |
+| 6.2b.2 ⛔ | **B, C y D NO son acumulables.** El cliente elige **una sola**. Probar que no haya forma de combinar dos. |
+| 6.2b.3 ⛔ | El descuento se calcula **sobre la mensualidad especial**. ⛔ `setupAPagar === setupEspecial` en las cuatro. |
+| 6.2b.4 ⛔ | En **D** el cliente recibe **12 meses de servicio** y paga **11 mensualidades**. |
+| 6.2b.5 ⛔ | De cada alternativa se muestran las **diez cifras**: precio total de lista · precio especial sin promoción · descuento adicional · ahorro total · setup a pagar · mensualidades a pagar · meses de servicio · total final · valor mensual efectivo · forma y calendario de pago. |
+| 6.2b.6 ⛔ | **Nunca se suman monedas diferentes.** Una base con PYG y USD ⇒ error, no un total. |
+| 6.2b.7 ⛔ | **Todos los cálculos se ejecutan de nuevo en el servidor antes de aprobar**, y el resultado del servidor prevalece sobre el del navegador. |
+| 6.2b.8 ⛔ | Las cuotas del calendario **suman exactamente** el total final. |
+| 6.2b.9 ⛔ | `npm run verificar:calculos` pasa en verde. Probarlo también **rompiendo una fórmula a propósito**: tiene que fallar. |
+
+### 6.3 Aprobación, firmas y circuito
+| # | Verificación |
+|---|---|
+| 6.3.1 ⛔ | El circuito es: **borrador → firma del vendedor → revisión del CEO → aprobación o corrección → firma del CEO → PDF definitivo → enlace para el cliente → respuesta → constancia → avisos**. |
 | 6.3.2 ⛔ | ⛔ **Ningún vendedor puede enviar una cotización final sin aprobación.** Probar todos los caminos: botón, URL directa, llamada a la capa de datos. |
-| 6.3.2b ⛔ | Al revisar se muestran **la suma de los hitos y si cierra**, los meses incluidos, el congelamiento y **qué habilita cada beneficio**. |
+| 6.3.2b ⛔ | Al revisar se muestran **los cuatro totales recalculados por el servidor**, la permanencia mínima, los **aportes bloqueantes**, qué incluye y qué no, y si la firma del vendedor está vigente. |
 | 6.3.3 ⛔ | `emitirPdfDefinitivo` sobre una cotización no aprobada ⇒ `requiere_aprobacion`. |
 | 6.3.4 ⛔ | `enviarAlCliente` sobre una cotización no aprobada ⇒ `requiere_aprobacion`. |
 | 6.3.5 ⛔ | **No hay autoaprobación** por tiempo, monto ni antigüedad. |
 | 6.3.6 ⛔ | Aprobar, corregir y rechazar **exigen comentario**. |
 | 6.3.7 ⛔ | Nadie aprueba su propia cotización. |
-| 6.3.8 ⛔ | Una cotización aprobada es inmutable: editarla crea versión nueva y **caduca la aprobación**. |
+| 6.3.8 ⛔ | Una cotización aprobada es inmutable: editarla crea versión nueva, **caduca la aprobación y anula las firmas anteriores**. |
 | 6.3.9 | El historial de versiones es completo e inmutable. |
+| 6.3.10 ⛔ | La **firma del vendedor** se registra **antes** de enviar a revisión. Sin ella ⇒ `requiere_firma`. |
+| 6.3.11 ⛔ | La **firma del CEO** se incorpora **al aprobar**, no antes. |
+| 6.3.12 ⛔ | `emitirPdfDefinitivo` sin las **dos** firmas vigentes ⇒ `requiere_firma`. |
+| 6.3.13 ⛔ | **La imagen original de la firma del CEO no se expone por ninguna URL pública.** Buscar en el HTML, en el CSS, en el JS servido y en el PDF: no hay ruta ni nombre de archivo que la alcance. |
+| 6.3.14 ⛔ | `Firma.referenciaProtegida` **no es una URL** ni un nombre de archivo, y no se puede adivinar. |
+
+### 6.3b Respuesta del cliente, constancia y avisos
+| # | Verificación |
+|---|---|
+| 6.3b.1 ⛔ | El enlace es **privado y único**, y muestra: nombre del cliente · producto y variante · número y versión · alternativas aprobadas con su total · vencimiento · bases y condiciones. |
+| 6.3b.2 ⛔ | **Botones de opción (radio), NUNCA casillas múltiples.** Inspeccionar el HTML: `type="radio"`, un solo `name`. Las alternativas son excluyentes. |
+| 6.3b.3 ⛔ | Las **seis opciones** están, con su texto exacto (`TEXTOS_OPCION`). |
+| 6.3b.4 ⛔ | La **casilla obligatoria** está, con este texto exacto: *"He revisado la opción seleccionada y solicito que Lab.IA continúe con los próximos pasos."* |
+| 6.3b.5 ⛔ | Sin la casilla marcada, el botón **Enviar mi elección** queda deshabilitado, y la capa de datos devuelve `validacion`. |
+| 6.3b.6 ⛔ | El botón final dice exactamente **"Enviar mi elección"**. |
+| 6.3b.7 ⛔ | La **constancia** guarda: cliente · cotización · **versión exacta** · opción · importes aceptados · fecha y hora · vencimiento · texto de aceptación · identificación del enlace · **huella del documento aprobado**. Inmutable. |
+| 6.3b.8 ⛔ | La interfaz y el documento dicen que es una **constancia comercial o aval de intención**. ⛔ **Nunca** la palabra "contrato" ni "firma electrónica" para describirla. |
+| 6.3b.9 ⛔ | Al recibirla se avisa a los **cuatro destinos**: celular del vendedor · WhatsApp corporativo +595 984 355775 · celular personal del CEO · panel de Administración. |
+| 6.3b.10 ⛔ | **El número personal del CEO no aparece** en el enlace, en el PDF ni en el código del navegador. Buscar el número en todo lo servido al cliente: cero coincidencias, ni siquiera en un comentario. |
+| 6.3b.11 ⛔ | **Cortar la notificación a propósito**: la constancia queda guardada igual, el aviso queda `pendiente` o `reintentando`, y `constanciaGuardada` sigue en `true`. ⛔ La elección del cliente **no se pierde**. |
+| 6.3b.12 ⛔ | Una cotización **vencida** se muestra sin importes y ⛔ **no acepta respuesta**. |
+| 6.3b.13 | Doble envío con la misma clave de idempotencia ⇒ **una sola** constancia. |
 
 ### 6.4 Seguimiento
 | # | Verificación |

@@ -114,7 +114,7 @@ export interface PrecioLista {
   readonly montoHasta: number | null;
   /**
    * `true` = IVA incluido · `false` = IVA excluido (`+ IVA` documentado)
-   * `null` = **no documentado**. No se asume ningún régimen. Ver COMMERCIAL_RULES.md §3.
+   * `null` = **no documentado**. No se asume ningún régimen. Ver COMMERCIAL_RULES.md §2.4.
    */
   readonly ivaIncluido: boolean | null;
   /** Transcripción literal del copy. **Es lo que se muestra en pantalla.** */

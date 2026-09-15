@@ -4,24 +4,41 @@
  *   A) PRESENTACIÓN — se genera PRIMERO. Personalizada, visual, compartible,
  *      SIN precio definitivo, NO requiere aprobación.
  *
- *   B) COTIZACIÓN — se prepara DESPUÉS. El vendedor propone el precio
- *      personalizado. ⛔ SIEMPRE pasa por aprobación del administrador.
+ *   B) COTIZACIÓN — se prepara DESPUÉS. El vendedor propone el precio especial.
+ *      ⛔ SIEMPRE pasa por aprobación del administrador (CEO).
  *
  * El circuito, sin desvíos:
- *   borrador del vendedor → revisión del administrador → aprobada o corregida
- *   → PDF definitivo → envío al cliente
+ *   borrador del vendedor → revisión del CEO → aprobación o corrección
+ *   → incorporación de firmas → PDF definitivo → enlace para el cliente
  *
  * ⛔ No existe ninguna transición que lleve una cotización al cliente sin pasar
  *    por `aprobada`. El tipo `EstadoCotizacion` y los métodos de api.ts lo
  *    hacen imposible por construcción, no por una validación saltéable.
  *
- * Ver MASTER_SPEC.md §2.4 y §9, USER_FLOWS.md F8 a F12.
+ * ⛔ PLANTILLA GENÉRICA. Esta estructura se genera para cualquiera de los 13
+ *    productos, cualquier variante y cualquier cliente. No hay ningún caso
+ *    particular, ningún cliente de referencia y ningún importe fijado en el
+ *    código: todo precio entra por datos.
+ *
+ * Nombres: internamente el importe negociado se llama **precio efectivo**.
+ * ⛔ En el PDF que recibe el cliente se muestra SIEMPRE como "Precio especial"
+ *    (ver `ETIQUETA_PRECIO_ESPECIAL`).
+ *
+ * Ver MASTER_SPEC.md §2.5 y §11, COMMERCIAL_RULES.md §6, USER_FLOWS.md F8b a F12.
  */
 
 import type { Dinero, Id, ISODate, TotalesPorMoneda, Trazado } from './core';
 import type { ProductoId } from './catalogo';
+import type { AlternativaCalculada, BaseCalculo, CodigoAlternativa } from './alternativas';
+import type { Firma } from './aceptacion';
 
 export type TipoPropuesta = 'presentacion' | 'cotizacion';
+
+/** ⛔ Etiqueta obligatoria en el documento del cliente. Internamente: precio efectivo. */
+export const ETIQUETA_PRECIO_ESPECIAL = 'Precio especial';
+
+/** ⛔ Permanencia mínima por defecto de toda cotización. */
+export const PERMANENCIA_MINIMA_MESES = 12;
 
 // ===========================================================================
 // A · PRESENTACIÓN — material de venta, sin efecto comercial
@@ -55,7 +72,7 @@ export interface NuevaPresentacion {
 }
 
 // ===========================================================================
-// B · COTIZACIÓN — precio personalizado, aprobación obligatoria
+// B · COTIZACIÓN — precio especial, aprobación obligatoria
 // ===========================================================================
 
 /**
@@ -73,143 +90,187 @@ export type EstadoCotizacion =
   | 'perdida'
   | 'vencida';
 
+// ---------------------------------------------------------------------------
+// Encabezado — quién, qué, cuándo
+// ---------------------------------------------------------------------------
+
+/** El cliente puede ser una empresa o un profesional independiente. Nunca las dos. */
+export type TipoDestinatario = 'empresa' | 'profesional';
+
 /**
- * Un ítem de cotización guarda el precio de lista JUNTO al propuesto:
- * es lo que permite explicar la desviación meses después.
+ * A quién va dirigida la cotización.
+ * ⛔ Todo viene del registro del cliente. Ningún dato se escribe en el código.
  */
-export interface ItemCotizacion {
-  readonly id: Id;
-  readonly productoId: ProductoId;
-  readonly plan: string | null;
-  /** Documentado en el copy. `null` cuando el producto no tiene precio de lista. */
-  readonly precioListaSetup: Dinero | null;
-  readonly precioListaMensualidad: Dinero | null;
-  /** Lo que propone el vendedor. */
-  readonly setupPropuesto: Dinero;
-  readonly mensualidadPropuesta: Dinero;
-  readonly descuentoImplementacionPorcentaje: number;
-  readonly alcance: string;
-  /** Límites de uso incluidos: "+400 consultas/mes", usuarios, canales. */
-  readonly limitesIncluidos: ReadonlyArray<string>;
-  readonly notas: string | null;
+export interface DestinatarioCotizacion {
+  readonly clienteId: Id;
+  readonly tipo: TipoDestinatario;
+  /** Persona a la que va dirigida: nombre de contacto. */
+  readonly nombreCliente: string;
+  /** Razón social si es empresa; nombre profesional si es profesional. */
+  readonly nombreEmpresaOProfesional: string;
+  /** Profesión, cuando el destinatario es un profesional. */
+  readonly profesion: string | null;
+  readonly ruc: string | null;
+  readonly ciudad: string | null;
 }
 
-export type ItemCotizacionEntrada = Omit<ItemCotizacion, 'id' | 'precioListaSetup' | 'precioListaMensualidad'>;
+/**
+ * Qué se cotiza.
+ * ⛔ Una cotización = UN producto y, cuando corresponde, UNA variante.
+ *    Los combos se cotizan como cotizaciones vinculadas, no mezcladas.
+ */
+export interface ObjetoCotizado {
+  readonly productoId: ProductoId;
+  readonly nombreProducto: string;
+  /** Variante o plan, cuando el producto lo tiene. `null` cuando no existe. */
+  readonly variante: string | null;
+}
 
 // ---------------------------------------------------------------------------
-// Hitos de pago del setup
+// Precios — lista, especial y ahorro
 // ---------------------------------------------------------------------------
 
 /**
- * Un hito de pago del setup.
+ * Los seis importes obligatorios del cuerpo de la cotización.
  *
- * Estructura tomada de la Carta Oferta real de Agendar.IA:
- *   "50 % al aceptar · 50 % con versión conectada"
+ *   setup:      precio de lista · precio especial · ahorro
+ *   mensualidad: precio de lista · precio especial · ahorro
  *
- * Cada hito se expresa por PORCENTAJE o por IMPORTE, nunca por los dos a la vez.
+ * ⛔ El ahorro NO se escribe: se calcula (lista − especial) y se recalcula en el
+ *    servidor antes de aprobar.
+ * ⛔ Las cuatro monedas tienen que ser la misma. Nunca se suman monedas distintas.
  */
-export type DisparadorHitoPago =
-  | 'al_aceptar'
-  | 'al_entregar'
-  | 'al_conectar'
-  | 'al_iniciar_piloto'
-  | 'fecha_fija';
+export interface PreciosCotizacion {
+  readonly setupLista: Dinero;
+  /** S — internamente "precio efectivo"; en el PDF del cliente, "Precio especial". */
+  readonly setupEspecial: Dinero;
+  readonly ahorroSetup: Dinero;
+  readonly ahorroSetupPorcentaje: number;
 
-export interface HitoPagoSetup {
-  readonly orden: number;
-  readonly disparador: DisparadorHitoPago;
-  /** Texto que ve el cliente: "50 % al aceptar", "50 % con versión conectada". */
+  readonly mensualLista: Dinero;
+  /** M — internamente "precio efectivo"; en el PDF del cliente, "Precio especial". */
+  readonly mensualEspecial: Dinero;
+  readonly ahorroMensual: Dinero;
+  readonly ahorroMensualPorcentaje: number;
+}
+
+/** Lo que el vendedor escribe. El resto lo calcula el servidor. */
+export interface PreciosEntrada {
+  readonly setupEspecial: Dinero;
+  readonly mensualEspecial: Dinero;
+}
+
+// ---------------------------------------------------------------------------
+// Instalación y responsabilidades
+// ---------------------------------------------------------------------------
+
+/** Qué tiene que poner el cliente para que la instalación pueda arrancar. */
+export type TipoAporteCliente = 'insumo' | 'acceso' | 'cuenta' | 'informacion' | 'equipo';
+
+export interface AporteDelCliente {
+  readonly tipo: TipoAporteCliente;
   readonly descripcion: string;
-  /** Exactamente uno de los dos. El otro va en `null`. */
-  readonly porcentaje: number | null;
-  readonly importe: Dinero | null;
-  /** Sólo cuando `disparador === 'fecha_fija'`. */
-  readonly fecha: ISODate | null;
+  /** `true` cuando sin esto la instalación no puede empezar. */
+  readonly bloqueante: boolean;
+}
+
+export interface CondicionesInstalacion {
+  /** Cómo se instala: modalidad, requisitos previos, quién participa. */
+  readonly descripcion: string;
+  /** Tiempo estimado de instalación, en días hábiles. */
+  readonly tiempoEstimadoDiasHabiles: number;
+  /** Texto que ve el cliente: "hasta 10 días hábiles desde la aceptación". */
+  readonly tiempoEstimadoTexto: string;
+  /** ⛔ Insumos, accesos, cuentas, información y equipos a cargo del cliente. */
+  readonly aportesDelCliente: ReadonlyArray<AporteDelCliente>;
+}
+
+// ---------------------------------------------------------------------------
+// Alcance y condiciones
+// ---------------------------------------------------------------------------
+
+/**
+ * Alcance del servicio.
+ * ⛔ `queIncluye` y `queNoIncluye` son ambos obligatorios y no vacíos: una
+ *    cotización sin exclusiones escritas es un reclamo futuro.
+ */
+export interface AlcanceCotizacion {
+  readonly queIncluye: ReadonlyArray<string>;
+  readonly queNoIncluye: ReadonlyArray<string>;
+  /** Límites de uso incluidos: consultas por mes, usuarios, canales. */
+  readonly limitesIncluidos: ReadonlyArray<string>;
 }
 
 /**
  * Condiciones comerciales de la cotización.
- * Estructura derivada de la Carta Oferta de Agendar.IA (ver COMMERCIAL_RULES §6).
+ * ⛔ Plantilla genérica: el texto se compone de la base de la empresa más lo
+ *    que agregue el vendedor. No hay condiciones fijadas por ningún caso previo.
  */
 export interface CondicionesCotizacion {
-  // --- Setup y sus hitos de pago ---
-  /** ⛔ Los porcentajes deben sumar 100 cuando todos los hitos son porcentuales. */
-  readonly hitosPagoSetup: ReadonlyArray<HitoPagoSetup>;
-  /** Descuento sobre el setup: porcentaje o importe, uno de los dos. */
-  readonly descuentoSetupPorcentaje: number | null;
-  readonly descuentoSetupImporte: Dinero | null;
-
-  // --- Mensualidad y su compromiso ---
-  /** Meses de servicio incluidos sin cargo adicional (p. ej. "primer mes operativo incluido"). */
-  readonly mesesIncluidos: number;
-  /** Meses durante los cuales el precio mensual no cambia. */
-  readonly mesesCongelamientoPrecio: number;
-
-  // --- Beneficios y lo que los habilita ---
-  readonly debitoAutomatico: boolean;
-  readonly compromisoDoceMeses: boolean;
-  readonly pagoAnualAnticipado: boolean;
-  /**
-   * ⛔ Cada beneficio declara QUÉ CONDICIÓN lo habilita.
-   * Un descuento sin condición escrita es un descuento que después nadie puede reclamar.
-   */
-  readonly condicionesHabilitantes: ReadonlyArray<CondicionHabilitante>;
-
-  // --- Alcance, vigencia y plan de trabajo ---
-  readonly alcance: string;
-  /** Qué NO incluye. En la Carta Oferta: comisiones de pasarela y consumos extraordinarios. */
-  readonly exclusiones: string;
-  readonly cronograma: ReadonlyArray<EtapaCronograma>;
-  readonly condicionesComerciales: string;
-  /** El copy sólo documenta "+ IVA" en un producto: acá se declara y se aprueba. */
+  /** Permanencia mínima comprometida. Por defecto `PERMANENCIA_MINIMA_MESES` (12). */
+  readonly permanenciaMinimaMeses: number;
+  readonly instalacion: CondicionesInstalacion;
+  readonly alcance: AlcanceCotizacion;
+  /** Bases y condiciones completas, tal como se imprimen en el PDF. */
+  readonly basesYCondiciones: string;
+  /** Tratamiento del IVA. Se declara y se aprueba; no se asume. */
   readonly tratamientoIva: string;
+  readonly notasInternas: string | null;
 }
 
-/** Qué beneficio se otorga y a cambio de qué. */
-export interface CondicionHabilitante {
-  readonly beneficio:
-    | 'descuento_setup'
-    | 'congelamiento_precio'
-    | 'meses_incluidos'
-    | 'precio_mensual_especial';
-  /** "Débito automático", "Compromiso de 12 meses", "Pago anual anticipado". */
-  readonly condicion: string;
-  readonly descripcion: string;
-  /** Qué pasa si el cliente deja de cumplirla. */
-  readonly siNoSeCumple: string | null;
-}
+// ---------------------------------------------------------------------------
+// Logos del documento
+// ---------------------------------------------------------------------------
 
 /**
- * Una etapa del cronograma de implementación.
- * En la Carta Oferta: reserva → versión personalizada → piloto supervisado →
- * inicio estimado → primera mensualidad.
+ * Logos oficiales que lleva el documento.
+ *
+ * ⛔ Son referencias a activos oficiales del inventario
+ *    (docs/INVENTARIO_ACTIVOS.md). No se generan, no se redibujan, no se
+ *    recolorean, no se recortan y no se deforman: se muestran con
+ *    `object-fit: contain` respetando su proporción original.
  */
-export interface EtapaCronograma {
-  readonly orden: number;
-  readonly titulo: string;
-  /** Fecha estimada, o duración en días desde la etapa anterior. */
-  readonly fechaEstimada: ISODate | null;
-  readonly duracionDias: number | null;
-  readonly entregable: string;
-  /** Importe asociado a esta etapa, si la etapa dispara un cobro. */
-  readonly importeAsociado: Dinero | null;
+export interface LogosDocumento {
+  readonly labIa: string;
+  readonly rgrlkGroup: string;
+  readonly producto: string;
+  /** Sólo si la variante tiene logo oficial propio. `null` si no existe. */
+  readonly variante: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// La cotización
+// ---------------------------------------------------------------------------
 
 export interface Cotizacion extends Trazado {
   readonly id: Id;
   readonly tipo: 'cotizacion';
-  readonly clienteId: Id;
-  readonly vendedorId: Id;
-  /** La presentación previa, si la hubo. El circuito esperado es presentación primero. */
-  readonly presentacionId: Id | null;
+  /** Número o folio del documento. */
   readonly folio: string;
   readonly version: number;
   readonly estado: EstadoCotizacion;
-  readonly items: ReadonlyArray<ItemCotizacion>;
+
+  readonly destinatario: DestinatarioCotizacion;
+  readonly objeto: ObjetoCotizado;
+
+  readonly vendedorId: Id;
+  readonly nombreVendedor: string;
+
+  readonly fechaEmision: ISODate;
+  /** Fecha de validez de la oferta. */
+  readonly fechaValidez: ISODate;
+
+  readonly precios: PreciosCotizacion;
+  /** Las cuatro alternativas, calculadas. ⛔ Excluyentes entre sí. */
+  readonly alternativas: ReadonlyArray<AlternativaCalculada>;
   readonly condiciones: CondicionesCotizacion;
+  readonly logos: LogosDocumento;
+
   /** ⛔ Una entrada por moneda. Nunca un total consolidado. */
   readonly totalesPorMoneda: TotalesPorMoneda;
-  readonly vigenteHasta: ISODate;
+
+  /** La presentación previa, si la hubo. El circuito esperado es presentación primero. */
+  readonly presentacionId: Id | null;
   readonly versionCatalogo: number;
   /** Obligatorio al pasar a `perdida`. */
   readonly motivoPerdida: string | null;
@@ -221,32 +282,39 @@ export interface CotizacionDetalle extends Cotizacion {
   readonly documentos: ReadonlyArray<DocumentoEmitido>;
   readonly enlaces: ReadonlyArray<EnlaceCompartido>;
   readonly comparacion: ComparacionConLista;
+  /** Firma del vendedor y, tras la aprobación, firma del CEO. */
+  readonly firmas: ReadonlyArray<Firma>;
   readonly avisos: ReadonlyArray<string>;
 }
 
+/**
+ * Lo que el vendedor manda al crear.
+ * ⛔ Precios de lista, ahorros, alternativas, totales y logos NO se envían:
+ *    salen del catálogo y del cálculo del servidor.
+ */
 export interface NuevaCotizacion {
   readonly clienteId: Id;
+  readonly productoId: ProductoId;
+  readonly variante?: string;
   readonly presentacionId?: Id;
-  readonly items: ReadonlyArray<ItemCotizacionEntrada>;
+  readonly precios: PreciosEntrada;
   readonly condiciones: CondicionesCotizacion;
-  readonly vigenteHasta: ISODate;
+  readonly fechaValidez: ISODate;
 }
 
 /** Lo propuesto contra lo documentado. Es información para el administrador, no un bloqueo. */
 export interface ComparacionConLista {
-  readonly lineas: ReadonlyArray<{
-    readonly productoId: ProductoId;
-    readonly precioListaSetup: Dinero | null;
-    readonly setupPropuesto: Dinero;
-    readonly desviacionSetup: Dinero | null;
-    readonly desviacionSetupPorcentaje: number | null;
-    readonly precioListaMensualidad: Dinero | null;
-    readonly mensualidadPropuesta: Dinero;
-    readonly desviacionMensualidad: Dinero | null;
-    readonly desviacionMensualidadPorcentaje: number | null;
-    /** `true` en Smart Commerce y Exeq.IA: no hay lista contra la cual comparar. */
-    readonly sinPrecioDeLista: boolean;
-  }>;
+  readonly productoId: ProductoId;
+  readonly precioListaSetup: Dinero | null;
+  readonly setupEspecial: Dinero;
+  readonly desviacionSetup: Dinero | null;
+  readonly desviacionSetupPorcentaje: number | null;
+  readonly precioListaMensualidad: Dinero | null;
+  readonly mensualEspecial: Dinero;
+  readonly desviacionMensualidad: Dinero | null;
+  readonly desviacionMensualidadPorcentaje: number | null;
+  /** `true` cuando el producto no tiene precio de lista documentado. */
+  readonly sinPrecioDeLista: boolean;
 }
 
 export interface VersionCotizacion {
@@ -266,8 +334,17 @@ export interface FiltroCotizaciones {
   readonly hasta?: ISODate;
 }
 
+/** Previsualización: lo que el vendedor ve mientras arma, antes de mandar a revisión. */
+export interface PrevisualizacionCotizacion {
+  readonly base: BaseCalculo;
+  readonly precios: PreciosCotizacion;
+  readonly alternativas: ReadonlyArray<AlternativaCalculada>;
+  readonly totalesPorMoneda: TotalesPorMoneda;
+  readonly avisos: ReadonlyArray<string>;
+}
+
 // ---------------------------------------------------------------------------
-// Revisión del administrador
+// Revisión del CEO
 // ---------------------------------------------------------------------------
 
 export type AccionRevision = 'enviar' | 'aprobar' | 'corregir' | 'rechazar';
@@ -282,6 +359,13 @@ export interface Revision {
   readonly creadoEn: ISODate;
   readonly resueltoEn: ISODate | null;
   readonly eventos: ReadonlyArray<EventoRevision>;
+  /**
+   * ⛔ El servidor vuelve a ejecutar los cuatro cálculos antes de aprobar.
+   * `true` cuando lo recalculado coincide con lo que el vendedor mandó.
+   */
+  readonly calculosRecalculados: boolean;
+  /** Alternativas que quedan aprobadas y visibles para el cliente. */
+  readonly alternativasAprobadas: ReadonlyArray<CodigoAlternativa>;
 }
 
 /**
@@ -311,7 +395,8 @@ export interface FiltroColaRevision {
 
 /**
  * Inmutable. Mismo insumo ⇒ mismo `hashContenido`.
- * ⛔ Para una cotización sólo se emite si el estado es `aprobada`.
+ * ⛔ Para una cotización sólo se emite si el estado es `aprobada` y las dos
+ *    firmas están incorporadas y vigentes.
  */
 export interface DocumentoEmitido {
   readonly id: Id;
@@ -323,6 +408,7 @@ export interface DocumentoEmitido {
   readonly emitidoEn: ISODate;
   readonly emitidoPor: Id;
   readonly validoHasta: ISODate | null;
+  /** ⛔ Referencia interna. El PDF se sirve desde el servidor, no por URL directa. */
   readonly almacenamientoRef: string;
 }
 
@@ -347,6 +433,8 @@ export interface EnlaceCompartido {
   readonly requiereCodigo: boolean;
   readonly revocadoEn: ISODate | null;
   readonly revocadoPor: Id | null;
+  /** `true` cuando el cliente ya respondió por este enlace. */
+  readonly respondido: boolean;
 }
 
 export type ResultadoAcceso = 'ok' | 'vencido' | 'revocado' | 'tope_superado' | 'codigo_invalido';
@@ -383,25 +471,25 @@ export interface FiltroAperturas {
 }
 
 // ---------------------------------------------------------------------------
-// Vista pública
+// Vista pública de una PRESENTACIÓN
 // ---------------------------------------------------------------------------
 
 /**
  * ⛔ Superficie mínima: sin navegación al Escritorio, sin otros clientes,
  *    sin precios de terceros, y NUNCA revela cuántas aperturas hubo.
+ *
+ * La vista pública de una COTIZACIÓN es `CotizacionPublica` (aceptacion.ts):
+ * lleva alternativas, botones de opción y constancia.
  */
-export interface PropuestaPublica {
-  readonly tipo: TipoPropuesta;
+export interface PresentacionPublica {
+  readonly tipo: 'presentacion';
   readonly titulo: string;
   readonly nombreCliente: string;
   readonly nombreVendedor: string;
   readonly emitidaEn: ISODate;
   readonly productos: ReadonlyArray<ProductoId>;
-  /** ⛔ Vacío cuando la cotización está `vencida`. */
-  readonly items: ReadonlyArray<Omit<ItemCotizacion, 'notas' | 'precioListaSetup' | 'precioListaMensualidad'>>;
-  readonly condiciones: CondicionesCotizacion | null;
-  readonly totalesPorMoneda: TotalesPorMoneda;
-  readonly vigenteHasta: ISODate | null;
-  readonly avisoVigencia: string | null;
+  readonly casosDeUso: ReadonlyArray<string>;
+  /** ⛔ Sólo rangos de referencia documentados. Nunca un precio definitivo. */
+  readonly rangoDeReferencia: string | null;
   readonly pdfDisponible: boolean;
 }

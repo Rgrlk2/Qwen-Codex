@@ -555,59 +555,92 @@ A) PRESENTACIÓN PARA DEJAR AL CLIENTE
 
 B) COTIZACIÓN ESTRUCTURADA
    - se prepara DESPUÉS, cuando el cliente ya vio la presentación;
-   - al lado del precio propuesto se muestra el de lista y la desviación, en
+   - al lado del precio especial se muestra el de lista y la desviación, en
      guaraníes y en porcentaje. Es información, no un bloqueo;
    - totales POR MONEDA. Nunca se suma PYG con USD.
 
-   LA ESTRUCTURA NO LA INVENTAMOS: sale de la Carta Oferta real de Agendar.IA
-   para la Dra. Claudia Leguizamón (docs/INVENTARIO_ACTIVOS.md §4, y
-   COMMERCIAL_RULES §6 con el desglose completo). Leé esa sección antes de
-   modelar la pantalla.
+   ES UNA PLANTILLA GENÉRICA DE LAB.IA. Se genera para cualquiera de los 13
+   productos, cualquier variante y cualquier cliente. NINGÚN importe está
+   fijado en el código y NINGUNA propuesta anterior se usa como modelo.
+   Leé COMMERCIAL_RULES §6 antes de modelar la pantalla.
 
-   PRECIO PROPUESTO
-     · setup + descuento de setup (porcentaje O importe, nunca los dos)
-     · mensualidad
-     · límites incluidos por ítem: "+400 consultas/mes", usuarios, canales
+   LOS 25 CAMPOS OBLIGATORIOS
+     · número o folio, y versión
+     · cliente
+     · empresa o profesional
+     · nombre del producto
+     · variante o plan, cuando exista
+     · nombre del vendedor
+     · fecha de emisión
+     · fecha de validez
+     · precio de lista del setup
+     · precio especial del setup            <- S
+     · ahorro en el setup                   <- calculado, no se escribe
+     · precio mensual de lista
+     · precio mensual especial              <- M
+     · ahorro mensual                       <- calculado, no se escribe
+     · permanencia mínima: 12 meses
+     · condiciones de instalación
+     · tiempo estimado de instalación
+     · insumos, accesos, cuentas, información y equipos que aporta el cliente
+     · qué incluye
+     · qué NO incluye                       (obligatorio y no vacío)
+     · bases y condiciones
+     · firma del vendedor
+     · firma del CEO
+     · logos oficiales de Lab.IA, RGrlk Group y del producto
+     · logo de la variante, si existe oficialmente
 
-   HITOS DE PAGO DEL SETUP — cada uno por porcentaje O por importe
-     · al aceptar                "50 % al aceptar"
-     · al entregar / al conectar "50 % con versión conectada"
-     · fecha fija                "27 JUL · Gs. 1.425.000 · Reserva"
-     ⛔ Si todos son porcentuales, DEBEN SUMAR 100.
-     ⛔ Si son importes, DEBEN SUMAR el setup con su descuento aplicado.
-     ⛔ Una cotización cuyos hitos no cierran NO se envía a revisión.
+   Falta uno, NO se envía a revisión.
 
-   PERMANENCIA
-     · meses incluidos            "primer mes operativo incluido" → 1
-     · congelamiento del precio   "congelado 12 meses" → 12
+   CÓMO SE LLAMA EL PRECIO
+     Internamente: "precio efectivo".
+     En el PDF que recibe el cliente: "Precio especial". SIEMPRE.
 
-   BENEFICIOS Y LO QUE LOS HABILITA
-     · débito automático (sí/no)
-     · compromiso de doce meses (sí/no)
-     · pago anual anticipado (sí/no)
-     ⛔ CADA beneficio declara la CONDICIÓN que lo habilita y QUÉ PASA SI EL
-        CLIENTE DEJA DE CUMPLIRLA. Un descuento sin condición escrita es un
-        descuento que después nadie puede reclamar: si el cliente da de baja
-        al cuarto mes y el descuento estaba atado a doce, hay que poder
-        mostrarlo en el documento que firmó.
-     ⛔ Un beneficio sin condición habilitante no se aprueba.
+   EL VENDEDOR ESCRIBE SÓLO DOS IMPORTES
+     setupEspecial (S) y mensualEspecial (M). Todo lo demás -precios de lista,
+     ahorros, alternativas, totales, logos- sale del catálogo y del cálculo
+     del servidor. NO pidas los ahorros en un formulario.
 
-   ALCANCE Y PLAN DE TRABAJO
-     · alcance: qué incluye
-     · EXCLUSIONES: qué NO incluye ("comisiones de pasarela y consumos
-       extraordinarios se cobran aparte")
-     · vigencia de la oferta
-     · cronograma por etapas, con fecha estimada, entregable e IMPORTE
-       ASOCIADO si esa etapa dispara un cobro
-     · condiciones comerciales y tratamiento del IVA
+   LAS CUATRO ALTERNATIVAS FINANCIERAS - NO ACUMULABLES
+
+     A · Plan estándar                        S + (M × 12)
+     B · Adelantado 12 meses, 10 %            S + (M × 12 × 0,90)
+     C · Adelantado 24 meses, 20 %            S + (M × 24 × 0,80)
+     D · Cheques diferidos o débito, 10 %     S + (M × 11 × 0,90)
+         un mes bonificado: 12 meses de servicio, 11 cuotas
+
+     El cliente elige UNA SOLA.
+     El descuento se calcula sobre la MENSUALIDAD ESPECIAL.
+     El precio especial del setup SE SUMA POR SEPARADO y nunca lo recibe.
+     NUNCA se suman monedas diferentes.
+     Todos los cálculos se ejecutan de nuevo EN EL SERVIDOR antes de aprobar.
+
+     De cada alternativa mostrá las diez cifras: precio total de lista, precio
+     especial sin promoción, descuento adicional, ahorro total, setup a pagar,
+     mensualidades a pagar, cantidad de meses de servicio, total final, valor
+     mensual efectivo, y forma y calendario de pago.
+
+     No reimplementes las fórmulas: usá calcularAlternativas de
+     packages/compartido/src/alternativas.ts. `npm run verificar:calculos`
+     prueba las cuatro.
+
+   LOGOS
+     Son activos OFICIALES del inventario. No se generan, no se redibujan,
+     no se recolorean, no se recortan, no se les quita el fondo y no se
+     deforman. object-fit: contain, proporción original. Si la variante no
+     tiene logo oficial, va null: no se fabrica uno.
 
 EL CIRCUITO, SIN DESVÍOS
 
    borrador del vendedor
-     → revisión del administrador
-     → aprobada o corregida
-     → PDF definitivo
-     → envío al cliente
+     -> firma del vendedor          ANTES de enviar a revisión
+     -> revisión del CEO
+     -> aprobación o corrección
+     -> firma del CEO               al aprobar (la incorpora S6)
+     -> PDF definitivo
+     -> enlace para el cliente
+     -> respuesta del cliente -> constancia -> avisos
 
 LA REGLA MÁS IMPORTANTE DE ESTA SESIÓN
 
@@ -619,10 +652,51 @@ LA REGLA MÁS IMPORTANTE DE ESTA SESIÓN
      · el botón     · la URL directa     · la llamada a la capa de datos
    emitirPdfDefinitivo y enviarAlCliente sobre una cotización no aprobada
    devuelven requiere_aprobacion. Verificá que así sea.
+   Sin las dos firmas vigentes, emitirPdfDefinitivo devuelve requiere_firma.
 
    El PDF DEFINITIVO se emite DESPUÉS de aprobar. Nunca antes.
-   Una cotización aprobada es inmutable: editarla crea versión nueva y CADUCA
-   la aprobación anterior.
+   Una cotización aprobada es inmutable: editarla crea versión nueva, CADUCA
+   la aprobación anterior Y ANULA LAS FIRMAS.
+
+FIRMAS - ACTIVOS PROTEGIDOS
+   firmarComoVendedor manda la INTENCIÓN de firmar, nunca la imagen ni su
+   ubicación. El servidor resuelve `referenciaProtegida`, que NO es una URL.
+   La imagen original de la firma del CEO NO se expone por ninguna URL
+   pública. El PDF la incrusta al generarse, en el servidor.
+
+LA VISTA PÚBLICA DEL CLIENTE - la construís vos
+
+   Muestra: nombre del cliente, producto y variante, número y versión, las
+   alternativas aprobadas con su total, vencimiento, bases y condiciones.
+
+   COMO LAS ALTERNATIVAS SON EXCLUYENTES, USÁ BOTONES DE OPCIÓN (radio),
+   NUNCA CASILLAS MÚLTIPLES. Seis opciones, con estos textos exactos:
+
+     1. Elijo el plan estándar.
+     2. Elijo pago adelantado por 12 meses.
+     3. Elijo pago adelantado por 24 meses.
+     4. Elijo cheques diferidos o débito automático.
+     5. Quiero que me contacten antes de elegir.
+     6. No continuar por ahora.
+
+   CASILLA OBLIGATORIA, con este texto exacto:
+     "He revisado la opción seleccionada y solicito que Lab.IA continúe con
+      los próximos pasos."
+   Sin marcarla, el botón queda deshabilitado. El tipo
+   RespuestaDelCliente.aceptacionMarcada es literal `true`: no compila de
+   otra forma. Usá TEXTO_ACEPTACION y TEXTOS_OPCION de aceptacion.ts, no
+   los copies a mano.
+
+   Botón final: "Enviar mi elección"
+
+   La respuesta es una CONSTANCIA COMERCIAL o aval de intención.
+   NO la presentes como contrato ni como firma electrónica legal.
+   Escribilo en la pantalla, con esas palabras.
+
+   Si falla una notificación, la constancia YA ESTÁ GUARDADA y el aviso se
+   reintenta. Nunca se pierde la elección del cliente.
+   El número personal del CEO NUNCA aparece en el enlace, el PDF ni el
+   código del navegador. Ni siquiera como constante, ni comentado.
 
 TAMBIÉN CONSTRUÍS
    Enlaces compartibles con vencimiento, tope de aperturas y revocación
@@ -633,11 +707,16 @@ TAMBIÉN CONSTRUÍS
    IP completa, user-agent crudo ni correlación entre enlaces.
 
 PROHIBIDO
-  Implementar la aprobación (es de S6). Implementar reglas de participación
-  (son de S6). Poner precio definitivo en una presentación. Sumar monedas.
-  Enviar a revisión una cotización cuyos hitos de pago no suman.
-  Otorgar un beneficio sin escribir la condición que lo habilita.
-  Tratar el precio de una Carta Oferta anterior como precio de lista.
+  Implementar la aprobación y la firma del CEO (son de S6). Implementar
+  reglas de participación (son de S6). Poner precio definitivo en una
+  presentación. Sumar monedas. Enviar a revisión una cotización a la que le
+  falte alguno de los 25 campos. Dejar vacío "qué no incluye". Acumular dos
+  alternativas. Aplicar el descuento sobre el setup. Reimplementar las
+  fórmulas en lugar de usar alternativas.ts. Usar casillas múltiples para
+  elegir entre alternativas excluyentes. Mostrarle al cliente la etiqueta
+  "precio efectivo" o "precio verdadero". Escribir el número del CEO en
+  cualquier archivo de apps/. Generar, redibujar, recolorear, recortar o
+  deformar un logo.
 ```
 
 ---
@@ -710,20 +789,55 @@ VISTA ADMINISTRACIÓN — UNA sola vista con SECCIONES INTERNAS
    para decidir hoy, no se muestra.
 
 APROBACIÓN DE COTIZACIONES — el cuello de botella del negocio
-   Cola priorizada por antigüedad y monto. Por cada una: propuesto vs. lista,
-   desviación, impacto en la parte de Lab.IA, las tres condiciones (débito,
-   compromiso, anual anticipado), historial del cliente, versiones anteriores.
+   Cola priorizada por antigüedad y monto. Por cada una: precio especial vs.
+   lista, desviación en guaraníes y en porcentaje, impacto en la parte de
+   Lab.IA, historial del cliente, versiones anteriores.
+
+   ANTES DE APROBAR, EL SERVIDOR VUELVE A EJECUTAR LOS CUATRO CÁLCULOS.
+   recalcularCotizacion(id) los devuelve. Si lo recalculado no coincide con lo
+   que mandó el vendedor, mandá lo del servidor y señalalo: el resultado del
+   servidor prevalece. No reimplementes las fórmulas: usá calcularAlternativas
+   de packages/compartido/src/alternativas.ts.
 
    Tres acciones, LAS TRES CON COMENTARIO OBLIGATORIO:
      aprobar · corregir (vuelve a borrador, versión +1) · rechazar
 
-   AL REVISAR se muestra, además del precio: la SUMA DE LOS HITOS DE PAGO y si
-   cierra · los meses incluidos y el congelamiento · las tres condiciones · y
-   QUÉ HABILITA cada beneficio. Una cotización cuyos hitos no suman, o con un
-   beneficio sin condición escrita, NO SE APRUEBA.
+   AL REVISAR se muestra, además del precio: los CUATRO TOTALES RECALCULADOS ·
+   la permanencia mínima · los APORTES BLOQUEANTES del cliente (insumos,
+   accesos, cuentas, información, equipos) · qué incluye y qué NO incluye ·
+   y si la FIRMA DEL VENDEDOR está presente y vigente. Sin firma del vendedor,
+   la cotización devuelve requiere_firma y no entra a la cola.
+
+   Al aprobar elegís CUÁLES alternativas quedan visibles para el cliente.
+   Vacío = las cuatro.
 
    Nadie aprueba su propia cotización.
    NO HAY AUTOAPROBACIÓN por tiempo, monto ni antigüedad.
+
+FIRMA DEL CEO — la incorporás vos, AL APROBAR
+   firmarComoCeo resuelve e incrusta la imagen EN EL SERVIDOR.
+   La imagen original de la firma del CEO NO se expone por ninguna URL
+   pública, ni en el enlace, ni en el PDF, ni en el navegador. Lo que viaja es
+   `referenciaProtegida`, que NO es una URL y sólo el servidor resuelve.
+   Una modificación posterior de la cotización ANULA la aprobación Y las dos
+   firmas: hay que volver a firmar y volver a aprobar.
+
+CONSTANCIAS Y AVISOS
+   Cuando el cliente elige, queda una CONSTANCIA COMERCIAL inmutable. En el
+   panel las listás y podés reintentar el aviso que haya fallado.
+   reintentarNotificaciones NO vuelve a guardar la constancia: ya está
+   guardada. Sólo reenvía el aviso.
+
+   Cuatro destinos: celular del vendedor · WhatsApp corporativo
+   +595 984 355775 · celular personal del CEO · panel de Administración.
+
+   EL CELULAR PERSONAL DEL CEO ES CONFIGURABLE Y VIVE SOLAMENTE EN EL
+   SERVIDOR. Nunca aparece en el enlace, el PDF ni el código del navegador.
+   DestinosNotificacion expone SI está configurado, jamás su valor. No lo
+   escribas en ningún archivo de apps/, ni como constante, ni comentado.
+
+   La constancia NO es un contrato ni una firma electrónica legal. Si la
+   mostrás en el panel, decilo con esas palabras.
 
 CIERRE DE PERÍODO
    Manual y explícito. Verifica antes: cotizaciones sin resolver, cobros sin
@@ -737,6 +851,11 @@ PROHIBIDO
   plata no cobrada. Implementar reabrirPeriodo, editarParticipacion o
   crearProducto. Escribir sobre los registros de acceso. Mezclar el registro
   de aperturas de enlace con el registro de uso del sistema en una misma lista.
+  Aprobar sin recalcular los cuatro cálculos en el servidor. Exponer la firma
+  del CEO por una URL pública. Escribir el número personal del CEO en
+  cualquier archivo de apps/. Presentar la constancia como contrato o como
+  firma electrónica legal. Descartar la elección del cliente porque falló un
+  aviso.
 ```
 
 ---

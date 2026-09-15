@@ -142,18 +142,51 @@ Ocho cifras, siempre por moneda: vendido · cobrado · por cobrar · parte de La
 
 ## Cotizaciones: estructuradas, y con un solo circuito
 
-La estructura sale de la **Carta Oferta real de Agendar.IA**: hitos de pago del setup (*"50 % al aceptar · 50 % con versión conectada"*), meses incluidos, período de congelamiento del precio, descuento de setup, débito automático, compromiso de doce meses, pago anual anticipado, alcance, exclusiones, vigencia, cronograma, y **la condición que habilita cada beneficio**.
+**Plantilla genérica de Lab.IA.** Se genera para cualquiera de los 13 productos,
+cualquier variante y cualquier cliente. Ningún importe está fijado en el código y
+ninguna propuesta anterior se usa como modelo.
 
-⛔ Los hitos de pago tienen que cerrar. ⛔ Un beneficio sin condición escrita no se aprueba.
+**25 campos obligatorios:** folio y versión · cliente · empresa o profesional ·
+producto y variante · vendedor · fecha de emisión y de validez · setup de lista,
+especial y ahorro · mensual de lista, especial y ahorro · permanencia mínima de
+12 meses · condiciones y tiempo de instalación · insumos, accesos, cuentas,
+información y equipos que aporta el cliente · qué incluye · qué no incluye ·
+bases y condiciones · firma del vendedor · firma del CEO · logos oficiales.
+
+Internamente el importe negociado se llama *precio efectivo*.
+⛔ En el PDF del cliente se muestra como **"Precio especial"**.
+
+**Cuatro alternativas financieras, ⛔ no acumulables.** Con **S** = precio especial
+del setup y **M** = precio mensual especial:
+
+| | Alternativa | Cálculo |
+|---|---|---|
+| **A** | Plan estándar, 12 meses | `S + (M × 12)` |
+| **B** | Adelantado 12 meses, 10 % | `S + (M × 12 × 0,90)` |
+| **C** | Adelantado 24 meses, 20 % | `S + (M × 24 × 0,80)` |
+| **D** | Cheques diferidos o débito automático, un mes bonificado | `S + (M × 11 × 0,90)` |
+
+⛔ El descuento cae sobre **M**; el setup se suma aparte.
+⛔ Nunca se suman monedas distintas.
+⛔ El servidor vuelve a ejecutar los cuatro cálculos antes de aprobar.
+Verificación: `npm run verificar:calculos`.
 
 ```
-borrador del vendedor → revisión del administrador → aprobada o corregida
-→ PDF definitivo → envío al cliente
+borrador del vendedor → revisión del CEO → aprobación o corrección
+→ incorporación de firmas → PDF definitivo → enlace para el cliente
+→ respuesta del cliente → constancia → avisos
 ```
 
-⛔ **Ningún vendedor puede enviar una cotización final sin aprobación.** No hay botón, ni URL, ni llamada que lo permita: el contrato de la capa de datos lo rechaza.
+El cliente elige **una** opción con botones de opción —las alternativas son
+excluyentes—, marca la casilla obligatoria *"He revisado la opción seleccionada y
+solicito que Lab.IA continúe con los próximos pasos."* y pulsa **Enviar mi
+elección**. Queda una **constancia comercial** inmutable: ⛔ no es un contrato ni
+una firma electrónica legal. Si falla un aviso, la constancia se conserva y el
+aviso se reintenta: nunca se pierde la elección del cliente.
 
-La **presentación** es otra cosa: se genera primero, es personalizada y visual, **no lleva precio definitivo** y **no requiere aprobación**.
+⛔ Las firmas son activos protegidos servidos desde el servidor. La imagen de la
+firma del CEO no se expone por ninguna URL pública, y el número personal del CEO
+nunca aparece en el enlace, el PDF ni el código del navegador.
 
 ---
 
@@ -197,7 +230,7 @@ Se buscó en Google Drive: el acceso funciona y los activos están inventariados
 
 | Falta | Estado |
 |---|---|
-| **Logo de Park.IA** | ⚠️ No existe en Drive. Es el único de los 13 sin logo. |
+| **El archivo del logo de Park.IA** | Park.IA **sí tiene logo oficial** (adjunto del CEO, 15/09/2026). Los bytes no llegaron a la sesión ni están en Drive. Va a `apps/escritorio/public/assets/productos/park-ia/logo-park-ia.png`. |
 | Versiones SVG de los logos | Todo es PNG de 1 a 2 MB. Se optimizan o se piden. |
 | Renders y mockups de producto | No existen como categoría. |
 | Datos societarios y términos comerciales | Para el encabezado legal de cotizaciones. |

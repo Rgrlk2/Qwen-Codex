@@ -86,6 +86,8 @@ SVG en línea. Sin biblioteca externa, sin descarga, sin dependencia.
 | P10 | Hex de marca "deducidos" de una landing o de una captura | Deducir no es documentar. Los ocho oficiales están en `marca-labia.css`. |
 | P10b | Usar `#0A55D9` como color de texto o de borde fino | No alcanza AA (3.18 / 2.85). Es color de relleno. |
 | P10c | Incorporar el logo del **producto excluido**, que está en la misma carpeta de Drive que los 13 | Portafolio cerrado. Ver `INVENTARIO_ACTIVOS.md` §3.1. |
+| P10d | Redibujar, recolorear, recortar, quitarle el fondo o deformar un logo oficial | Un logo retocado deja de ser el logo. Siempre `object-fit: contain` y proporción original. |
+| P10e | Publicar la **firma del CEO** por una URL accesible desde el navegador | Es un activo protegido: se sirve desde el servidor y se incrusta en el PDF al generarlo. |
 | P11 | Fondo blanco corporativo convencional · neón excesivo | `rgrlk-brand-guardian`, prohibiciones explícitas. |
 | P12 | Productos adicionales hallados en la web, en cualquier forma | Portafolio cerrado en 13. |
 
@@ -97,7 +99,7 @@ SVG en línea. Sin biblioteca externa, sin descarga, sin dependencia.
 
 | # | Activo | Estado tras la búsqueda | Mientras no llegue |
 |---|---|---|---|
-| 1 | **Logo de Park.IA** | ⚠️ **No existe en Drive.** La numeración lo confirma: falta el `3` de las integrales. | El nombre en texto, con Inter 600. ⛔ No se genera. |
+| 1 | **El archivo del logo de Park.IA** | Park.IA **sí tiene logo oficial**: el CEO adjuntó `Logo ParkIA.png` el 15/09/2026. ⚠️ Los bytes llegaron **incrustados en el mensaje**, no como archivo, y **no están en Drive** (se buscó). | Destino exacto: `apps/escritorio/public/assets/productos/park-ia/logo-park-ia.png`. Hasta que llegue, el nombre en texto con Inter 600. ⛔ **No se genera, no se redibuja, no se recolorea, no se recorta, no se elimina el fondo, no se deforma.** `object-fit: contain`, proporción cuadrada. Ver `INVENTARIO_ACTIVOS.md` §3.2. |
 | 2 | **Versiones SVG** | No encontradas. Todo es PNG/WebP de 1 a 2 MB. | Se usan los PNG optimizados. ⛔ No se vectoriza a mano. |
 | 3 | **Variantes claro/oscuro** de Lab.IA | Hay `Logo_LabIA_T` y `Logo_LabIA_V`; falta confirmar cuál funciona sobre `#020711`. | Se prueba la existente sobre el fondo real. |
 | 4 | **Renders y mockups de producto** | No existen como categoría. Lo más cercano: capturas de dashboard. | Composición tipográfica. ⛔ No se generan. |

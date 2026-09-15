@@ -30,7 +30,7 @@ export type Version = number;
 
 /**
  * Monedas del portafolio. PYG en 12 productos; USD documentado en Precio Vivo.
- * No hay tipo de cambio institucional definido: ver COMMERCIAL_RULES.md §6 (7).
+ * No hay tipo de cambio institucional definido: ver COMMERCIAL_RULES.md §1 y §11 (X3).
  */
 export type Moneda = 'PYG' | 'USD';
 
@@ -70,6 +70,9 @@ export type CodigoError =
   | 'validacion'
   | 'conflicto_version'
   | 'regla_comercial'
+  | 'requiere_aprobacion'
+  | 'requiere_firma'
+  | 'monedas_mezcladas'
   | 'limite_excedido'
   | 'enlace_vencido'
   | 'enlace_revocado'

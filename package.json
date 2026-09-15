@@ -15,7 +15,8 @@
     "typecheck": "tsc -b packages/compartido",
     "verificar:copy": "cd content/copy && sha256sum -c copy.sha256",
     "verificar:portafolio": "node scripts/verificar-portafolio.mjs",
-    "verificar": "npm run verificar:copy && npm run verificar:portafolio && npm run typecheck"
+    "verificar:calculos": "npm run typecheck && node scripts/verificar-calculos.mjs",
+    "verificar": "npm run verificar:copy && npm run verificar:portafolio && npm run typecheck && node scripts/verificar-calculos.mjs"
   },
   "devDependencies": {
     "typescript": "^5.6.0"

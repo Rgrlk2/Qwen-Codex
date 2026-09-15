@@ -1,6 +1,9 @@
 /**
  * Verificaciones bloqueantes del Escritorio Vendedores Lab.IA.
- * Corresponde a docs/QA_CHECKLIST.md §1, §4 y §7.
+ * Corresponde a docs/QA_CHECKLIST.md §1, §4, §6 y §7.
+ *
+ * Los calculos de las alternativas se prueban aparte, con importes reales:
+ *   node scripts/verificar-calculos.mjs
  *
  *   node scripts/verificar-portafolio.mjs
  *
@@ -231,12 +234,170 @@ if (!existsSync(join(RAIZ, 'apps/escritorio/src/vistas/agenda'))) {
   fallos.push('Falta la vista apps/escritorio/src/vistas/agenda/.');
 }
 
-// --- 12. Cotizacion estructurada ------------------------------------------
-const prop = readFileSync(join(RAIZ, 'packages/compartido/src/propuestas.ts'), 'utf8');
-for (const campo of ['HitoPagoSetup', 'mesesIncluidos', 'mesesCongelamientoPrecio', 'CondicionHabilitante', 'descuentoSetupPorcentaje']) {
+// --- 12. Cotizacion estructurada: los 25 campos obligatorios --------------
+/**
+ * Sobre CODIGO EFECTIVO: los comentarios de propuestas.ts nombran cada campo
+ * para explicarlo, asi que buscar en el texto crudo daria verde aunque el
+ * campo se hubiera borrado de la interfaz. Probado borrando `queNoIncluye`.
+ */
+const prop = codigoEfectivo(readFileSync(join(RAIZ, 'packages/compartido/src/propuestas.ts'), 'utf8'), '.ts');
+const CAMPOS_COTIZACION = [
+  'folio', 'nombreCliente', 'nombreEmpresaOProfesional', 'nombreProducto', 'variante',
+  'nombreVendedor', 'fechaEmision', 'fechaValidez',
+  'setupLista', 'setupEspecial', 'ahorroSetup',
+  'mensualLista', 'mensualEspecial', 'ahorroMensual',
+  'permanenciaMinimaMeses', 'CondicionesInstalacion', 'tiempoEstimadoDiasHabiles',
+  'aportesDelCliente', 'queIncluye', 'queNoIncluye', 'basesYCondiciones',
+  'LogosDocumento', 'rgrlkGroup',
+];
+for (const campo of CAMPOS_COTIZACION) {
   if (!prop.includes(campo)) {
-    fallos.push(`propuestas.ts no declara ${campo} (COMMERCIAL_RULES §6).`);
+    fallos.push(`propuestas.ts no declara ${campo}: es uno de los 25 campos obligatorios (COMMERCIAL_RULES §6.1).`);
   }
+}
+/** La etiqueta del cliente es "Precio especial", no "precio verdadero" ni "precio efectivo". */
+if (!prop.includes("ETIQUETA_PRECIO_ESPECIAL = 'Precio especial'")) {
+  fallos.push('propuestas.ts no declara ETIQUETA_PRECIO_ESPECIAL = \'Precio especial\' (COMMERCIAL_RULES §6, regla C11).');
+}
+
+// --- 12b. Ningun modelo de cliente particular -----------------------------
+/**
+ * La cotizacion es una PLANTILLA GENERICA. No hay cliente de referencia, ni
+ * condiciones heredadas de un caso, ni importes copiados de una propuesta.
+ * Se busca en comentarios tambien: el modelo eliminado vivia sobre todo ahi.
+ */
+const MODELO_ELIMINADO = [
+  { patron: /fundador[ao]/i, motivo: 'Modelo "Cliente Fundadora" eliminado: la cotizacion es una plantilla generica' },
+  { patron: /leguizam[oó]n/i, motivo: 'Cliente particular: ningun nombre de cliente vive en el repositorio' },
+  { patron: /carta\s*oferta/i, motivo: 'La estructura no se copia de una propuesta anterior (COMMERCIAL_RULES §6)' },
+];
+for (const ambito of [...AMBITOS, 'docs']) {
+  for (const archivo of archivos(join(RAIZ, ambito))) {
+    if (archivo.includes('/content/copy/')) continue;   // el copy aprobado es intocable
+    const texto = readFileSync(archivo, 'utf8');
+    for (const { patron, motivo } of MODELO_ELIMINADO) {
+      const m = texto.match(patron);
+      if (m) fallos.push(`${rel(archivo)}: contiene "${m[0].trim()}" — ${motivo}.`);
+    }
+  }
+}
+
+// --- 12c. Las cuatro alternativas financieras -----------------------------
+const alt = readFileSync(join(RAIZ, 'packages/compartido/src/alternativas.ts'), 'utf8');
+for (const codigo of ['estandar', 'adelantado_12', 'adelantado_24', 'diferido']) {
+  if (!alt.includes(`codigo: '${codigo}'`)) {
+    fallos.push(`alternativas.ts no declara la alternativa ${codigo} (COMMERCIAL_RULES §7).`);
+  }
+}
+/**
+ * Los parametros exactos de cada alternativa, leidos del CODIGO EFECTIVO: si
+ * alguien cambia un factor o una cantidad de cuotas, esto lo rechaza.
+ * `diferido` con 11 cuotas y 12 meses de servicio es el mes bonificado.
+ */
+const altEfectivo = codigoEfectivo(alt, '.ts');
+const PARAMETROS_ESPERADOS = [
+  { codigo: 'estandar', mesesServicio: 12, cuotasAPagar: 12, factorMensual: '1' },
+  { codigo: 'adelantado_12', mesesServicio: 12, cuotasAPagar: 12, factorMensual: '0.9' },
+  { codigo: 'adelantado_24', mesesServicio: 24, cuotasAPagar: 24, factorMensual: '0.8' },
+  { codigo: 'diferido', mesesServicio: 12, cuotasAPagar: 11, factorMensual: '0.9' },
+];
+for (const esperado of PARAMETROS_ESPERADOS) {
+  const bloque = altEfectivo.match(
+    new RegExp(`codigo: '${esperado.codigo}',[\\s\\S]{0,600}?descripcionPago`),
+  );
+  if (!bloque) {
+    fallos.push(`alternativas.ts: no se pudo leer el bloque de ${esperado.codigo}.`);
+    continue;
+  }
+  const b = bloque[0];
+  if (!b.includes(`mesesServicio: ${esperado.mesesServicio},`)) {
+    fallos.push(`alternativas.ts: ${esperado.codigo} deberia tener mesesServicio: ${esperado.mesesServicio} (COMMERCIAL_RULES §7.1).`);
+  }
+  if (!b.includes(`cuotasAPagar: ${esperado.cuotasAPagar},`)) {
+    fallos.push(`alternativas.ts: ${esperado.codigo} deberia tener cuotasAPagar: ${esperado.cuotasAPagar} (COMMERCIAL_RULES §7.1).`);
+  }
+  if (!b.includes(`factorMensual: ${esperado.factorMensual},`)) {
+    fallos.push(`alternativas.ts: ${esperado.codigo} deberia tener factorMensual: ${esperado.factorMensual} (COMMERCIAL_RULES §7.1).`);
+  }
+}
+
+// --- 12d. Respuesta del cliente: opciones y casilla obligatoria -----------
+const ace = readFileSync(join(RAIZ, 'packages/compartido/src/aceptacion.ts'), 'utf8');
+const OPCIONES = {
+  estandar: 'Elijo el plan estándar.',
+  adelantado_12: 'Elijo pago adelantado por 12 meses.',
+  adelantado_24: 'Elijo pago adelantado por 24 meses.',
+  diferido: 'Elijo cheques diferidos o débito automático.',
+  contactar_antes: 'Quiero que me contacten antes de elegir.',
+  no_continuar: 'No continuar por ahora.',
+};
+for (const [codigo, texto] of Object.entries(OPCIONES)) {
+  if (!ace.includes(`${codigo}: '${texto}'`)) {
+    fallos.push(`aceptacion.ts: falta el texto exacto de la opcion ${codigo} (MASTER_SPEC §11.2).`);
+  }
+}
+const TEXTO_ACEPTACION_ESPERADO =
+  'He revisado la opción seleccionada y solicito que Lab.IA continúe con los próximos pasos.';
+if (!ace.includes(TEXTO_ACEPTACION_ESPERADO)) {
+  fallos.push('aceptacion.ts: falta el texto exacto de la casilla obligatoria (MASTER_SPEC §11.2).');
+}
+if (!ace.includes("TEXTO_BOTON_ENVIO = 'Enviar mi elección'")) {
+  fallos.push('aceptacion.ts: el boton final debe decir exactamente "Enviar mi elección".');
+}
+/** La casilla y la constancia son obligaciones de tipo, no validaciones salteables. */
+for (const literal of ['aceptacionMarcada: true', 'constanciaGuardada: true', "naturaleza: 'constancia_comercial'"]) {
+  if (!codigoEfectivo(ace, '.ts').includes(literal)) {
+    fallos.push(`aceptacion.ts: falta el literal \`${literal}\` (DATA_MODEL §8.5 y §8.6).`);
+  }
+}
+/** Es una constancia comercial. Nunca un contrato ni una firma electronica legal. */
+const CONFUSION_LEGAL = /(esta\s+cotizaci[oó]n|esta\s+respuesta|la\s+respuesta|la\s+constancia)[^.]{0,80}\b(es|equivale a|constituye)\b[^.]{0,40}\b(contrato|firma electr[oó]nica)/i;
+for (const archivo of [...archivos(join(RAIZ, 'packages')), ...archivos(join(RAIZ, 'apps'))]) {
+  const texto = readFileSync(archivo, 'utf8');
+  if (CONFUSION_LEGAL.test(texto)) {
+    fallos.push(`${rel(archivo)}: presenta la respuesta del cliente como contrato o firma electronica legal. Es una constancia comercial (MASTER_SPEC §11.3).`);
+  }
+}
+
+// --- 12e. El numero personal del CEO no vive en el navegador --------------
+/**
+ * El WhatsApp corporativo +595 984 355775 es publico y puede aparecer.
+ * Cualquier OTRO celular paraguayo en apps/ es sospechoso: el numero del CEO
+ * se configura y se guarda SOLO en el servidor.
+ */
+const WHATSAPP_CORPORATIVO = '984355775';
+const TELEFONO_PY = /(?:\+?595|0)[\s.-]?9[\s.-]?\d{2}[\s.-]?\d{3}[\s.-]?\d{3}/g;
+for (const archivo of archivos(join(RAIZ, 'apps'))) {
+  const texto = readFileSync(archivo, 'utf8');   // tambien en comentarios: ahi tampoco va
+  for (const m of texto.match(TELEFONO_PY) ?? []) {
+    if (m.replace(/[^0-9]/g, '').endsWith(WHATSAPP_CORPORATIVO)) continue;
+    fallos.push(`${rel(archivo)}: numero de celular "${m}" en codigo del navegador. Solo el WhatsApp corporativo puede aparecer; el del CEO vive unicamente en el servidor (MASTER_SPEC §11.3).`);
+  }
+}
+/** La firma del CEO no se sirve por URL publica. */
+const FIRMA_EXPUESTA = /(firma[-_]?(del[-_]?)?ceo|ceo[-_]?firma)[^\n]{0,40}\.(png|jpe?g|svg|webp)/i;
+for (const archivo of [...archivos(join(RAIZ, 'apps')), ...archivos(join(RAIZ, 'packages'))]) {
+  const texto = readFileSync(archivo, 'utf8');
+  const m = texto.match(FIRMA_EXPUESTA);
+  if (m) {
+    fallos.push(`${rel(archivo)}: "${m[0]}" parece una ruta a la firma del CEO. Es un activo protegido, se sirve desde el servidor (MASTER_SPEC §11.1).`);
+  }
+}
+
+// --- 12f. Logo oficial de Park.IA -----------------------------------------
+const CARPETA_PARK = join(RAIZ, 'apps/escritorio/public/assets/productos/park-ia');
+if (!existsSync(CARPETA_PARK)) {
+  fallos.push('Falta apps/escritorio/public/assets/productos/park-ia/: es el destino del logo oficial de Park.IA.');
+} else if (!existsSync(join(CARPETA_PARK, 'logo-park-ia.png'))) {
+  avisos.push(
+    'apps/escritorio/public/assets/productos/park-ia/logo-park-ia.png todavia no esta. ' +
+    'El logo oficial existe (adjunto del CEO, 15/09/2026) pero sus bytes no llegaron al repositorio. ' +
+    'PROHIBIDO generar un reemplazo: ver el LEEME.md de esa carpeta e INVENTARIO_ACTIVOS §3.2.',
+  );
+}
+const invActivos = readFileSync(join(RAIZ, 'docs/INVENTARIO_ACTIVOS.md'), 'utf8');
+if (/Park\.IA\s+no\s+tiene\s+logo/i.test(invActivos)) {
+  fallos.push('INVENTARIO_ACTIVOS.md sigue afirmando que Park.IA no tiene logo. Lo tiene: adjunto del CEO del 15/09/2026 (§3.2).');
 }
 
 // --- 13. Referencias cruzadas entre documentos ---------------------------
@@ -305,5 +466,9 @@ console.log('OK — identidad Lab.IA: ocho colores oficiales + Inter, sin serif,
 console.log('OK — sin overflow-x: hidden usado como parche de desborde.');
 console.log('OK — siete rutas, #/administracion restringida al administrador.');
 console.log('OK — investigacion automatica declarada, sin credenciales en el cliente.');
-console.log('OK — agenda operativa y cotizacion estructurada declaradas.');
+console.log('OK — agenda operativa y los 25 campos obligatorios de la cotizacion.');
+console.log('OK — sin modelo de cliente particular: la cotizacion es una plantilla generica.');
+console.log('OK — las cuatro alternativas financieras, con sus parametros exactos.');
+console.log('OK — respuesta del cliente: seis opciones excluyentes, casilla obligatoria y constancia comercial.');
+console.log('OK — sin celular del CEO ni firma expuesta en codigo del navegador.');
 console.log('OK — todas las referencias cruzadas entre documentos apuntan a secciones reales.');

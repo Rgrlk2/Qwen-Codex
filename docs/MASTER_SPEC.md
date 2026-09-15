@@ -134,7 +134,7 @@ Opcional: ciudad.
 
 | Campo | Obligatorio | Ejemplo |
 |---|---|---|
-| **Nombre** | sí | *Dra. Claudia Leguizamón* |
+| **Nombre** | sí | *Dra. Marta Ayala* |
 | **Profesión o especialidad** | sí | *Pediatría* |
 | **Matrícula** | **sólo si la tiene a mano** | — |
 | **Ciudad** | **sólo si la tiene a mano** | *Asunción* |
@@ -250,34 +250,38 @@ Dos cosas distintas que nunca se mezclan.
 | Qué es | Documento comercial con precio personalizado propuesto por el vendedor. |
 | Aprobación | **Obligatoria, sin excepción.** |
 
-**Campos de una cotización.** Estructura tomada de la **Carta Oferta real de Agendar.IA** (`INVENTARIO_ACTIVOS.md` §4):
+**Campos de una cotización.** ⛔ **Plantilla genérica**: se genera para cualquiera de los 13 productos, cualquier variante y cualquier cliente. Ningún importe está fijado en el código.
 
-**Precio propuesto por el vendedor**
-- **Setup** (implementación) y su **descuento** — porcentaje o importe.
-- **Mensualidad.**
-- **Límites incluidos** por ítem: consultas por mes, usuarios, canales.
+**Encabezado**
+- **Número o folio** y **versión.**
+- **Cliente**, y **empresa o profesional** al que pertenece.
+- **Nombre del producto** y **variante o plan**, cuando exista.
+- **Nombre del vendedor.**
+- **Fecha de emisión** y **fecha de validez.**
 
-**Hitos de pago del setup** — cada uno por porcentaje **o** por importe:
-- porcentaje o importe **al aceptar**;
-- porcentaje o importe **al entregar o conectar**;
-- otros hitos con su disparador o su fecha.
+**Precios** — internamente "precio efectivo"; ⛔ en el PDF del cliente, **"Precio especial"**
+- **Setup:** precio de lista · precio especial (**S**) · **ahorro**.
+- **Mensualidad:** precio de lista · precio especial (**M**) · **ahorro**.
+- ⛔ Los ahorros se calculan, no se escriben.
 
-**Compromiso y permanencia**
-- **Meses incluidos** sin cargo adicional.
-- **Período de congelamiento del precio** mensual, en meses.
+**Compromiso e instalación**
+- **Permanencia mínima: 12 meses.**
+- **Condiciones de instalación** y **tiempo estimado**.
+- ⛔ **Insumos, accesos, cuentas, información y equipos que debe proporcionar el cliente**, cada uno marcado como bloqueante o no.
 
-**Beneficios y lo que los habilita**
-- **Débito automático** (sí/no).
-- **Compromiso de doce meses** (sí/no).
-- **Pago anual anticipado** (sí/no).
-- ⛔ **Condiciones habilitantes**: cada beneficio declara **a cambio de qué** se otorga y **qué pasa si el cliente deja de cumplirlo**. Un descuento sin condición escrita es un descuento que después nadie puede reclamar.
+**Alcance**
+- **Qué incluye.**
+- ⛔ **Qué no incluye.** Obligatorio y no vacío.
+- **Límites incluidos**: consultas por mes, usuarios, canales.
+- **Bases y condiciones.**
 
-**Alcance y plan de trabajo**
-- **Alcance**: qué incluye.
-- **Exclusiones**: qué **no** incluye.
-- **Vigencia** de la oferta.
-- **Cronograma** por etapas, con fecha estimada, entregable e importe asociado si esa etapa dispara un cobro.
-- **Condiciones** comerciales y tratamiento del IVA.
+**Alternativas financieras** — las cuatro, ⛔ **no acumulables** (§10).
+
+**Firmas y logos**
+- **Firma del vendedor** — antes de enviar a revisión.
+- **Firma del CEO** — al aprobar.
+- **Logos oficiales** de Lab.IA, RGrlk Group y del producto; **logo de la variante** si existe oficialmente.
+- ⛔ Los logos no se generan, no se redibujan, no se recolorean, no se recortan y no se deforman.
 
 Detalle y reglas de validación: `docs/COMMERCIAL_RULES.md` §6.
 
@@ -544,6 +548,30 @@ PYG y USD conviven. Todo importe lleva moneda. ⛔ Sin conversión automática: 
 | 10.6 | Los totales se presentan **agrupados por moneda**. Nunca se suma PYG con USD. |
 | 10.7 | ⛔ Cotizar un producto fuera de los 13 es imposible por construcción. |
 
+### 10.8 Las cuatro alternativas financieras
+
+Toda cotización aprobada le ofrece al cliente cuatro alternativas.
+⛔ **B, C y D NO son acumulables. El cliente elige una sola.**
+
+| | Alternativa | Cálculo | Permanencia |
+|---|---|---|---|
+| **A** | Plan estándar | `S + (M × 12)` | 12 meses |
+| **B** | Pago adelantado 12 meses, 10 % de descuento | `S + (M × 12 × 0,90)` | 12 meses |
+| **C** | Pago adelantado 24 meses, 20 % de descuento | `S + (M × 24 × 0,80)` | 24 meses |
+| **D** | Cheques diferidos o débito automático: 10 % de descuento, un mes bonificado | `S + (M × 11 × 0,90)` | 12 meses |
+
+Donde **S** = precio especial del setup y **M** = precio mensual especial.
+En **D** el cliente recibe **12 meses de servicio** y paga **11 mensualidades**.
+
+| # | Regla |
+|---|---|
+| 10.9 | ⛔ El descuento se calcula sobre la **mensualidad especial**. El setup **se suma por separado** y nunca lo recibe. |
+| 10.10 | ⛔ **Nunca se suman monedas diferentes.** |
+| 10.11 | ⛔ **Todos los cálculos se ejecutan de nuevo en el servidor antes de aprobar.** |
+| 10.12 | De cada alternativa se muestran diez cifras: precio total de lista · precio especial sin promoción · descuento adicional · ahorro total · setup a pagar · mensualidades a pagar · meses de servicio · total final · valor mensual efectivo · forma y calendario de pago. |
+
+Detalle: `docs/COMMERCIAL_RULES.md` §7.
+
 ---
 
 ## 11. Aprobación de cotizaciones
@@ -552,25 +580,75 @@ PYG y USD conviven. Todo importe lleva moneda. ⛔ Sin conversión automática: 
 
 ```
 borrador del vendedor
+      ↓  firma del vendedor
       ↓  enviar
-revisión del administrador
+revisión del CEO
       ↓                    ↓
-  aprobada            corregida  ──► vuelve a borrador, versión +1
+  aprobación          corrección  ──► vuelve a borrador, versión +1
+      ↓  firma del CEO
+PDF definitivo (inmutable, con folio, versión y las dos firmas)
       ↓
-PDF definitivo (inmutable, con folio y versión)
+enlace para el cliente
       ↓
-envío al cliente
+respuesta del cliente → constancia → avisos
 ```
 
 | # | Regla |
 |---|---|
 | A1 | ⛔ **Ningún vendedor puede enviar una cotización final sin aprobación del administrador.** |
 | A2 | Aprobar, corregir y rechazar **exigen comentario**. |
-| A3 | Una cotización aprobada es **inmutable**. Editarla crea una versión nueva y **caduca la aprobación anterior**. |
-| A4 | El PDF definitivo se emite **después** de aprobar, nunca antes. |
+| A3 | Una cotización aprobada es **inmutable**. Editarla crea una versión nueva, **caduca la aprobación anterior y anula las firmas**. |
+| A4 | El PDF definitivo se emite **después** de aprobar y con **las dos firmas vigentes**, nunca antes. |
 | A5 | ⛔ **No hay autoaprobación** por tiempo, por monto ni por antigüedad del vendedor. |
 | A6 | Nadie aprueba su propia cotización, ni siquiera el administrador si la cargó él. |
 | A7 | Todo el historial de versiones es inmutable y consultable. |
+| A8 | ⛔ El servidor **vuelve a ejecutar los cuatro cálculos** antes de aprobar. |
+
+### 11.1 Firmas
+
+| # | Regla |
+|---|---|
+| A9 | La **firma del vendedor** se registra **antes** de enviar a revisión. |
+| A10 | La **firma del CEO** se incorpora **cuando aprueba**. |
+| A11 | ⛔ Las firmas son **activos protegidos servidos desde el servidor**. |
+| A12 | ⛔ **La imagen original de la firma del CEO no se expone por ninguna URL pública.** El PDF la incrusta al generarse, en el servidor. |
+
+### 11.2 La respuesta del cliente
+
+Enlace **privado y único**, después de la aprobación. Muestra: nombre del cliente ·
+producto y variante · número y versión · las alternativas aprobadas con su total ·
+vencimiento · bases y condiciones.
+
+⛔ **Como las alternativas son excluyentes, se usan botones de opción, no casillas múltiples.**
+
+1. Elijo el plan estándar.
+2. Elijo pago adelantado por 12 meses.
+3. Elijo pago adelantado por 24 meses.
+4. Elijo cheques diferidos o débito automático.
+5. Quiero que me contacten antes de elegir.
+6. No continuar por ahora.
+
+⛔ **Casilla obligatoria:** *"He revisado la opción seleccionada y solicito que Lab.IA continúe con los próximos pasos."*
+
+Botón final: **Enviar mi elección**
+
+### 11.3 Constancia y avisos
+
+Registro inmutable con: cliente · cotización · versión exacta · opción seleccionada ·
+importes aceptados · fecha y hora · vencimiento · texto de aceptación ·
+identificación del enlace · huella del documento aprobado.
+
+⛔ **Funciona como constancia comercial o aval de intención. No se presenta como
+contrato ni como firma electrónica legal.**
+
+Al recibirla se avisa a: **celular del vendedor asignado** · **WhatsApp corporativo
++595 984 355775** · **celular personal del CEO** (configurable y almacenado
+**solamente en el servidor**) · **panel de Administración**.
+
+| # | Regla |
+|---|---|
+| A13 | ⛔ El número personal del CEO **nunca** aparece en el enlace, el PDF ni el código del navegador. |
+| A14 | ⛔ Si falla una notificación, la respuesta **se conserva** y el aviso se reintenta. **Nunca se pierde la elección del cliente.** |
 
 ---
 
@@ -636,9 +714,17 @@ Es el error más fácil de cometer con esta paleta, porque es el azul más "de m
 
 ### 14.3 Logos e imágenes
 
-Se usan los **archivos oficiales** localizados en Google Drive. ⛔ No se redibuja, no se recolorea, no se deforma. `object-fit: contain`.
+Se usan los **archivos oficiales**. ⛔ **No se genera otro, no se redibuja, no se recolorea, no se recorta, no se elimina el fondo, no se deforma.** Siempre `object-fit: contain`, respetando la proporción original.
 
 Inventario completo con enlaces, versiones y estado: **`docs/INVENTARIO_ACTIVOS.md`**.
+
+**Park.IA tiene logo oficial.** Es el archivo `Logo ParkIA.png` que el CEO adjuntó el 15/09/2026. Su destino en el repositorio es exactamente:
+
+```
+apps/escritorio/public/assets/productos/park-ia/logo-park-ia.png
+```
+
+Se muestra con `object-fit: contain` y **proporción cuadrada**. Ver `INVENTARIO_ACTIVOS.md` §3.2.
 
 **De la referencia operativa se reutiliza la arquitectura, no la identidad:** estructura de navegación, patrones de componente, los cuatro estados, criterios de accesibilidad.
 
@@ -699,12 +785,26 @@ Detalle: `docs/DESIGN_SYSTEM.md` · Activos: `docs/ASSET_SOURCES.md` e `INVENTAR
 | `#0A55D9` no es color de texto | §14.2 |
 | **Inventario de activos de Drive** | `INVENTARIO_ACTIVOS.md` |
 | Sin inventar, reconstruir ni generar activos | §14.3, `ASSET_SOURCES.md` |
-| **Cotización estructurada** con hitos de pago | §2.5, `COMMERCIAL_RULES.md` §6 |
-| Porcentaje o importe al aceptar y al entregar/conectar | §2.5 |
-| Meses incluidos y congelamiento de precio | §2.5 |
-| Condiciones que habilitan cada beneficio | §2.5 |
+| **Cotización estructurada**, plantilla genérica de 25 campos | §2.5, `COMMERCIAL_RULES.md` §6.1 |
+| Setup y mensualidad: lista, especial y ahorro | §2.5 |
+| "Precio especial" en el documento del cliente | §2.5, `COMMERCIAL_RULES.md` §6.4 C11 |
+| Permanencia mínima de 12 meses | §2.5 |
+| Insumos, accesos, cuentas, información y equipos del cliente | §2.5 |
+| Qué incluye y qué no incluye | §2.5 |
+| **Las cuatro alternativas, no acumulables** | §10.8, `COMMERCIAL_RULES.md` §7 |
+| El descuento cae sobre M; el setup se suma aparte | §10.9 |
+| Nunca se suman monedas distintas | §10.10 |
+| El servidor recalcula antes de aprobar | §10.11, §11 A8 |
 | Presentación primero sin precio; cotización después; aprobación obligatoria | §2.5, §11 |
-| PDF definitivo sólo después de aprobar | §11 A4 |
+| PDF definitivo sólo después de aprobar y con las dos firmas | §11 A4 |
+| **Firmas como activos protegidos**, sin URL pública de la del CEO | §11.1 A11, A12 |
+| Una modificación posterior anula aprobación y firmas | §11 A3 |
+| **Respuesta del cliente con botones de opción**, no casillas | §11.2 |
+| Casilla obligatoria y botón "Enviar mi elección" | §11.2 |
+| **Constancia comercial**, no contrato ni firma electrónica legal | §11.3 |
+| Cuatro destinos de aviso; el celular del CEO sólo en el servidor | §11.3 A13 |
+| Si falla un aviso, la elección del cliente no se pierde | §11.3 A14 |
+| **Logo oficial de Park.IA** | §14.3, `INVENTARIO_ACTIVOS.md` §3.2 |
 | **Seis sesiones desde el mismo commit base, en ramas separadas** | `PARALLEL_SESSIONS.md` |
 | Un solo sistema, dos roles | §1 |
 | Los 13 productos | §7 |

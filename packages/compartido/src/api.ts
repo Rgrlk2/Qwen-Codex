@@ -49,9 +49,16 @@ import type {
 import type {
   AccesoEnlace, AccionRevision, ComparacionConLista, Cotizacion, CotizacionDetalle,
   DocumentoEmitido, EnlaceCompartido, FiltroAperturas, FiltroColaRevision, FiltroCotizaciones,
-  ItemCotizacionEntrada, NuevaCotizacion, NuevaPresentacion, OpcionesEnlace, Presentacion,
-  PropuestaPublica, VersionCotizacion,
+  NuevaCotizacion, NuevaPresentacion, OpcionesEnlace, PreciosEntrada, Presentacion,
+  PresentacionPublica, PrevisualizacionCotizacion, VersionCotizacion,
 } from './propuestas';
+
+import type { AlternativaCalculada, BaseCalculo, CodigoAlternativa } from './alternativas';
+
+import type {
+  ConstanciaRespuesta, CotizacionPublica, Firma, ResultadoNotificaciones,
+  RespuestaDelCliente, RolFirmante,
+} from './aceptacion';
 
 import type {
   Ajuste, EstadoObservacion, FiltroMensualidades, LineaParticipacion, LineaPorCobrar,
@@ -253,23 +260,52 @@ export interface CapaPropuestas {
   crearCotizacion(datos: NuevaCotizacion, clave: ClaveIdempotencia): R<Cotizacion>;
   /** Sobre `aprobada` crea versión nueva en borrador y CADUCA la aprobación. */
   actualizarCotizacion(id: Id, cambios: Partial<NuevaCotizacion>, version: Version): R<Cotizacion>;
+
+  /**
+   * Las cuatro alternativas y los seis importes, calculados por el SERVIDOR.
+   *
+   * El navegador puede previsualizar con `calcularAlternativas` de
+   * alternativas.ts, pero lo que vale es esto: ⛔ el servidor vuelve a ejecutar
+   * los cuatro cálculos antes de aprobar y su resultado prevalece.
+   * ⛔ Monedas distintas en la base ⇒ `monedas_mezcladas`.
+   */
+  previsualizarCotizacion(
+    productoId: ProductoId,
+    precios: PreciosEntrada,
+    variante?: string,
+  ): R<PrevisualizacionCotizacion>;
   /** ⛔ Un Dinero por moneda. Nunca un total consolidado. */
-  previsualizarTotales(items: ReadonlyArray<ItemCotizacionEntrada>): R<TotalesPorMoneda>;
-  compararConLista(items: ReadonlyArray<ItemCotizacionEntrada>): R<ComparacionConLista>;
-  enviarARevision(id: Id, comentario: string, clave: ClaveIdempotencia): R<Cotizacion>;
+  previsualizarTotales(base: BaseCalculo): R<TotalesPorMoneda>;
+  compararConLista(productoId: ProductoId, precios: PreciosEntrada): R<ComparacionConLista>;
   historialVersiones(id: Id): R<ReadonlyArray<VersionCotizacion>>;
 
+  // Firma del vendedor y envío a revisión
+  /**
+   * ⛔ Se registra ANTES de enviar a revisión.
+   * ⛔ `referenciaProtegida` la resuelve el servidor: el navegador manda la
+   *    intención de firmar, nunca la imagen ni su ubicación.
+   */
+  firmarComoVendedor(cotizacionId: Id, clave: ClaveIdempotencia): R<Firma>;
+  /** ⛔ Sin firma de vendedor vigente ⇒ `requiere_firma`. */
+  enviarARevision(id: Id, comentario: string, clave: ClaveIdempotencia): R<Cotizacion>;
+
   // Sólo después de aprobar
-  /** ⛔ Estado distinto de `aprobada` ⇒ `requiere_aprobacion`. Idempotente por (id, version). */
+  /**
+   * ⛔ Estado distinto de `aprobada` ⇒ `requiere_aprobacion`.
+   * ⛔ Sin las DOS firmas vigentes ⇒ `requiere_firma`.
+   * Idempotente por (id, version).
+   */
   emitirPdfDefinitivo(cotizacionId: Id, clave: ClaveIdempotencia): R<DocumentoEmitido>;
   /** ⛔ Estado distinto de `aprobada` ⇒ `requiere_aprobacion`. */
   enviarAlCliente(cotizacionId: Id, clave: ClaveIdempotencia): R<Cotizacion>;
   marcarDesenlace(id: Id, desenlace: 'aceptada' | 'perdida', motivo?: string): R<Cotizacion>;
 
-  // Enlaces y aperturas
+  // Enlaces, aperturas y respuesta
   crearEnlace(propuestaId: Id, opciones: OpcionesEnlace, clave: ClaveIdempotencia): R<EnlaceCompartido>;
   revocarEnlace(enlaceId: Id, motivo: string): R<EnlaceCompartido>;
   aperturasDePropuesta(propuestaId: Id, pagina?: OpcionesPagina): R<Pagina<AccesoEnlace>>;
+  /** La constancia del cliente, si ya respondió. */
+  constanciaDeCotizacion(cotizacionId: Id): R<ConstanciaRespuesta | null>;
 }
 
 // ===========================================================================
@@ -339,7 +375,36 @@ export interface CapaAdministracion {
     accion: Extract<AccionRevision, 'aprobar' | 'corregir' | 'rechazar'>,
     comentario: string,
     clave: ClaveIdempotencia,
+    /**
+     * Alternativas que quedan visibles para el cliente. Vacío = las cuatro.
+     * ⛔ Sólo se usa al `aprobar`.
+     */
+    alternativasAprobadas?: ReadonlyArray<CodigoAlternativa>,
   ): R<Cotizacion>;
+  /**
+   * Los cuatro cálculos, ejecutados de nuevo en el servidor.
+   * ⛔ `revisarCotizacion('aprobar', …)` lo corre siempre antes de aprobar;
+   *    este método existe para poder verlos antes de decidir.
+   */
+  recalcularCotizacion(id: Id): R<ReadonlyArray<AlternativaCalculada>>;
+  /**
+   * Incorpora la firma del CEO. ⛔ Sucede AL APROBAR, no antes.
+   * ⛔ La imagen se resuelve y se incrusta en el servidor. No hay URL pública
+   *    de la firma del CEO, ni en el enlace, ni en el PDF, ni en el navegador.
+   */
+  firmarComoCeo(cotizacionId: Id, clave: ClaveIdempotencia): R<Firma>;
+  /** Firmas de una cotización, con su estado de anulación. */
+  firmasDeCotizacion(cotizacionId: Id): R<ReadonlyArray<Firma>>;
+  /**
+   * ⛔ Una modificación posterior anula la aprobación Y las firmas anteriores.
+   *    Lo hace `actualizarCotizacion`; esto sólo lo deja consultar.
+   */
+  anulacionesDeFirma(cotizacionId: Id, rol?: RolFirmante): R<ReadonlyArray<Firma>>;
+
+  // Constancias y avisos
+  listarConstancias(pagina?: OpcionesPagina): R<Pagina<ConstanciaRespuesta>>;
+  /** ⛔ Reintento manual. La constancia ya está guardada: esto sólo reenvía el aviso. */
+  reintentarNotificaciones(constanciaId: Id): R<ResultadoNotificaciones>;
 
   // Configuración comercial
   listarParticipaciones(): R<ReadonlyArray<ParticipacionProducto>>;
@@ -390,8 +455,29 @@ export interface CapaAdministracion {
  * ⛔ Nunca revela cuántas aperturas hubo.
  */
 export interface CapaPublica {
-  obtenerPropuestaPublica(token: string, codigo?: string): R<PropuestaPublica>;
+  obtenerPresentacionPublica(token: string, codigo?: string): R<PresentacionPublica>;
+  /** ⛔ Sólo de cotizaciones `aprobada` o `enviada_al_cliente`. */
+  obtenerCotizacionPublica(token: string, codigo?: string): R<CotizacionPublica>;
   descargarPdfPublico(token: string): R<{ readonly url: string; readonly venceEn: ISODate }>;
+
+  /**
+   * La elección del cliente.
+   *
+   * ⛔ `aceptacionMarcada` es literal `true`: sin la casilla marcada el tipo no
+   *    compila y el servidor devuelve `validacion`.
+   * ⛔ Una sola opción: las alternativas son excluyentes (botones de opción).
+   * ⛔ La constancia se guarda ANTES de intentar los avisos. Si un aviso falla,
+   *    `constanciaGuardada` sigue siendo `true` y el envío se reintenta.
+   *    Nunca se pierde la elección del cliente.
+   * ⛔ Es una constancia comercial, no un contrato ni una firma electrónica legal.
+   */
+  responderCotizacion(
+    token: string,
+    respuesta: RespuestaDelCliente,
+    clave: ClaveIdempotencia,
+  ): R<ConstanciaRespuesta>;
+  /** Lo que el cliente ve después de enviar: su propia constancia, nada más. */
+  obtenerConstanciaPublica(token: string): R<ConstanciaRespuesta | null>;
 }
 
 // ===========================================================================

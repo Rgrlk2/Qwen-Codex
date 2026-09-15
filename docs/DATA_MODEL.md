@@ -193,53 +193,102 @@ Sólo un paso `aceptado` aparece en los próximos seguimientos de Inicio.
 ⛔ **No requiere aprobación.**
 
 ### 7.2 `Cotizacion`
-`id` · `clienteId` · `vendedorId` · `presentacionId: Id | null` · `folio` · `version` · `estado` · `items` · `condiciones` · `totalesPorMoneda` · `vigenteHasta` · `versionCatalogo` · `motivoPerdida`.
+`id` · `folio` · `version` · `estado` · `destinatario` · `objeto` · `vendedorId` · `nombreVendedor` · `fechaEmision` · `fechaValidez` · `precios` · `alternativas` · `condiciones` · `logos` · `totalesPorMoneda` · `presentacionId: Id | null` · `versionCatalogo` · `motivoPerdida`.
 
 `estado`: `"borrador" | "en_revision" | "aprobada" | "corregida" | "rechazada" | "enviada_al_cliente" | "aceptada" | "perdida" | "vencida"`.
 
-### 7.3 `ItemCotizacion`
-Incluye `limitesIncluidos: string[]` — *"+400 consultas/mes"*, usuarios, canales.
-`id` · `productoId` · `plan` · `precioListaSetup: Dinero | null` · `precioListaMensualidad: Dinero | null` · **`setupPropuesto: Dinero`** · **`mensualidadPropuesta: Dinero`** · `descuentoImplementacionPorcentaje` · `alcance` · `notas`.
+⛔ **Plantilla genérica.** Se genera para cualquiera de los 13 productos, cualquier variante y cualquier cliente. Ningún importe está fijado en el código.
 
-**Invariantes:** `setupPropuesto.moneda === mensualidadPropuesta.moneda` · un producto aparece una sola vez · el precio de lista se guarda **junto** al propuesto, para poder explicar la desviación meses después.
+### 7.3 Encabezado
 
-### 7.4 `CondicionesCotizacion`
+`DestinatarioCotizacion`: `clienteId` · `tipo: "empresa" | "profesional"` · `nombreCliente` · `nombreEmpresaOProfesional` · `profesion` · `ruc` · `ciudad`.
 
-Estructura tomada de la **Carta Oferta real de Agendar.IA** (`INVENTARIO_ACTIVOS.md` §4).
+`ObjetoCotizado`: `productoId` · `nombreProducto` · `variante: string | null`.
 
-**Setup y sus hitos**
-`hitosPagoSetup: HitoPagoSetup[]` · `descuentoSetupPorcentaje` · `descuentoSetupImporte`.
+⛔ Una cotización = **un producto** y, cuando corresponde, **una variante**. Los combos se cotizan como cotizaciones vinculadas, no mezcladas.
 
-`HitoPagoSetup`: `orden` · `disparador` (`al_aceptar | al_entregar | al_conectar | al_iniciar_piloto | fecha_fija`) · `descripcion` · `porcentaje` · `importe` · `fecha`.
+`LogosDocumento`: `labIa` · `rgrlkGroup` · `producto` · `variante: string | null`.
+
+⛔ Son referencias a activos **oficiales** del inventario. No se generan, no se redibujan, no se recolorean, no se recortan y no se deforman: `object-fit: contain`, proporción original. Si la variante no tiene logo oficial, `null`.
+
+### 7.4 `PreciosCotizacion`
+
+Los seis importes obligatorios:
+
+| Campo | Qué es |
+|---|---|
+| `setupLista` | Precio de lista del setup |
+| `setupEspecial` | **S** — internamente "precio efectivo"; en el PDF del cliente, **"Precio especial"** |
+| `ahorroSetup` · `ahorroSetupPorcentaje` | Calculados: `setupLista − setupEspecial` |
+| `mensualLista` | Precio mensual de lista |
+| `mensualEspecial` | **M** — internamente "precio efectivo"; en el PDF del cliente, **"Precio especial"** |
+| `ahorroMensual` · `ahorroMensualPorcentaje` | Calculados: `mensualLista − mensualEspecial` |
 
 | # | Invariante |
 |---|---|
-| HP1 | Cada hito lleva **porcentaje o importe**, ⛔ nunca los dos. |
-| HP2 | Si todos son porcentuales, ⛔ **suman exactamente 100**. |
-| HP3 | Si son importes, ⛔ **suman el setup con su descuento aplicado**. |
-| HP4 | `disparador === 'fecha_fija'` ⇒ `fecha !== null`. |
-| HP5 | `descuentoSetupPorcentaje` y `descuentoSetupImporte`: ⛔ uno de los dos, no ambos. |
+| PC1 | ⛔ Las cuatro monedas son **la misma**. Distintas ⇒ `monedas_mezcladas`. |
+| PC2 | ⛔ Los ahorros **no se escriben**: se calculan y se recalculan en el servidor. |
+| PC3 | ⛔ El documento del cliente dice **"Precio especial"**, nunca "precio efectivo" ni "precio verdadero". |
 
-**Permanencia**
-`mesesIncluidos: number` · `mesesCongelamientoPrecio: number`.
+`PreciosEntrada` es lo único que manda el vendedor: `setupEspecial` · `mensualEspecial`.
 
-**Beneficios y lo que los habilita**
-`debitoAutomatico` · `compromisoDoceMeses` · `pagoAnualAnticipado` · `condicionesHabilitantes: CondicionHabilitante[]`.
+### 7.5 `CondicionesCotizacion`
 
-`CondicionHabilitante`: `beneficio` (`descuento_setup | congelamiento_precio | meses_incluidos | precio_mensual_especial`) · `condicion` · `descripcion` · `siNoSeCumple`.
+`permanenciaMinimaMeses` (por defecto **12**) · `instalacion` · `alcance` · `basesYCondiciones` · `tratamientoIva` · `notasInternas`.
 
-⛔ **Todo beneficio otorgado tiene su condición escrita.** Un descuento sin condición es un descuento que después nadie puede reclamar.
+`CondicionesInstalacion`: `descripcion` · `tiempoEstimadoDiasHabiles` · `tiempoEstimadoTexto` · `aportesDelCliente: AporteDelCliente[]`.
 
-**Alcance y plan**
-`alcance` · `exclusiones` · `cronograma: EtapaCronograma[]` · `condicionesComerciales` · `tratamientoIva`.
+`AporteDelCliente`: `tipo: "insumo" | "acceso" | "cuenta" | "informacion" | "equipo"` · `descripcion` · `bloqueante: boolean`.
 
-`EtapaCronograma`: `orden` · `titulo` · `fechaEstimada` · `duracionDias` · `entregable` · `importeAsociado`.
+`AlcanceCotizacion`: `queIncluye: string[]` · `queNoIncluye: string[]` · `limitesIncluidos: string[]`.
 
-### 7.5 `VersionCotizacion`
+| # | Invariante |
+|---|---|
+| CC1 | ⛔ `queIncluye` y `queNoIncluye` **no vacíos**. Una cotización sin exclusiones escritas es un reclamo futuro. |
+| CC2 | ⛔ `permanenciaMinimaMeses >= 1`. Por defecto `PERMANENCIA_MINIMA_MESES` = 12. |
+| CC3 | Un aporte `bloqueante` sin cumplir frena el arranque de la instalación, y eso quedó escrito en el documento que el cliente aceptó. |
+
+### 7.6 Alternativas financieras
+
+`ReglaAlternativa`: `codigo: "estandar" | "adelantado_12" | "adelantado_24" | "diferido"` · `nombre` · `mesesServicio` · `cuotasAPagar` · `factorMensual` · `permanenciaMinimaMeses` · `pagoUnicoAdelantado` · `descripcionPago`.
+
+| Código | `mesesServicio` | `cuotasAPagar` | `factorMensual` | `permanenciaMinimaMeses` | Cálculo |
+|---|---|---|---|---|---|
+| `estandar` | 12 | 12 | 1 | 12 | `S + (M × 12)` |
+| `adelantado_12` | 12 | 12 | 0,90 | 12 | `S + (M × 12 × 0,90)` |
+| `adelantado_24` | 24 | 24 | 0,80 | 24 | `S + (M × 24 × 0,80)` |
+| `diferido` | 12 | **11** | 0,90 | 12 | `S + (M × 11 × 0,90)` |
+
+`AlternativaCalculada` expone las diez cifras: `precioTotalLista` · `precioEspecialSinPromocion` · `descuentoAdicional` · `ahorroTotal` · `setupAPagar` · `mensualidadesAPagar` · `importeCuota` · `cantidadCuotas` · `mesesServicio` · `permanenciaMinimaMeses` · `totalFinal` · `valorMensualEfectivo` · `formaDePago` · `calendarioPago: CuotaCalendario[]`.
+
+| # | Invariante |
+|---|---|
+| AF1 | ⛔ `adelantado_12`, `adelantado_24` y `diferido` **no se acumulan**. El cliente elige **una**. |
+| AF2 | ⛔ El descuento cae sobre **M**. `setupAPagar === precios.setupEspecial`, siempre. |
+| AF3 | ⛔ `totalFinal === setupAPagar + mensualidadesAPagar`. |
+| AF4 | ⛔ Las cuotas de `calendarioPago` **suman exactamente** `totalFinal`. |
+| AF5 | ⛔ Una sola moneda en toda la alternativa. |
+| AF6 | ⛔ El servidor recalcula las cuatro antes de aprobar; su resultado prevalece. |
+
+**Redondeo.** En pago único adelantado (B y C) se redondea **el total** de las mensualidades, una vez. En cuotas (A y D) se redondea **la cuota** y el total es la cuota por la cantidad: si se redondeara el total, las cuotas no lo sumarían.
+
+### 7.7 `Firma`
+
+`id` · `rol: "vendedor" | "ceo"` · `firmanteId` · `nombreFirmante` · `aclaracion` · `referenciaProtegida` · `firmadoEn` · `versionFirmada` · `anulada` · `anuladaEn` · `motivoAnulacion`.
+
+| # | Invariante |
+|---|---|
+| FI1 | La firma del **vendedor** se registra antes de `enviarARevision`. |
+| FI2 | La firma del **CEO** se incorpora al aprobar. |
+| FI3 | ⛔ `referenciaProtegida` **no es una URL** ni un nombre de archivo, y sólo el servidor la resuelve. |
+| FI4 | ⛔ La imagen original de la firma del CEO **no se expone por ninguna URL pública**. |
+| FI5 | ⛔ Una edición posterior pone `anulada: true` en todas las firmas de la versión anterior. |
+
+### 7.8 `VersionCotizacion`
 `version` · `estado` · `creadaEn` · `creadaPor` · `totalesPorMoneda` · `motivoCambio`.
 **Inmutable.**
 
-### 7.6 `EventoRevision` *(append-only)*
+### 7.9 `EventoRevision` *(append-only)*
 `id` · `cotizacionId` · `version` · `actorId` · `accion: "enviar" | "aprobar" | "corregir" | "rechazar"` · `comentario` · `ocurridoEn`.
 
 **Invariantes:** `comentario` no vacío en `aprobar`, `corregir` y `rechazar` · `actorId !== vendedorId` en `aprobar` · ⛔ **no existe ninguna transición que lleve a `enviada_al_cliente` sin pasar por `aprobada`**.
@@ -254,7 +303,7 @@ Estructura tomada de la **Carta Oferta real de Agendar.IA** (`INVENTARIO_ACTIVOS
 ⛔ **Inmutable.** Mismo insumo ⇒ mismo hash. Para una cotización, ⛔ **sólo se emite si el estado es `aprobada`**.
 
 ### 8.2 `EnlaceCompartido`
-`id` · `propuestaId` · `versionPropuesta` · `token` · `creadoEn` · `creadoPor` · `venceEn` · `topeAperturas` · `aperturas` · `requiereCodigo` · `revocadoEn` · `revocadoPor`.
+`id` · `propuestaId` · `tipoPropuesta` · `versionPropuesta` · `token` · `creadoEn` · `creadoPor` · `venceEn` · `topeAperturas` · `aperturas` · `requiereCodigo` · `revocadoEn` · `revocadoPor` · `respondido`.
 
 ⛔ El `token` **nunca** deriva de `clienteId`, `propuestaId` ni de dato alguno del cliente.
 
@@ -262,6 +311,59 @@ Estructura tomada de la **Carta Oferta real de Agendar.IA** (`INVENTARIO_ACTIVOS
 `id` · `enlaceId` · `documentoId` · `tipoDocumento` · `ocurridoEn` · `tipoDispositivo` · `paisAproximado` · `duracionSegundos` · `resultado: "ok" | "vencido" | "revocado" | "tope_superado" | "codigo_invalido"`.
 
 ⛔ **Prohibido almacenar:** IP completa, user-agent crudo, identificador de dispositivo, cookie persistente, datos de contacto del visitante, correlación entre enlaces. Granularidad geográfica máxima: **país**.
+
+---
+
+### 8.4 `CotizacionPublica`
+
+Lo que el cliente ve en el enlace: `nombreCliente` · `nombreProducto` · `variante` · `folio` · `version` · `emitidaEn` · `venceEn` · `alternativas: AlternativaPublica[]` · `basesYCondiciones` · `pdfDisponible` · `vencida`.
+
+`AlternativaPublica`: `codigo` · `nombre` · `totalFinal` · `setupAPagar` · `importeCuota` · `cantidadCuotas` · `mesesServicio` · `permanenciaMinimaMeses` · `formaDePago`.
+
+⛔ Superficie mínima: sin datos internos, sin otras cotizaciones, sin precios de terceros, y nunca revela cuántas aperturas hubo.
+
+### 8.5 `RespuestaDelCliente`
+
+`opcion: OpcionRespuesta` · `aceptacionMarcada: true`.
+
+`OpcionRespuesta`: `"estandar" | "adelantado_12" | "adelantado_24" | "diferido" | "contactar_antes" | "no_continuar"`.
+
+| Opción | Texto exacto |
+|---|---|
+| `estandar` | Elijo el plan estándar. |
+| `adelantado_12` | Elijo pago adelantado por 12 meses. |
+| `adelantado_24` | Elijo pago adelantado por 24 meses. |
+| `diferido` | Elijo cheques diferidos o débito automático. |
+| `contactar_antes` | Quiero que me contacten antes de elegir. |
+| `no_continuar` | No continuar por ahora. |
+
+| # | Invariante |
+|---|---|
+| RC1 | ⛔ **Una sola opción.** Las alternativas son excluyentes: **botones de opción, no casillas múltiples**. |
+| RC2 | ⛔ `aceptacionMarcada` es **literal `true`**. Sin la casilla marcada el código no compila y el servidor devuelve `validacion`. |
+| RC3 | Texto de la casilla (`TEXTO_ACEPTACION`): *"He revisado la opción seleccionada y solicito que Lab.IA continúe con los próximos pasos."* |
+| RC4 | Botón final (`TEXTO_BOTON_ENVIO`): **"Enviar mi elección"**. |
+
+### 8.6 `ConstanciaRespuesta` *(inmutable)*
+
+`id` · `clienteId` · `nombreCliente` · `cotizacionId` · `folio` · `versionCotizacion` · `opcionSeleccionada` · `importesAceptados` · `respondidaEn` · `venceEn` · `textoAceptacion` · `enlaceId` · `huellaDocumento` · `naturaleza: "constancia_comercial"`.
+
+⛔ **Funciona como constancia comercial o aval de intención. No se presenta como contrato ni como firma electrónica legal.** El campo `naturaleza` lo recuerda en el propio registro.
+
+### 8.7 `Notificacion`
+
+`id` · `constanciaId` · `canal` · `destinoProtegido` · `estado` · `intentos` · `ultimoIntentoEn` · `proximoIntentoEn` · `error`.
+
+`CanalNotificacion`: `"celular_vendedor" | "whatsapp_corporativo" | "celular_ceo" | "panel_administracion"`.
+
+`DestinosNotificacion`: `whatsappCorporativo: "+595 984 355775"` · `celularCeoConfigurado: boolean` · `celularVendedorConfigurado: boolean`.
+
+| # | Invariante |
+|---|---|
+| NO1 | ⛔ El número personal del CEO **nunca** aparece en el enlace, el PDF ni el código del navegador. Se referencia por `destinoProtegido`, que sólo el servidor resuelve. |
+| NO2 | ⛔ `DestinosNotificacion` expone **si** el celular del CEO está configurado, **nunca su valor**. |
+| NO3 | ⛔ La constancia se guarda **antes** de intentar los avisos. |
+| NO4 | ⛔ Si una notificación falla, la respuesta **se conserva** y el aviso se reintenta. `ResultadoNotificaciones.constanciaGuardada` es **literal `true`**: un fallo de aviso no puede representarse como pérdida de la constancia. |
 
 ---
 
