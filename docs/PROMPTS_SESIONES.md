@@ -59,13 +59,17 @@ REGLAS QUE NO SE NEGOCIAN, en ninguna sesión:
    (en TU sección) y seguís con lo que no depende de eso. No lo editás.
    Ni "rapidito", ni "sólo una línea".
 
-TU RAMA
-   Salís del commit base, trabajás en tu propia rama, y abrís UN PR contra
-   `integracion/escritorio`. ⛔ Nunca contra main. ⛔ Nunca mergeás la rama
-   de otra sesión. ⛔ No esperás a nadie: todo lo que necesitás está en la base.
+TU RAMA — ya existe, sólo hacés checkout:
+
+   git fetch origin
+   git checkout sesion/<la tuya>
+
+   Trabajás ahí y abrís UN PR contra `integracion/escritorio`.
+   ⛔ Nunca contra main. ⛔ Nunca mergeás la rama de otra sesión.
+   ⛔ No esperás a nadie: todo lo que necesitás está en la base.
 
 ANTES DE ABRIR EL PR:
-   git diff --name-only <commit-base>...HEAD
+   git diff --name-only origin/integracion/escritorio...HEAD
    Toda ruta tiene que estar en tu ámbito. Una sola ruta fuera = rechazo,
    aunque el cambio sea correcto: rompe la garantía para las otras cinco.
 

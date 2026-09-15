@@ -185,7 +185,7 @@ npm run verificar
 | **S5** | `sesion/5-propuestas-cotizaciones` | Presentaciones y cotizaciones |
 | **S6** | `sesion/6-finanzas-administracion` | Finanzas y administración |
 
-Cada una abre PR contra `integracion/escritorio`. ⛔ **Ninguna espera a otra**: contratos, tipos, rutas, catálogo, copy, identidad, inventario de activos e interfaces de investigación están congelados en la base.
+**Las siete ramas ya están creadas y empujadas.** Cada sesión hace `git checkout` de la suya y abre PR contra `integracion/escritorio`. ⛔ **Ninguna espera a otra**: contratos, tipos, rutas, catálogo, copy, identidad, inventario de activos e interfaces de investigación están congelados en la base.
 
 **Un archivo tiene un solo dueño.** Ámbitos exactos: [`docs/PARALLEL_SESSIONS.md`](docs/PARALLEL_SESSIONS.md). Prompts listos: [`docs/PROMPTS_SESIONES.md`](docs/PROMPTS_SESIONES.md).
 

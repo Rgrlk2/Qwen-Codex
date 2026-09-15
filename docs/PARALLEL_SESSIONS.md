@@ -42,16 +42,27 @@ main
            └── sesion/6-finanzas-administracion
 ```
 
+### 2.1 Las ramas ya existen
+
+**Las siete ramas están creadas y empujadas**, todas apuntando al mismo commit base. Cada sesión sólo tiene que hacer `git checkout` de la suya y empezar.
+
+```bash
+git fetch origin
+git checkout sesion/3-motor-investigacion     # la que le toque
+```
+
+⛔ **El punto de referencia es `integracion/escritorio`, no un SHA.** Si hay que rebasar, se rebasa contra esa rama.
+
 | # | Regla |
 |---|---|
-| R1 | Las seis ramas salen **del mismo commit base**, al mismo tiempo. |
+| R1 | Las seis ramas salen **del mismo commit base**, al mismo tiempo. Ya están creadas (§2.1). |
 | R2 | Cada sesión trabaja **sólo** en su rama. |
 | R3 | Cada sesión abre **un PR contra `integracion/escritorio`**, nunca contra `main`. |
 | R4 | ⛔ **Ninguna sesión hace merge de la rama de otra.** |
 | R5 | ⛔ **Ninguna sesión espera a otra para empezar.** |
 | R6 | La integración a `main` es una decisión posterior, con las seis ramas mergeadas y QA §7 en verde. |
 
-### 2.1 Por qué ya no hay esperas
+### 2.2 Por qué ya no hay esperas
 
 En la versión anterior decía *"S4 y S5 esperan a S3"* y *"S2 publica tokens temprano"*. **Eso no era paralelismo: era una fila.** Se eliminó así:
 
@@ -157,7 +168,7 @@ packages/mock/src/datos-finanzas.ts
 Antes de abrir el PR, **cada sesión** corre esto y adjunta la salida:
 
 ```bash
-git diff --name-only <commit-base>...HEAD
+git diff --name-only origin/integracion/escritorio...HEAD
 npm run verificar
 ```
 
