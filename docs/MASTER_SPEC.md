@@ -718,13 +718,13 @@ Se usan los **archivos oficiales**. ⛔ **No se genera otro, no se redibuja, no 
 
 Inventario completo con enlaces, versiones y estado: **`docs/INVENTARIO_ACTIVOS.md`**.
 
-**Park.IA tiene logo oficial.** Es el archivo `Logo ParkIA.png` que el CEO adjuntó el 15/09/2026. Su destino en el repositorio es exactamente:
+**Los 13 productos tienen su logo oficial disponible.** El de Park.IA, aportado por el CEO el 15/09/2026, está en:
 
 ```
-apps/escritorio/public/assets/productos/park-ia/logo-park-ia.png
+apps/escritorio/public/assets/productos/park-ia/logo-park-ia.webp
 ```
 
-Se muestra con `object-fit: contain` y **proporción cuadrada**. Ver `INVENTARIO_ACTIVOS.md` §3.2.
+1188 × 1188, **proporción cuadrada**, guardado sin modificar un solo byte. Se muestra con `object-fit: contain`. Ver `INVENTARIO_ACTIVOS.md` §3.2.
 
 **De la referencia operativa se reutiliza la arquitectura, no la identidad:** estructura de navegación, patrones de componente, los cuatro estados, criterios de accesibilidad.
 

@@ -1,32 +1,31 @@
 # Logo oficial de Park.IA
 
-**Archivo de destino, exacto:**
+**Archivo:**
 
 ```
-apps/escritorio/public/assets/productos/park-ia/logo-park-ia.png
+apps/escritorio/public/assets/productos/park-ia/logo-park-ia.webp
 ```
 
 ## Estado
 
-⚠️ **El archivo todavía no está en el repositorio.**
+✅ **Incorporado.** Es el logo oficial de Park.IA, aportado por el CEO el 15/09/2026.
 
-El logo oficial **existe** y fue confirmado por el CEO: es el archivo
-`Logo ParkIA.png` adjuntado a la conversación del 15/09/2026. Ese adjunto llegó
-**incrustado en el mensaje**, no como archivo en disco, y **no está en el Google
-Drive conectado**. Sin los bytes originales no se puede escribir acá.
+| | |
+|---|---|
+| Dimensiones | 1188 × 1188 — **proporción cuadrada** |
+| Peso | 85.496 bytes |
+| Formato | WebP, con perfil ICC incrustado |
+| SHA-256 | `534320db17a2ef422a88ce890f053596dc442922c6d53e84f7e5dc3e6ead94f7` |
 
-⛔ **No se generó un reemplazo.** Las reglas de abajo lo prohíben, y un logo
-inventado es peor que un logo ausente.
-
-**Para completarlo:** copiar el archivo original a la ruta de arriba, con ese
-nombre exacto. No hace falta ningún otro cambio: el inventario, la ficha de
-producto y el generador de PDF ya apuntan ahí.
+⛔ **Se guardó tal cual llegó: ni un byte modificado.** No se generó otro, no se
+redibujó, no se recoloreó, no se recortó, no se le quitó el fondo y no se
+deformó. La igualdad byte a byte se verificó con `cmp` antes de confirmarlo.
 
 ## Reglas de manejo — las ocho, sin excepción
 
 | # | Regla |
 |---|---|
-| 1 | ⛔ Usar **exactamente** el archivo original. |
+| 1 | ⛔ Usar **exactamente** este archivo. |
 | 2 | ⛔ **No generar** otro. |
 | 3 | ⛔ **No redibujar.** |
 | 4 | ⛔ **No recolorear.** |

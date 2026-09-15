@@ -99,13 +99,12 @@ SVG en línea. Sin biblioteca externa, sin descarga, sin dependencia.
 
 | # | Activo | Estado tras la búsqueda | Mientras no llegue |
 |---|---|---|---|
-| 1 | **El archivo del logo de Park.IA** | Park.IA **sí tiene logo oficial**: el CEO adjuntó `Logo ParkIA.png` el 15/09/2026. ⚠️ Los bytes llegaron **incrustados en el mensaje**, no como archivo, y **no están en Drive** (se buscó). | Destino exacto: `apps/escritorio/public/assets/productos/park-ia/logo-park-ia.png`. Hasta que llegue, el nombre en texto con Inter 600. ⛔ **No se genera, no se redibuja, no se recolorea, no se recorta, no se elimina el fondo, no se deforma.** `object-fit: contain`, proporción cuadrada. Ver `INVENTARIO_ACTIVOS.md` §3.2. |
-| 2 | **Versiones SVG** | No encontradas. Todo es PNG/WebP de 1 a 2 MB. | Se usan los PNG optimizados. ⛔ No se vectoriza a mano. |
-| 3 | **Variantes claro/oscuro** de Lab.IA | Hay `Logo_LabIA_T` y `Logo_LabIA_V`; falta confirmar cuál funciona sobre `#020711`. | Se prueba la existente sobre el fondo real. |
-| 4 | **Renders y mockups de producto** | No existen como categoría. Lo más cercano: capturas de dashboard. | Composición tipográfica. ⛔ No se generan. |
-| 5 | **Datos societarios** (razón social, RUC, domicilio) | No buscados: no son un activo gráfico. | Campo vacío, marcado como pendiente. ⛔ No se supone ninguno. |
-| 6 | **Términos y condiciones comerciales** | Idem. | Bloque ausente, marcado. |
-| 7 | **Manual de marca completo** (radios, sombras, espaciados) | No encontrado. Los colores y la tipografía ya están. | Se usan los del `DESIGN_SYSTEM.md`. |
+| 1 | **Versiones SVG** | No encontradas. Todo es PNG/WebP de 1 a 2 MB. | Se usan los PNG optimizados. ⛔ No se vectoriza a mano. |
+| 2 | **Variantes claro/oscuro** de Lab.IA | Hay `Logo_LabIA_T` y `Logo_LabIA_V`; falta confirmar cuál funciona sobre `#020711`. | Se prueba la existente sobre el fondo real. |
+| 3 | **Renders y mockups de producto** | No existen como categoría. Lo más cercano: capturas de dashboard. | Composición tipográfica. ⛔ No se generan. |
+| 4 | **Datos societarios** (razón social, RUC, domicilio) | No buscados: no son un activo gráfico. | Campo vacío, marcado como pendiente. ⛔ No se supone ninguno. |
+| 5 | **Términos y condiciones comerciales** | Idem. | Bloque ausente, marcado. |
+| 6 | **Manual de marca completo** (radios, sombras, espaciados) | No encontrado. Los colores y la tipografía ya están. | Se usan los del `DESIGN_SYSTEM.md`. |
 
 ### 3.1 Cómo se piden
 

@@ -230,7 +230,6 @@ Se buscó en Google Drive: el acceso funciona y los activos están inventariados
 
 | Falta | Estado |
 |---|---|
-| **El archivo del logo de Park.IA** | Park.IA **sí tiene logo oficial** (adjunto del CEO, 15/09/2026). Los bytes no llegaron a la sesión ni están en Drive. Va a `apps/escritorio/public/assets/productos/park-ia/logo-park-ia.png`. |
 | Versiones SVG de los logos | Todo es PNG de 1 a 2 MB. Se optimizan o se piden. |
 | Renders y mockups de producto | No existen como categoría. |
 | Datos societarios y términos comerciales | Para el encabezado legal de cotizaciones. |

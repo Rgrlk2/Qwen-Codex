@@ -10,6 +10,7 @@
  * Sale con codigo 1 si alguna verificacion falla.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, extname } from 'node:path';
 
 const RAIZ = new URL('..', import.meta.url).pathname;
@@ -385,15 +386,32 @@ for (const archivo of [...archivos(join(RAIZ, 'apps')), ...archivos(join(RAIZ, '
 }
 
 // --- 12f. Logo oficial de Park.IA -----------------------------------------
-const CARPETA_PARK = join(RAIZ, 'apps/escritorio/public/assets/productos/park-ia');
-if (!existsSync(CARPETA_PARK)) {
-  fallos.push('Falta apps/escritorio/public/assets/productos/park-ia/: es el destino del logo oficial de Park.IA.');
-} else if (!existsSync(join(CARPETA_PARK, 'logo-park-ia.png'))) {
-  avisos.push(
-    'apps/escritorio/public/assets/productos/park-ia/logo-park-ia.png todavia no esta. ' +
-    'El logo oficial existe (adjunto del CEO, 15/09/2026) pero sus bytes no llegaron al repositorio. ' +
-    'PROHIBIDO generar un reemplazo: ver el LEEME.md de esa carpeta e INVENTARIO_ACTIVOS §3.2.',
-  );
+/**
+ * Los trece productos tienen su logo. El de Park.IA se guarda tal cual lo
+ * entrego el CEO: si alguien lo regenera, lo recomprime o lo recorta, el
+ * SHA-256 cambia y esto lo rechaza.
+ */
+const LOGO_PARK = join(RAIZ, 'apps/escritorio/public/assets/productos/park-ia/logo-park-ia.webp');
+const SHA_LOGO_PARK = '534320db17a2ef422a88ce890f053596dc442922c6d53e84f7e5dc3e6ead94f7';
+if (!existsSync(LOGO_PARK)) {
+  fallos.push('Falta apps/escritorio/public/assets/productos/park-ia/logo-park-ia.webp: es el logo oficial de Park.IA.');
+} else {
+  const bytes = readFileSync(LOGO_PARK);
+  const sha = createHash('sha256').update(bytes).digest('hex');
+  if (sha !== SHA_LOGO_PARK) {
+    fallos.push(
+      `logo-park-ia.webp fue modificado (sha256 ${sha.slice(0, 16)}..., esperado ${SHA_LOGO_PARK.slice(0, 16)}...). ` +
+      'PROHIBIDO generar otro, redibujar, recolorear, recortar, quitar el fondo o deformar: INVENTARIO_ACTIVOS §3.2.',
+    );
+  }
+  // Proporcion cuadrada, leida de la cabecera VP8X del propio archivo.
+  if (bytes.slice(12, 16).toString('latin1') === 'VP8X') {
+    const ancho = bytes.readUIntLE(24, 3) + 1;
+    const alto = bytes.readUIntLE(27, 3) + 1;
+    if (ancho !== alto) {
+      fallos.push(`logo-park-ia.webp dejo de ser cuadrado (${ancho} x ${alto}). Se muestra con object-fit: contain, sin deformar.`);
+    }
+  }
 }
 const invActivos = readFileSync(join(RAIZ, 'docs/INVENTARIO_ACTIVOS.md'), 'utf8');
 if (/Park\.IA\s+no\s+tiene\s+logo/i.test(invActivos)) {
@@ -471,4 +489,5 @@ console.log('OK — sin modelo de cliente particular: la cotizacion es una plant
 console.log('OK — las cuatro alternativas financieras, con sus parametros exactos.');
 console.log('OK — respuesta del cliente: seis opciones excluyentes, casilla obligatoria y constancia comercial.');
 console.log('OK — sin celular del CEO ni firma expuesta en codigo del navegador.');
+console.log('OK — los 13 logos oficiales, con el de Park.IA intacto y cuadrado.');
 console.log('OK — todas las referencias cruzadas entre documentos apuntan a secciones reales.');

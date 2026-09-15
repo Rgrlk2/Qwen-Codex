@@ -201,7 +201,10 @@ QUÉ CONSTRUÍS
    ⛔ No redibujar, no recolorear, no deformar. object-fit: contain.
    ⛔ El logo del producto EXCLUIDO está en la misma carpeta de Drive que los
       13. No lo incorpores.
-   ⛔ Falta el logo de Park.IA: no lo generes. Está pedido.
+   El de Park.IA ya está en el repositorio, en
+   apps/escritorio/public/assets/productos/park-ia/logo-park-ia.webp
+   ⛔ No lo toques: se guarda tal cual lo entregó el CEO y la verificacion
+      compara su SHA-256. Es cuadrado: object-fit: contain.
 
    PROHIBIDO: serif (ni Newsreader, ni Georgia), la paleta dorada de la
    referencia, cualquier marca de terceros, neón excesivo.
