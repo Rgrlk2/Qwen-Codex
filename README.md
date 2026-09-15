@@ -3,7 +3,7 @@
 Una sola aplicación para el equipo comercial de Lab.IA. Un login, dos roles.
 La planificación es el comienzo: el vendedor abre el sistema y lo primero que ve es su plata y dos formas de empezar a vender.
 
-**Estado: especificación v3.0 y esqueleto.** Define *qué* se construye y *con qué reglas*. Las vistas finales todavía no se construyen — arrancan con los límites de `docs/PARALLEL_SESSIONS.md`.
+**Estado: especificación v3.0 · núcleo y autenticación construidos (Sesión 1).** El ingreso, la guardia de rol, el ruteo, la capa de datos y el mock ya funcionan. Las seis vistas operativas las construyen las sesiones 2 a 6 con los límites de `docs/PARALLEL_SESSIONS.md`.
 
 ---
 
@@ -115,8 +115,50 @@ El vendedor ajusta fechas (con motivo) y completa acciones. ⛔ No reconstruye n
 │       └── src/vistas/          ingreso · inicio · planificar · clientes
 │                                agenda · propuestas · dinero · administracion
 └── scripts/
-    └── verificar-portafolio.mjs Verificaciones bloqueantes
+    ├── verificar-portafolio.mjs Verificaciones bloqueantes de contenido
+    ├── verificar-calculos.mjs   Las cuatro alternativas, con importes reales
+    ├── verificar-nucleo.mjs     Guardia de rol, ingreso, capa HTTP y formato
+    └── verificar-navegador.mjs  Cinco anchos, foco y área táctil en Chromium
 ```
+
+---
+
+## Arrancar
+
+```bash
+npm install
+npm run dev          # http://localhost:5173 — con datos de ejemplo (mock)
+npm run build        # construcción de producción — usa la API real
+```
+
+Con el mock, el Escritorio muestra de forma permanente el chip **"Datos de ejemplo"**, y estas son las dos cuentas:
+
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| `vendedora` | `ejemplo-vendedora` | `vendedor` |
+| `administracion` | `ejemplo-administracion` | `administrador` |
+
+⛔ Existen **sólo** mientras la aplicación corre con mock. Una construcción de
+producción nunca sirve datos de ejemplo por descuido: `VITE_CAPA_DATOS=mock` hay
+que pedirlo a propósito.
+
+### Núcleo y autenticación
+
+**Un solo login para toda la aplicación.** No hay pantalla de ingreso de
+administrador: la sesión trae el rol, y el rol decide qué rutas se dibujan.
+
+La ruta `#/administracion` está protegida **en tres lugares a la vez**, porque
+ocultar un enlace no es proteger nada:
+
+| Capa | Qué hace | Dónde |
+|---|---|---|
+| Interfaz | No dibuja el destino para un vendedor | `nucleo/guardia-rol.ts` · `rutasVisibles` |
+| Ruteo | Un vendedor que escribe la URL a mano recibe un **mensaje claro** y la vuelta a Inicio. ⛔ Ni pantalla en blanco ni redirección silenciosa | `nucleo/guardia-rol.ts` · `resolverAcceso` |
+| Datos | Los **42 métodos** de `CapaAdministracion` devuelven `sin_permiso` a un vendedor, en el mock igual que en el servidor | `packages/mock/src/index.ts` · `apps/escritorio/src/datos/http.ts` |
+
+Ante credenciales inválidas, el mensaje es **siempre el mismo**, exista o no el
+usuario. Cada ingreso y cada intento fallido quedan en `RegistroAcceso`, que es
+**append-only**: no hay método de escritura ni de borrado.
 
 ---
 
@@ -201,7 +243,19 @@ npm run verificar
 |---|---|
 | `npm run verificar:copy` | Hash original de los dos archivos de copy |
 | `npm run verificar:portafolio` | 13 productos · una sola app · dos roles · siete rutas con `#/administracion` restringida · ocho colores oficiales + Inter · investigación declarada · **sin credenciales en el cliente** · agenda y cotización estructurada · sin términos prohibidos · sin copy duplicado · sin métodos prohibidos · sin `overflow-x: hidden` de parche |
-| `npm run typecheck` | Tipos compartidos sin `any` y sin advertencias |
+| `npm run verificar:calculos` | Las cuatro alternativas financieras, con importes reales |
+| `npm run verificar:nucleo` | **Guardia de rol** en el ruteo y en los 42 métodos de administración · ingreso con mensaje genérico · registro de accesos · los tres escenarios del mock · traducción HTTP ⇄ `Resultado<T>` **sin jerga técnica en pantalla** · formato es-PY con moneda explícita · los cuatro estados y la accesibilidad de la pantalla de ingreso |
+| `npm run typecheck` | Tipos compartidos sin `any` y sin advertencias, en los tres proyectos |
+
+Verificación complementaria en navegador real (cinco anchos sin scroll
+horizontal, foco visible y área táctil), con el servidor de desarrollo
+levantado:
+
+```bash
+npm i --no-save playwright-core     # no es dependencia del proyecto
+npm run dev                          # en otra terminal
+node scripts/verificar-navegador.mjs
+```
 
 ---
 

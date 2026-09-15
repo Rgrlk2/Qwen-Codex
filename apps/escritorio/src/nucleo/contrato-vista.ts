@@ -26,3 +26,57 @@ export interface Vista {
   /** Libera recursos: escuchas, temporizadores, grabaciones en curso. */
   desmontar(): void;
 }
+
+/**
+ * Lo que exporta el módulo de cada vista.
+ *
+ * ⛔ Convención única entre las seis sesiones: `export function crearVista(): Vista`.
+ *    El núcleo importa el módulo por su ruta (`Ruta.modulo`) y llama a esto.
+ *    Una vista que no lo exporte todavía no rompe la aplicación: el núcleo
+ *    muestra un aviso honesto de que esa sección está en construcción.
+ */
+export interface ModuloVista {
+  readonly crearVista: () => Vista;
+}
+
+export function esModuloVista(modulo: unknown): modulo is ModuloVista {
+  if (typeof modulo !== 'object' || modulo === null) return false;
+  const candidato = (modulo as { crearVista?: unknown }).crearVista;
+  return typeof candidato === 'function';
+}
+
+/**
+ * La cáscara: barra lateral, barra inferior y encabezado.
+ *
+ * ⛔ DUEÑA DE LA IMPLEMENTACIÓN: SESIÓN 2 (`nucleo/disposicion.ts`).
+ *    Acá vive sólo el contrato, para que el núcleo pueda montarla sin conocerla.
+ *    Mientras no exista, el núcleo monta una cáscara mínima provisional.
+ */
+export interface Disposicion {
+  /** Contenedor donde el núcleo monta la vista activa. */
+  readonly contenido: HTMLElement;
+  /** La ruta activa cambió: la cáscara marca el destino correspondiente. */
+  marcarRuta(ruta: string): void;
+  destruir(): void;
+}
+
+export interface OpcionesDisposicion {
+  readonly raiz: HTMLElement;
+  readonly rol: Rol;
+  /** `true` con mock: la cáscara muestra el chip permanente "Datos de ejemplo". */
+  readonly datosDeEjemplo: boolean;
+  readonly nombreUsuario: string;
+  /** Rutas que este rol puede ver. Ya vienen filtradas por la guardia. */
+  readonly destinos: ReadonlyArray<{ readonly ruta: string; readonly titulo: string; readonly enBarraInferior: boolean }>;
+  cerrarSesion(): void;
+}
+
+export interface ModuloDisposicion {
+  readonly crearDisposicion: (opciones: OpcionesDisposicion) => Disposicion;
+}
+
+export function esModuloDisposicion(modulo: unknown): modulo is ModuloDisposicion {
+  if (typeof modulo !== 'object' || modulo === null) return false;
+  const candidato = (modulo as { crearDisposicion?: unknown }).crearDisposicion;
+  return typeof candidato === 'function';
+}
