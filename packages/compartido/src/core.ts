@@ -64,6 +64,11 @@ export type SumarDinero = <M extends Moneda>(a: Dinero<M>, b: Dinero<M>) => Dine
 // ---------------------------------------------------------------------------
 
 export type CodigoError =
+  /**
+   * Credenciales inválidas en el ingreso.
+   * ⛔ Mensaje genérico: NUNCA revela si el usuario existe (MASTER_SPEC §1.3).
+   */
+  | 'credenciales_invalidas'
   | 'no_autenticado'
   | 'sin_permiso'
   | 'no_encontrado'
