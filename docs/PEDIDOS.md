@@ -38,4 +38,13 @@ _(sin pedidos)_
 
 ## S6 · Finanzas y administración
 
-_(sin pedidos)_
+### [S6] 2026-09-17 — Falta un listado de observaciones para administración
+Archivo: packages/compartido/src/api.ts (dueña: S1)
+Necesito: `CapaDinero.abrirObservacion` crea una `Observacion`, pero `CapaAdministracion`
+no tiene ningún método para listarlas. `resolverObservacion(id, estado, comentario)`
+existe, pero el administrador no tiene forma de conocer el `id` de una observación
+abierta sin que otra vista se la muestre. Pido un método aditivo, por ejemplo
+`listarObservaciones(filtro, pagina?): R<Pagina<Observacion>>`, agregado a
+`CapaAdministracion` en `api.ts` y a `dinero.ts` si hace falta un `FiltroObservaciones`.
+Bloqueante: no — mientras tanto, la sección Comisiones de Administración resuelve
+una observación por el id de línea de participación, que sí está listado.
