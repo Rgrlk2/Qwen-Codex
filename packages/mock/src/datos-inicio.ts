@@ -30,33 +30,35 @@ import type { NucleoMock } from './nucleo';
 // Escenario 1 — con datos
 // ---------------------------------------------------------------------------
 
+/**
+ * ⛔ Sólo guaraníes: el portafolio opera en PYG y en USD (Precio Vivo), pero
+ * los datos de ejemplo de Inicio muestran nada más que Gs. — pedido explícito
+ * de negocio para esta pantalla. `formatearDinero` (nucleo/formato.ts) sigue
+ * soportando ambas monedas: esto es una decisión de QUÉ SE MUESTRA acá, no un
+ * cambio de contrato.
+ */
 export const RESUMEN_INICIO_CON_DATOS: ResumenInicio = {
-  dineroVendido: [
-    { monto: 48_500_000, moneda: 'PYG' },
-    { monto: 320_000, moneda: 'USD' },
-  ],
-  dineroCobrado: [
-    { monto: 31_200_000, moneda: 'PYG' },
-    { monto: 180_000, moneda: 'USD' },
-  ],
-  comisionAcumulada: [
-    { monto: 15_600_000, moneda: 'PYG' },
-    { monto: 90_000, moneda: 'USD' },
-  ],
-  comisionPendiente: [
-    { monto: 6_400_000, moneda: 'PYG' },
-    { monto: 30_000, moneda: 'USD' },
-  ],
+  dineroVendido: [{ monto: 48_500_000, moneda: 'PYG' }],
+  dineroCobrado: [{ monto: 31_200_000, moneda: 'PYG' }],
+  comisionAcumulada: [{ monto: 15_600_000, moneda: 'PYG' }],
+  comisionPendiente: [{ monto: 6_400_000, moneda: 'PYG' }],
   sinDatosTodavia: false,
   periodo: '2026-09',
 };
 
+/**
+ * Negocios reales de Paraguay, a pedido del CEO, como ejemplos de demostración
+ * — nunca como clientes reales con vendedor asignado, reunión, resultado o
+ * venta: eso sería inventar una situación comercial que no existe. Acá sólo
+ * se muestra un próximo paso genérico, para que la lista de Inicio tenga
+ * ejemplos reconocibles en vez de nombres inventados.
+ */
 export const PROXIMOS_SEGUIMIENTOS_CON_DATOS: ReadonlyArray<ProximoSeguimiento> = [
   {
     id: 'seg-001',
     clienteId: 'cli-001',
-    nombreCliente: 'Repuestera del Este',
-    titulo: 'Confirmar alcance de Radar Stock',
+    nombreCliente: 'Cadena Punto Farma',
+    titulo: 'Coordinar un primer contacto',
     venceEn: '2026-09-16T13:00:00-03:00',
     vencido: false,
     canal: 'whatsapp',
@@ -66,8 +68,8 @@ export const PROXIMOS_SEGUIMIENTOS_CON_DATOS: ReadonlyArray<ProximoSeguimiento> 
   {
     id: 'seg-002',
     clienteId: 'cli-002',
-    nombreCliente: 'Dra. Marta Ayala — Odontología',
-    titulo: 'Enviar presentación de Agendar.IA',
+    nombreCliente: 'Dra. Ale Acosta B — Odontóloga',
+    titulo: 'Enviar información inicial',
     venceEn: '2026-09-15T18:30:00-03:00',
     vencido: true,
     canal: 'telefono',
@@ -77,8 +79,8 @@ export const PROXIMOS_SEGUIMIENTOS_CON_DATOS: ReadonlyArray<ProximoSeguimiento> 
   {
     id: 'seg-003',
     clienteId: 'cli-003',
-    nombreCliente: 'Hotel Costanera',
-    titulo: 'Llamar: abrió el enlace de la cotización',
+    nombreCliente: 'Joseph Coaffair — Peluquería',
+    titulo: 'Llamar: abrió un enlace enviado',
     venceEn: '2026-09-16T09:00:00-03:00',
     vencido: false,
     canal: 'telefono',
@@ -88,8 +90,8 @@ export const PROXIMOS_SEGUIMIENTOS_CON_DATOS: ReadonlyArray<ProximoSeguimiento> 
   {
     id: 'seg-004',
     clienteId: 'cli-004',
-    nombreCliente: 'Comercial San Miguel S.A.',
-    titulo: 'Retomar contacto tras la presentación',
+    nombreCliente: 'EBA — Inmobiliaria',
+    titulo: 'Retomar el contacto',
     venceEn: '2026-09-18T10:00:00-03:00',
     vencido: false,
     canal: 'email',
@@ -105,10 +107,10 @@ const PROXIMA_ENTRADA_AGENDA: EntradaAgenda = {
   origen: 'seguimiento',
   referenciaId: 'obj-014',
   clienteId: 'cli-002',
-  nombreCliente: 'Dra. Marta Ayala — Odontología',
-  titulo: 'Enviar presentación de Agendar.IA',
+  nombreCliente: 'Dra. Ale Acosta B — Odontóloga',
+  titulo: 'Enviar información inicial',
   detalle: null,
-  productoId: 'agendar-ia',
+  productoId: null,
   inicioEn: null,
   finEn: null,
   venceEn: '2026-09-15T18:30:00-03:00',

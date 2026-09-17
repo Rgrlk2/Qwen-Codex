@@ -25,6 +25,7 @@
  */
 
 import type { DefinicionAccion, ProximoSeguimiento, ResumenAgenda, ResumenInicio } from '@labia/compartido';
+import { crearIconoEnvuelto, type NombreIcono } from '@labia/ui/iconos';
 import type { ContextoVista, Vista } from '../../nucleo/contrato-vista';
 import { esqueletoCifra, esqueletoTarjeta, montarBloqueAsincrono } from '../../nucleo/estados';
 import { formatearDinero, formatearFechaHora } from '../../nucleo/formato';
@@ -50,9 +51,10 @@ const ACCION_RUBRO: DefinicionAccion = {
 
 const ACCIONES: ReadonlyArray<DefinicionAccion> = [ACCION_CONOCIDO, ACCION_RUBRO];
 
-const EMOJI_ACCION: Record<string, string> = {
-  investigar_conocido: '🔍',
-  explorar_rubro: '🧭',
+/** Íconos genéricos de interfaz, no una marca (docs/ASSET_SOURCES.md §1.5). */
+const ICONO_ACCION: Record<string, NombreIcono> = {
+  investigar_conocido: 'buscar',
+  explorar_rubro: 'brujula',
 };
 
 type ClaveCifra = 'dineroVendido' | 'dineroCobrado' | 'comisionAcumulada' | 'comisionPendiente';
@@ -79,11 +81,7 @@ function crearAcciones(): HTMLElement {
     enlace.className = 'accion-protagonista';
     enlace.href = accion.ruta;
 
-    const icono = document.createElement('span');
-    icono.className = 'accion-protagonista-icono accion-protagonista-icono--emoji';
-    icono.setAttribute('aria-hidden', 'true');
-    icono.textContent = EMOJI_ACCION[accion.accion] ?? '';
-    enlace.appendChild(icono);
+    enlace.appendChild(crearIconoEnvuelto(ICONO_ACCION[accion.accion] ?? 'buscar', 'lg'));
 
     const titulo = document.createElement('span');
     titulo.className = 'accion-protagonista-titulo';

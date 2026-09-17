@@ -14,7 +14,13 @@
  *   .btn(-borde|-texto) · .campo/.entrada · .pestanas/.pestana · .chips/.chip
  *   .tabla dentro de .tabla-contenedor · dialog/.dialogo · .aviso
  *   .cargando/.hueso · .vacio · .error
- *   .lateral · .inferior · .principal · .vista · .encabezado · .saltar
+ *   .lateral(--compacta, vía .app-cascara--lateral-compacta) · .inferior
+ *   .principal · .vista · .encabezado · .saltar
+ *   .icono-envoltorio(--sm|--md|--lg) · .avatar(--sm|--md|--lg)
+ *
+ * Íconos: familia SVG única en `@labia/ui/iconos`. ⛔ Sin emojis en la
+ * interfaz — sólo esta familia, envuelta en `.icono-envoltorio` para el
+ * degradado azul→cian y la sombra de profundidad.
  *
  * REGLAS QUE NO SE DEBILITAN
  * ──────────────────────────
@@ -161,22 +167,52 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   }
 }
 
+.lateral-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
 .lateral-marca {
   display: flex;
   align-items: center;
   gap: 10px;
   min-height: 44px;
+  min-width: 0;
+  overflow: hidden;
 }
 .lateral-marca img {
   height: 32px;
   width: auto;
   object-fit: contain;
+  flex-shrink: 0;
 }
 .lateral-marca-texto {
   font-weight: 600;
   font-size: 17px;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
+
+/** Control retráctil: siempre visible, siempre con área táctil de 44 px. */
+.lateral-alternar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--linea-2);
+  background: var(--superficie-2);
+  color: var(--texto-2);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.lateral-alternar:hover { color: var(--cian); border-color: var(--linea-acento); }
+.lateral-alternar svg { width: 18px; height: 18px; }
 
 .lateral-nav {
   display: flex;
@@ -190,8 +226,8 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   align-items: center;
   gap: 12px;
   min-height: 44px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
   color: var(--texto-2);
   text-decoration: none;
   font-size: 15px;
@@ -207,15 +243,110 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   color: var(--texto);
   border-color: var(--linea-acento);
 }
-.lateral-enlace .lateral-enlace-icono {
-  color: var(--cian);
-  flex-shrink: 0;
+.lateral-enlace[aria-current="page"] .icono-envoltorio {
+  border-color: var(--cian);
+  box-shadow: 0 0 0 1px var(--linea-acento), 0 4px 14px rgba(0, 217, 255, .22);
+}
+.lateral-enlace-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .lateral-pie {
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid var(--linea);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===========================================================================
+   3b. Lateral retráctil — expandida (ícono + texto) / compacta (sólo ícono)
+   =========================================================================== */
+
+@media (min-width: 900px) {
+  .app-cascara--lateral-compacta .lateral {
+    width: var(--lateral-compacta);
+    min-width: var(--lateral-compacta);
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .app-cascara--lateral-compacta .lateral-marca,
+  .app-cascara--lateral-compacta .lateral-enlace-texto,
+  .app-cascara--lateral-compacta .lateral-usuario-info,
+  .app-cascara--lateral-compacta .chip-datos-ejemplo,
+  .app-cascara--lateral-compacta .lateral-cerrar-texto {
+    display: none;
+  }
+  .app-cascara--lateral-compacta .lateral-encabezado {
+    justify-content: center;
+  }
+  .app-cascara--lateral-compacta .lateral-enlace {
+    justify-content: center;
+    padding: 8px;
+  }
+  .app-cascara--lateral-compacta .lateral-usuario {
+    justify-content: center;
+  }
+  .app-cascara--lateral-compacta .lateral-alternar svg {
+    transform: rotate(180deg);
+  }
+}
+
+/* ===========================================================================
+   3c. Usuario: avatar + nombre, sin truncar de más
+   =========================================================================== */
+
+.lateral-usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.lateral-usuario-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.lateral-usuario-nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+
+.lateral-usuario-rol {
+  font-size: 12px;
+  color: var(--texto-2);
+  text-transform: capitalize;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--azul), var(--azul-texto) 65%, var(--cian));
+  border: 1px solid var(--linea-acento);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .1);
+  color: var(--texto);
+  font-weight: 700;
+  overflow: hidden;
+}
+.avatar--sm { width: 32px; height: 32px; font-size: 12px; }
+.avatar--md { width: 40px; height: 40px; font-size: 15px; }
+.avatar--lg { width: 64px; height: 64px; font-size: 22px; }
+.avatar-foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .inferior {
@@ -242,7 +373,7 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   min-height: 44px;
   color: var(--texto-2);
   text-decoration: none;
@@ -252,7 +383,7 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   background: none;
   padding: 6px 2px;
 }
-.inferior-enlace span:last-child {
+.inferior-enlace-texto {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -261,9 +392,9 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
 .inferior-enlace[aria-current="page"] {
   color: var(--cian);
 }
-.inferior-enlace .inferior-enlace-icono {
-  width: 22px;
-  height: 22px;
+.inferior-enlace[aria-current="page"] .icono-envoltorio {
+  border-color: var(--cian);
+  box-shadow: 0 0 0 1px var(--linea-acento), 0 4px 14px rgba(0, 217, 255, .22);
 }
 
 .principal {
@@ -328,6 +459,33 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   border-radius: 50%;
   background: var(--cian);
   flex-shrink: 0;
+}
+
+/* ===========================================================================
+   3d. Íconos — una única familia SVG, contenedor con degradado y profundidad
+   =========================================================================== */
+
+.icono-envoltorio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--azul-suave), var(--cian-suave));
+  border: 1px solid var(--linea-acento);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .32), inset 0 1px 0 rgba(255, 255, 255, .05);
+  color: var(--cian);
+}
+.icono-envoltorio svg { width: 56%; height: 56%; }
+
+.icono-envoltorio--sm { width: 32px; height: 32px; border-radius: 9px; }
+.icono-envoltorio--md { width: 40px; height: 40px; border-radius: 11px; }
+.icono-envoltorio--lg {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--azul-suave), var(--cian-suave) 70%);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 
 /* ===========================================================================
@@ -397,14 +555,6 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
 .accion-protagonista:active {
   transform: scale(0.99);
 }
-
-.accion-protagonista-icono {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  color: var(--cian);
-}
-.accion-protagonista-icono svg { width: 100%; height: 100%; }
 
 .accion-protagonista-titulo {
   font-size: clamp(18px, 1.8vw, 22px);
@@ -738,6 +888,7 @@ a.lista-fila:hover { background: var(--superficie-2); border-radius: 8px; }
   min-width: 44px;
 }
 .btn-texto:hover { color: var(--cian); background: none; text-decoration: underline; }
+.btn-texto svg { width: 18px; height: 18px; flex-shrink: 0; }
 
 /* ===========================================================================
    13. Campos

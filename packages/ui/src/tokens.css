@@ -58,6 +58,8 @@
 
   /* --- Estructura --- */
   --lateral: 248px;
+  /* Lateral retráctil (docs/PARALLEL_SESSIONS.md pedido S2): sólo íconos. */
+  --lateral-compacta: 76px;
   --inferior: 64px;
   --ancho-contenido: 1240px;
 

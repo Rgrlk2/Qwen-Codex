@@ -25,11 +25,6 @@
   margin-bottom: 12px;
 }
 
-.accion-protagonista-icono--emoji {
-  font-size: 32px;
-  line-height: 1;
-}
-
 .inicio-agenda-acceso {
   display: flex;
   flex-wrap: wrap;
