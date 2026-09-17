@@ -48,23 +48,24 @@ Como todavía no hay ninguna cargada, el mock de clientes usa sus propios ids de
 mostrarlos en la ficha. Cuando la taxonomía de S3 exista, se cablean los ids reales.
 Bloqueante: no
 
-### [S4] 2026-09-17 — apps/escritorio no declara `vite` como dependencia ni trae `vite-env.d.ts`
-Archivo: apps/escritorio/package.json, vite.config.ts   (dueña: S1)
-Necesito: `npm run dev`/`vite build` funcionan porque Vite resuelve
-`import './estilos.css'` en tiempo de bundle, pero `tsc -b` (que sí corre en
-CI vía `npm run typecheck`) no conoce ese import sin una declaración
-ambiental. Mientras tanto, Clientes y Agenda agregan su propio
-`declare module '*.css'` en un `tipos.d.ts` local. Cuando exista
-`vite-env.d.ts` (o se agregue `vite` a `devDependencies` con sus tipos), esos
-archivos locales se pueden borrar.
-Bloqueante: no
-
-### [S4] 2026-09-15 — apps/escritorio/src/main.ts y nucleo/rutas no montan ninguna vista todavía
-Archivo: apps/escritorio/src/main.ts, src/nucleo/{estados,disposicion,formato}.ts   (dueña: S1/S2)
-Necesito: el ruteo real, la cáscara y los helpers de formato/estado compartidos para probar
-Clientes y Agenda end-to-end en el navegador. Mientras tanto, ambas vistas son autocontenidas:
-implementan sus propios cuatro estados y su propio formato es-PY localmente, siguiendo el
-mismo contrato documentado en DESIGN_SYSTEM.md y formato.ts, para no bloquear la sesión.
+### [S4] 2026-09-17 — resuelto al rebasar contra integracion/escritorio
+`main.ts`, `contrato-vista.ts`, `guardia-rol.ts` y `nucleo/formato.ts` de Sesión 1 ya están
+mergeados en `integracion/escritorio`. Esta sesión rebaseó contra esa rama y:
+· adoptó la convención `export function crearVista(): Vista` en clientes/vista.ts y
+  agenda/vista.ts (antes exportaba un singleton por `default`, que `esModuloVista` no detecta);
+· usa `packages/mock/src/nucleo.ts` real (`NucleoMock.responder/paginar/listar/identificador`)
+  en vez de una implementación local duplicada;
+· usa la vendedora de ejemplo real de `datos-sesion.ts` (`usr-vendedora`) como dueña de la
+  cartera, en vez de un id inventado;
+· re-exporta `formatearFecha`/`formatearFechaHora`/`formatearDinero` de
+  `nucleo/formato.ts` desde el `util.ts` de cada vista, en vez de reimplementarlos;
+· sigue el patrón `css.d.ts` de `vistas/ingreso/` (Sesión 1) para tipar
+  `import './estilos.css'` bajo `tsc -b`, uno por carpeta, sin depender de un
+  `vite-env.d.ts` global que todavía no existe.
+Sigue pendiente (no bloqueante): `nucleo/{estados,disposicion}.ts` (Sesión 2) todavía no
+existen, así que Clientes y Agenda implementan sus cuatro estados y su propia hoja de
+estilos con los mismos nombres de clase de DESIGN_SYSTEM.md §5, para integrar sin
+retrabajo cuando `base.css` los traiga.
 Bloqueante: no
 
 ## S5 · Presentaciones y cotizaciones

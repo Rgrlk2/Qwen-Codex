@@ -5,6 +5,8 @@
  *
  * Tiene que ofrecer los tres escenarios, o la vista no puede probar sus estados:
  *   1. con datos    2. vacío    3. error
+ * Los tres salen de la MISMA implementación: dependen de `NucleoMock`
+ * (packages/mock/src/nucleo.ts).
  *
  * ⛔ Sin productos fuera de los 13.
  * ⛔ Sin roles fuera de vendedor y administrador.
@@ -15,8 +17,9 @@
  * vencimiento, apertura de enlace, objetivo aceptado). La única excepción real
  * la crea el vendedor con `crearEntradaManual`, en tiempo de uso.
  *
- * Los clientes referenciados son los mismos de datos-clientes.ts
- * (`CLIENTES_REFERENCIA`), para que ambas vistas cuenten la misma historia.
+ * Los clientes y la vendedora referenciados son los mismos de
+ * datos-clientes.ts y datos-sesion.ts, para que las tres vistas cuenten la
+ * misma historia con la misma fecha de referencia (`AHORA`).
  *
  * ⛔ `EntradaAgenda` no tiene un campo propio para "motivo de descarte": el
  *    contrato (packages/compartido/src/agenda.ts) sólo declara
@@ -28,28 +31,17 @@
 import type {
   AgendaHoy, AgendaMes, AgendaSemana, AjusteEntrada, BarraCronograma,
   CronogramaComercial, DiaDeMes, DiaDeSemana, EntradaAgenda, EstadoEntrada,
-  FiltroAgenda, Id, ISODate, NuevaEntradaManual, OpcionesPagina, Pagina,
-  Resultado, TipoEntradaAgenda,
+  FiltroAgenda, Id, ISODate, NuevaEntradaManual, OpcionesPagina, TipoEntradaAgenda,
 } from '@labia/compartido';
 import type { CapaAgenda } from '@labia/compartido';
-import type { ConfiguracionMock } from './nucleo';
-import { CLIENTES_REFERENCIA } from './datos-clientes';
+import type { NucleoMock } from './nucleo';
+import { AHORA, CLIENTES_REFERENCIA } from './datos-clientes';
+import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
 
-const VENDEDOR_DEMO: Id = 'vendedor-demo-1';
-
-// ---------------------------------------------------------------------------
-// Utilidades locales — mismo criterio que datos-clientes.ts: sin depender de
-// apps/escritorio/src/nucleo/formato.ts, todavía sin implementar (S1).
-// ---------------------------------------------------------------------------
-
-let contador = 0;
-function generarId(prefijo: string): Id {
-  contador += 1;
-  return `${prefijo}-${contador.toString(36)}`;
-}
+const VENDEDOR_DEMO: Id = CUENTAS_DE_EJEMPLO.find((c) => c.usuario.rol === 'vendedor')?.usuario.id ?? 'usr-vendedora';
 
 function ahora(): ISODate {
-  return new Date().toISOString();
+  return AHORA;
 }
 
 function sumarDias(fecha: ISODate, dias: number): ISODate {
@@ -74,31 +66,6 @@ function mismoDia(a: ISODate, b: ISODate): boolean {
   return inicioDelDia(a).getTime() === inicioDelDia(b).getTime();
 }
 
-function esperar(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function responder<T>(config: () => ConfiguracionMock, datos: T): Promise<Resultado<T>> {
-  const actual = config();
-  await esperar(actual.latenciaMs);
-  if (actual.fallaForzada) {
-    return { ok: false, error: actual.fallaForzada };
-  }
-  return { ok: true, datos };
-}
-
-function paginar<T>(items: ReadonlyArray<T>, opciones?: OpcionesPagina): Pagina<T> {
-  const limite = opciones?.limite ?? 20;
-  const inicio = opciones?.cursor ? Number.parseInt(opciones.cursor, 10) : 0;
-  const pagina = items.slice(inicio, inicio + limite);
-  const siguiente = inicio + limite;
-  return {
-    items: pagina,
-    cursor: siguiente < items.length ? String(siguiente) : null,
-    total: items.length,
-  };
-}
-
 function nombreDeCliente(clienteId: Id | null): string | null {
   if (!clienteId) return null;
   return CLIENTES_REFERENCIA.find((c) => c.id === clienteId)?.nombre ?? null;
@@ -117,14 +84,13 @@ function idDeCliente(nombre: string): Id {
 interface EntradaInterna extends Omit<EntradaAgenda, 'atrasada' | 'diasDeAtraso'> {}
 
 function entrada(
-  datos: Omit<EntradaInterna, 'id' | 'vendedorId' | 'nombreCliente' | 'clienteId'> &
+  datos: Omit<EntradaInterna, 'vendedorId' | 'nombreCliente' | 'clienteId'> &
     { readonly clienteId?: Id | null; readonly clienteNombre?: string },
 ): EntradaInterna {
   const { clienteNombre, clienteId: clienteIdExplicito, ...resto } = datos;
   const clienteId = clienteIdExplicito ?? (clienteNombre ? idDeCliente(clienteNombre) : null);
   return {
     ...resto,
-    id: generarId('agenda'),
     vendedorId: VENDEDOR_DEMO,
     clienteId,
     nombreCliente: nombreDeCliente(clienteId),
@@ -133,6 +99,7 @@ function entrada(
 
 const entradasSemilla: EntradaInterna[] = [
   entrada({
+    id: 'agenda-pame-vencimiento',
     tipo: 'vencimiento',
     origen: 'vencimiento',
     referenciaId: 'referencia-mensualidad-pame',
@@ -150,6 +117,7 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-repuestos-cotizacion',
     tipo: 'cotizacion_en_revision',
     origen: 'cotizacion',
     referenciaId: 'referencia-cotizacion-repuestos',
@@ -167,9 +135,10 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-repuestos-proximo-paso',
     tipo: 'proximo_paso',
     origen: 'seguimiento',
-    referenciaId: 'referencia-seguimiento-repuestos',
+    referenciaId: 'seguimiento-repuestos-1',
     clienteNombre: 'Repuestos San Roque',
     titulo: 'Enviar la información conversada',
     detalle: 'Diego pidió una cotización de Radar Stock.',
@@ -184,6 +153,7 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-nandutii-presentacion',
     tipo: 'presentacion_enviada',
     origen: 'presentacion',
     referenciaId: 'referencia-presentacion-nandutii',
@@ -201,6 +171,7 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-nandutii-visita',
     tipo: 'visita',
     origen: 'plan',
     referenciaId: 'referencia-plan-nandutii',
@@ -218,9 +189,10 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-liz-proximo-paso',
     tipo: 'proximo_paso',
     origen: 'seguimiento',
-    referenciaId: 'referencia-seguimiento-liz',
+    referenciaId: 'seguimiento-liz-1',
     clienteNombre: 'Dra. Liz Acosta — Odontología',
     titulo: 'Confirmar si le sirve Agendar IA para los turnos',
     detalle: 'Pierde turnos porque atiende el teléfono mientras trabaja con pacientes.',
@@ -235,6 +207,7 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-bella-imagen-llamada',
     tipo: 'llamada',
     origen: 'plan',
     referenciaId: 'referencia-plan-bella-imagen',
@@ -252,6 +225,7 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-mercedes-apertura',
     tipo: 'apertura_enlace',
     origen: 'apertura_enlace',
     referenciaId: 'referencia-apertura-mercedes',
@@ -269,6 +243,7 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-motel-luna-objetivo',
     tipo: 'objetivo_aceptado',
     origen: 'objetivo_aceptado',
     referenciaId: 'referencia-objetivo-motel-luna',
@@ -286,6 +261,7 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-veterinaria-hito',
     tipo: 'hito_plan',
     origen: 'plan',
     referenciaId: 'referencia-plan-veterinaria',
@@ -303,6 +279,7 @@ const entradasSemilla: EntradaInterna[] = [
     fechaAjustadaPorVendedor: false,
   }),
   entrada({
+    id: 'agenda-gomeria-proximo-paso',
     tipo: 'proximo_paso',
     origen: 'seguimiento',
     referenciaId: 'referencia-seguimiento-gomeria',
@@ -339,15 +316,17 @@ const PROGRESO_POR_ETAPA: Readonly<Record<string, number>> = {
 
 function cronogramaSemilla(): ReadonlyArray<BarraCronograma> {
   const barras: Array<{
+    id: string;
     clienteNombre: string;
     etapa: string;
     desdeHace: number;
     hastaEn: number;
     enRiesgo: boolean;
     motivoRiesgo: string | null;
-    hitos: ReadonlyArray<{ titulo: string; enDias: number; cumplido: boolean; tipo: TipoEntradaAgenda }>;
+    hitos: ReadonlyArray<{ id: string; titulo: string; enDias: number; cumplido: boolean; tipo: TipoEntradaAgenda }>;
   }> = [
     {
+      id: 'cronograma-pame',
       clienteNombre: 'Pame Garelik Bags',
       etapa: 'cliente_activo',
       desdeHace: 40,
@@ -355,11 +334,12 @@ function cronogramaSemilla(): ReadonlyArray<BarraCronograma> {
       enRiesgo: false,
       motivoRiesgo: null,
       hitos: [
-        { titulo: 'Presentación de Smart Commerce', enDias: -20, cumplido: true, tipo: 'presentacion_enviada' },
-        { titulo: 'Mensualidad vigente', enDias: -6, cumplido: true, tipo: 'vencimiento' },
+        { id: 'hito-pame-presentacion', titulo: 'Presentación de Smart Commerce', enDias: -20, cumplido: true, tipo: 'presentacion_enviada' },
+        { id: 'hito-pame-mensualidad', titulo: 'Mensualidad vigente', enDias: -6, cumplido: true, tipo: 'vencimiento' },
       ],
     },
     {
+      id: 'cronograma-repuestos',
       clienteNombre: 'Repuestos San Roque',
       etapa: 'negociacion',
       desdeHace: 10,
@@ -367,11 +347,12 @@ function cronogramaSemilla(): ReadonlyArray<BarraCronograma> {
       enRiesgo: false,
       motivoRiesgo: null,
       hitos: [
-        { titulo: 'Cotización enviada a revisión', enDias: -2, cumplido: true, tipo: 'cotizacion_en_revision' },
-        { titulo: 'Enviar la información conversada', enDias: 1, cumplido: false, tipo: 'proximo_paso' },
+        { id: 'hito-repuestos-cotizacion', titulo: 'Cotización enviada a revisión', enDias: -2, cumplido: true, tipo: 'cotizacion_en_revision' },
+        { id: 'hito-repuestos-proximo-paso', titulo: 'Enviar la información conversada', enDias: 1, cumplido: false, tipo: 'proximo_paso' },
       ],
     },
     {
+      id: 'cronograma-nandutii',
       clienteNombre: 'Parrillada Ñandutí',
       etapa: 'presentacion',
       desdeHace: 8,
@@ -379,32 +360,34 @@ function cronogramaSemilla(): ReadonlyArray<BarraCronograma> {
       enRiesgo: false,
       motivoRiesgo: null,
       hitos: [
-        { titulo: 'Presentación enviada', enDias: -4, cumplido: true, tipo: 'presentacion_enviada' },
-        { titulo: 'Visitar el local', enDias: 7, cumplido: false, tipo: 'visita' },
+        { id: 'hito-nandutii-presentacion', titulo: 'Presentación enviada', enDias: -4, cumplido: true, tipo: 'presentacion_enviada' },
+        { id: 'hito-nandutii-visita', titulo: 'Visitar el local', enDias: 7, cumplido: false, tipo: 'visita' },
       ],
     },
     {
+      id: 'cronograma-mercedes',
       clienteNombre: 'Hotel Las Mercedes',
       etapa: 'cotizacion',
       desdeHace: 12,
       hastaEn: 6,
       enRiesgo: true,
       motivoRiesgo: 'El cliente abrió la cotización y todavía no respondió.',
-      hitos: [{ titulo: 'Apertura de la cotización', enDias: -1, cumplido: true, tipo: 'apertura_enlace' }],
+      hitos: [{ id: 'hito-mercedes-apertura', titulo: 'Apertura de la cotización', enDias: -1, cumplido: true, tipo: 'apertura_enlace' }],
     },
     {
+      id: 'cronograma-veterinaria',
       clienteNombre: 'Veterinaria San Francisco',
       etapa: 'ganado',
       desdeHace: 30,
       hastaEn: 0,
       enRiesgo: false,
       motivoRiesgo: null,
-      hitos: [{ titulo: 'Puesta en marcha de Agendar IA', enDias: -15, cumplido: true, tipo: 'hito_plan' }],
+      hitos: [{ id: 'hito-veterinaria-puesta-marcha', titulo: 'Puesta en marcha de Agendar IA', enDias: -15, cumplido: true, tipo: 'hito_plan' }],
     },
   ];
 
   return barras.map((barra) => ({
-    id: generarId('cronograma'),
+    id: barra.id,
     clienteId: idDeCliente(barra.clienteNombre),
     planId: null,
     titulo: barra.clienteNombre,
@@ -415,7 +398,7 @@ function cronogramaSemilla(): ReadonlyArray<BarraCronograma> {
     enRiesgo: barra.enRiesgo,
     motivoRiesgo: barra.motivoRiesgo,
     hitos: barra.hitos.map((h) => ({
-      id: generarId('hito'),
+      id: h.id,
       titulo: h.titulo,
       fecha: sumarDias(ahora(), h.enDias),
       cumplido: h.cumplido,
@@ -440,7 +423,7 @@ function idempotente<T>(clave: string, crear: () => T): T {
   return resultado;
 }
 
-/** Recalcula `atrasada` y `diasDeAtraso` contra el reloj real en cada lectura. */
+/** Recalcula `atrasada` y `diasDeAtraso` contra la fecha de referencia del mock (`AHORA`). */
 function conAtraso(e: EntradaInterna): EntradaAgenda {
   const fechaRelevante = e.venceEn ?? e.inicioEn;
   if (e.estado !== 'pendiente' || !fechaRelevante) {
@@ -481,17 +464,15 @@ function inicioDeSemana(fecha: ISODate): Date {
 // Fábrica de la capa
 // ---------------------------------------------------------------------------
 
-export function crearCapaAgenda(obtenerConfiguracion: () => ConfiguracionMock): CapaAgenda {
-  function todasVigentes(config: ReturnType<typeof obtenerConfiguracion>): EntradaAgenda[] {
-    if (config.forzarVacio) return [];
-    return entradas.map(conAtraso);
+export function crearCapaAgendaMock(nucleo: NucleoMock): CapaAgenda {
+  function todasVigentes(): ReadonlyArray<EntradaAgenda> {
+    return nucleo.listar(entradas.map(conAtraso));
   }
 
   return {
     async agendaHoy(fecha?: ISODate) {
-      const config = obtenerConfiguracion();
       const hoy = fecha ?? ahora();
-      const vigentes = todasVigentes(config);
+      const vigentes = todasVigentes();
       const pendientes = vigentes.filter((e) => e.estado === 'pendiente');
       const atrasados = pendientes.filter((e) => e.atrasada);
       const noAtrasadosHastaHoy = pendientes.filter((e) => !e.atrasada && esHastaHoy(e, hoy));
@@ -504,12 +485,11 @@ export function crearCapaAgenda(obtenerConfiguracion: () => ConfiguracionMock): 
         atrasados,
         totalPendientes: pendientes.length,
       };
-      return responder(obtenerConfiguracion, respuesta);
+      return nucleo.responder(respuesta);
     },
 
     async agendaSemana(desde?: ISODate) {
-      const config = obtenerConfiguracion();
-      const vigentes = todasVigentes(config);
+      const vigentes = todasVigentes();
       const inicio = desde ? inicioDelDia(desde) : inicioDeSemana(ahora());
       const dias: DiaDeSemana[] = [];
       for (let i = 0; i < 7; i += 1) {
@@ -527,12 +507,11 @@ export function crearCapaAgenda(obtenerConfiguracion: () => ConfiguracionMock): 
       const ultimo = new Date(inicio);
       ultimo.setUTCDate(ultimo.getUTCDate() + 6);
       const respuesta: AgendaSemana = { desde: inicio.toISOString(), hasta: ultimo.toISOString(), dias };
-      return responder(obtenerConfiguracion, respuesta);
+      return nucleo.responder(respuesta);
     },
 
     async agendaMes(anio: number, mes: number) {
-      const config = obtenerConfiguracion();
-      const vigentes = todasVigentes(config);
+      const vigentes = todasVigentes();
       const primerDiaDelMes = new Date(Date.UTC(anio, mes - 1, 1));
       const inicioGrilla = inicioDeSemana(primerDiaDelMes.toISOString());
       const ultimoDiaDelMes = new Date(Date.UTC(anio, mes, 0));
@@ -560,21 +539,16 @@ export function crearCapaAgenda(obtenerConfiguracion: () => ConfiguracionMock): 
       for (let i = 0; i < dias.length; i += 7) semanas.push(dias.slice(i, i + 7));
 
       const respuesta: AgendaMes = { anio, mes, semanas };
-      return responder(obtenerConfiguracion, respuesta);
+      return nucleo.responder(respuesta);
     },
 
     async cronogramaComercial(desde: ISODate, hasta: ISODate) {
-      const config = obtenerConfiguracion();
-      if (config.forzarVacio) {
-        return responder(obtenerConfiguracion, { desde, hasta, barras: [] } satisfies CronogramaComercial);
-      }
-      const barras = cronograma.filter((b) => b.hasta >= desde && b.desde <= hasta);
-      return responder(obtenerConfiguracion, { desde, hasta, barras } satisfies CronogramaComercial);
+      const barras = nucleo.listar(cronograma.filter((b) => b.hasta >= desde && b.desde <= hasta));
+      return nucleo.responder({ desde, hasta, barras } satisfies CronogramaComercial);
     },
 
     async listarEntradas(filtro: FiltroAgenda, pagina?: OpcionesPagina) {
-      const config = obtenerConfiguracion();
-      let items = todasVigentes(config);
+      let items = todasVigentes();
       if (filtro.vendedorId) items = items.filter((e) => e.vendedorId === filtro.vendedorId);
       if (filtro.clienteId) items = items.filter((e) => e.clienteId === filtro.clienteId);
       if (filtro.tipo) items = items.filter((e) => e.tipo === filtro.tipo);
@@ -583,19 +557,18 @@ export function crearCapaAgenda(obtenerConfiguracion: () => ConfiguracionMock): 
       if (filtro.desde) items = items.filter((e) => (fechaRelevante(e) ?? '') >= filtro.desde!);
       if (filtro.hasta) items = items.filter((e) => (fechaRelevante(e) ?? '') <= filtro.hasta!);
       if (filtro.soloAtrasados) items = items.filter((e) => e.atrasada);
-      return responder(obtenerConfiguracion, paginar(items, pagina));
+      return nucleo.responder(nucleo.paginar(items, pagina?.cursor, pagina?.limite));
     },
 
     async entradasAtrasadas(pagina?: OpcionesPagina) {
-      const config = obtenerConfiguracion();
-      const items = todasVigentes(config).filter((e) => e.atrasada);
-      return responder(obtenerConfiguracion, paginar(items, pagina));
+      const items = todasVigentes().filter((e) => e.atrasada);
+      return nucleo.responder(nucleo.paginar(items, pagina?.cursor, pagina?.limite));
     },
 
     async crearEntradaManual(datos: NuevaEntradaManual, clave) {
       return idempotente(clave, () => {
         const nueva: EntradaInterna = {
-          id: generarId('agenda'),
+          id: nucleo.identificador('agenda'),
           vendedorId: VENDEDOR_DEMO,
           tipo: datos.tipo,
           origen: 'manual',
@@ -615,21 +588,21 @@ export function crearCapaAgenda(obtenerConfiguracion: () => ConfiguracionMock): 
           fechaAjustadaPorVendedor: false,
         };
         entradas = [...entradas, nueva];
-        return responder(obtenerConfiguracion, conAtraso(nueva));
+        return nucleo.responder(conAtraso(nueva));
       });
     },
 
     async ajustarEntrada(ajuste: AjusteEntrada) {
       if (!ajuste.motivo || ajuste.motivo.trim().length === 0) {
-        return { ok: false, error: { codigo: 'validacion', mensajeAmable: 'Contá por qué movés la fecha antes de guardar.', campo: 'motivo' } };
+        return nucleo.responderError<EntradaAgenda>({ codigo: 'validacion', mensajeAmable: 'Contá por qué movés la fecha antes de guardar.', campo: 'motivo' });
       }
       const indice = entradas.findIndex((e) => e.id === ajuste.entradaId);
       if (indice === -1) {
-        return { ok: false, error: { codigo: 'no_encontrado', mensajeAmable: 'No encontramos esa entrada de agenda.' } };
+        return nucleo.responderError<EntradaAgenda>({ codigo: 'no_encontrado', mensajeAmable: 'No encontramos esa entrada de agenda.' });
       }
       const actual = entradas[indice]!;
       if (actual.estado === 'completada' || actual.estado === 'descartada') {
-        return { ok: false, error: { codigo: 'regla_comercial', mensajeAmable: 'Esta entrada ya se resolvió: no se puede mover.' } };
+        return nucleo.responderError<EntradaAgenda>({ codigo: 'regla_comercial', mensajeAmable: 'Esta entrada ya se resolvió: no se puede mover.' });
       }
       const actualizada: EntradaInterna = {
         ...actual,
@@ -642,29 +615,29 @@ export function crearCapaAgenda(obtenerConfiguracion: () => ConfiguracionMock): 
         fechaAjustadaPorVendedor: true,
       };
       entradas = entradas.map((e, i) => (i === indice ? actualizada : e));
-      return responder(obtenerConfiguracion, conAtraso(actualizada));
+      return nucleo.responder(conAtraso(actualizada));
     },
 
     async completarEntrada(entradaId: Id, clave) {
       const indice = entradas.findIndex((e) => e.id === entradaId);
       if (indice === -1) {
-        return { ok: false, error: { codigo: 'no_encontrado', mensajeAmable: 'No encontramos esa entrada de agenda.' } };
+        return nucleo.responderError<EntradaAgenda>({ codigo: 'no_encontrado', mensajeAmable: 'No encontramos esa entrada de agenda.' });
       }
       return idempotente(clave, () => {
         const actual = entradas[indice]!;
         const actualizada: EntradaInterna = { ...actual, estado: 'completada', completadaEn: ahora() };
         entradas = entradas.map((e, i) => (i === indice ? actualizada : e));
-        return responder(obtenerConfiguracion, conAtraso(actualizada));
+        return nucleo.responder(conAtraso(actualizada));
       });
     },
 
     async descartarEntrada(entradaId: Id, motivo: string) {
       if (!motivo || motivo.trim().length === 0) {
-        return { ok: false, error: { codigo: 'validacion', mensajeAmable: 'Contá por qué descartás esta entrada.', campo: 'motivo' } };
+        return nucleo.responderError<EntradaAgenda>({ codigo: 'validacion', mensajeAmable: 'Contá por qué descartás esta entrada.', campo: 'motivo' });
       }
       const indice = entradas.findIndex((e) => e.id === entradaId);
       if (indice === -1) {
-        return { ok: false, error: { codigo: 'no_encontrado', mensajeAmable: 'No encontramos esa entrada de agenda.' } };
+        return nucleo.responderError<EntradaAgenda>({ codigo: 'no_encontrado', mensajeAmable: 'No encontramos esa entrada de agenda.' });
       }
       const actual = entradas[indice]!;
       const actualizada: EntradaInterna = {
@@ -673,7 +646,7 @@ export function crearCapaAgenda(obtenerConfiguracion: () => ConfiguracionMock): 
         motivoReprogramacion: `Descartada: ${motivo}`,
       };
       entradas = entradas.map((e, i) => (i === indice ? actualizada : e));
-      return responder(obtenerConfiguracion, conAtraso(actualizada));
+      return nucleo.responder(conAtraso(actualizada));
     },
   };
 }

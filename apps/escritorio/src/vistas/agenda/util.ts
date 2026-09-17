@@ -3,22 +3,17 @@
  *
  * ⛔ DUEÑA: Sesión 4.
  *
- * Formato es-PY implementado acá porque apps/escritorio/src/nucleo/formato.ts
- * (Sesión 1) todavía no existe (docs/PEDIDOS.md [S4] 2026-09-15).
+ * El formato es-PY de fecha y hora se re-exporta desde
+ * apps/escritorio/src/nucleo/formato.ts (Sesión 1): es la única fuente de
+ * verdad para toda la aplicación. Acá sólo vive lo propio de esta vista.
  */
 
-const ZONA = 'America/Asuncion';
+import { ZONA } from '../../nucleo/formato';
+
+export { formatearFecha as formatFecha, formatearFechaHora as formatFechaHora } from '../../nucleo/formato';
 
 export function esc(texto: string): string {
   return texto.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
-}
-
-export function formatFecha(iso: string): string {
-  return new Intl.DateTimeFormat('es-PY', { dateStyle: 'medium', timeZone: ZONA }).format(new Date(iso));
-}
-
-export function formatFechaHora(iso: string): string {
-  return new Intl.DateTimeFormat('es-PY', { dateStyle: 'medium', timeStyle: 'short', timeZone: ZONA }).format(new Date(iso));
 }
 
 export function formatDiaCorto(iso: string): string {

@@ -502,6 +502,11 @@ function crearVistaClientes(): Vista {
   };
 }
 
-const vista = crearVistaClientes();
-export default vista;
-export { vista };
+/**
+ * ⛔ Convención única entre las seis sesiones (nucleo/contrato-vista.ts):
+ *    `export function crearVista(): Vista`. El núcleo instancia una vista
+ *    nueva por cada montaje.
+ */
+export function crearVista(): Vista {
+  return crearVistaClientes();
+}

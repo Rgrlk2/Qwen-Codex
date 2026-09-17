@@ -3,35 +3,16 @@
  *
  * ⛔ DUEÑO: Sesión 4.
  *
- * Formato es-PY y clave de idempotencia, implementados acá porque
- * apps/escritorio/src/nucleo/formato.ts (Sesión 1) todavía no existe
- * (docs/PEDIDOS.md [S4] 2026-09-15). Cuando exista, esta vista migra a ese
- * módulo compartido.
+ * El formato es-PY (fecha, hora, dinero) se re-exporta desde
+ * apps/escritorio/src/nucleo/formato.ts (Sesión 1): es la única fuente de
+ * verdad para toda la aplicación. Acá sólo vive lo propio de esta vista:
+ * escape HTML, clave de idempotencia y etiquetas legibles.
  */
 
-import type { Dinero } from '@labia/compartido';
-
-const ZONA = 'America/Asuncion';
+export { formatearDinero as formatDinero, formatearFecha as formatFecha, formatearFechaHora as formatFechaHora } from '../../nucleo/formato';
 
 export function esc(texto: string): string {
   return texto.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
-}
-
-export function formatFecha(iso: string): string {
-  return new Intl.DateTimeFormat('es-PY', { dateStyle: 'medium', timeZone: ZONA }).format(new Date(iso));
-}
-
-export function formatFechaHora(iso: string): string {
-  return new Intl.DateTimeFormat('es-PY', { dateStyle: 'medium', timeStyle: 'short', timeZone: ZONA }).format(new Date(iso));
-}
-
-export function formatDinero(dinero: Dinero): string {
-  const valor = dinero.moneda === 'PYG' ? dinero.monto : dinero.monto / 100;
-  const numero = new Intl.NumberFormat('es-PY', {
-    minimumFractionDigits: dinero.moneda === 'PYG' ? 0 : 2,
-    maximumFractionDigits: dinero.moneda === 'PYG' ? 0 : 2,
-  }).format(valor);
-  return dinero.moneda === 'PYG' ? `Gs. ${numero}` : `USD ${numero}`;
 }
 
 export function generarClave(): string {

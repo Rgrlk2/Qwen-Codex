@@ -7,7 +7,7 @@
  *
  * Tiene que ofrecer los tres escenarios, o la vista no puede probar sus estados:
  *   1. con datos    2. vacío    3. error
- * Los tres salen de la MISMA implementación: dependen de `ConfiguracionMock`
+ * Los tres salen de la MISMA implementación: dependen de `NucleoMock`
  * (packages/mock/src/nucleo.ts), que quien integre puede alternar en caliente.
  *
  * ⛔ Sin productos fuera de los 13.
@@ -23,75 +23,46 @@
  *    cartera son negocios de ejemplo de los rubros citados en MASTER_SPEC.md
  *    §2.1 (repuestera, restaurante, odontología, peluquería, hotel, motel,
  *    veterinaria, gomería), siempre bajo el chip "Datos de ejemplo"
- *    (ContextoVista.datosDeEjemplo).
+ *    (ContextoVista.datosDeEjemplo). La cartera se asigna a la vendedora de
+ *    ejemplo real de Sesión 1 (`CUENTAS_DE_EJEMPLO` en datos-sesion.ts).
  * ⛔ `actividadId` todavía no puede referenciar la taxonomía real de Sesión 3
  *    (content/taxonomia/actividades.md está vacía — ver docs/PEDIDOS.md
  *    [S4] 2026-09-15). Se usan slugs propios, legibles, hasta que exista.
  */
 
 import type {
-  AudioSeguimiento, CapturaSeguimiento, Cliente, ClienteDetalle, Contacto,
+  AudioSeguimiento, CapturaSeguimiento, Cliente, ClienteDetalle,
   EstadoPaso, EventoLineaTiempo, FiltroClientes, FiltroSeguimientos, Id,
-  ISODate, NuevoCliente, OpcionesPagina, Pagina, PasoSugerido, ProductoId,
-  PropuestaDeSeguimiento, Resultado, Seguimiento, SeguimientoConfirmado,
+  ISODate, NuevoCliente, OpcionesPagina, PasoSugerido, ProductoId,
+  PropuestaDeSeguimiento, Seguimiento, SeguimientoConfirmado,
   SoporteDictado, Version,
 } from '@labia/compartido';
 import type { CapaClientes } from '@labia/compartido';
-import type { ConfiguracionMock } from './nucleo';
+import type { NucleoMock } from './nucleo';
+import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
 
 // ---------------------------------------------------------------------------
-// Actor de ejemplo — hasta que Sesión 1 publique vendedores reales
-// (docs/PEDIDOS.md [S4] 2026-09-15).
+// Actor de ejemplo — la vendedora real de Sesión 1 (datos-sesion.ts).
 // ---------------------------------------------------------------------------
 
-const VENDEDOR_DEMO: Id = 'vendedor-demo-1';
+const VENDEDOR_DEMO: Id = CUENTAS_DE_EJEMPLO.find((c) => c.usuario.rol === 'vendedor')?.usuario.id ?? 'usr-vendedora';
 const RETENCION_AUDIO_DIAS = 90;
 
-// ---------------------------------------------------------------------------
-// Utilidades locales (sin depender de apps/escritorio/src/nucleo/formato.ts,
-// que Sesión 1 todavía no implementó — docs/PEDIDOS.md [S4] 2026-09-15).
-// ---------------------------------------------------------------------------
-
-let contador = 0;
-function generarId(prefijo: string): Id {
-  contador += 1;
-  return `${prefijo}-${contador.toString(36)}`;
-}
+/**
+ * Momento de referencia del mock. Fijo (no `Date.now()`) para que el mock sea
+ * reproducible, igual que `datos-sesion.ts` (Sesión 1): un atraso calculado
+ * hoy se ve igual mañana.
+ */
+export const AHORA: ISODate = '2026-09-15T08:00:00-03:00';
 
 function ahora(): ISODate {
-  return new Date().toISOString();
+  return AHORA;
 }
 
 function sumarDias(fecha: ISODate, dias: number): ISODate {
   const base = new Date(fecha);
   base.setUTCDate(base.getUTCDate() + dias);
   return base.toISOString();
-}
-
-function esperar(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/** Envuelve toda respuesta con la latencia y la falla forzada de la configuración. */
-async function responder<T>(config: () => ConfiguracionMock, datos: T): Promise<Resultado<T>> {
-  const actual = config();
-  await esperar(actual.latenciaMs);
-  if (actual.fallaForzada) {
-    return { ok: false, error: actual.fallaForzada };
-  }
-  return { ok: true, datos };
-}
-
-function paginar<T>(items: ReadonlyArray<T>, opciones?: OpcionesPagina): Pagina<T> {
-  const limite = opciones?.limite ?? 20;
-  const inicio = opciones?.cursor ? Number.parseInt(opciones.cursor, 10) : 0;
-  const pagina = items.slice(inicio, inicio + limite);
-  const siguiente = inicio + limite;
-  return {
-    items: pagina,
-    cursor: siguiente < items.length ? String(siguiente) : null,
-    total: items.length,
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -166,12 +137,11 @@ function detectarPasos(texto: string): Array<Omit<PasoSugerido, 'id' | 'seguimie
 interface ClienteInterno extends ClienteDetalle {}
 
 function clienteBase(datos: Omit<ClienteInterno, 'creadoEn' | 'creadoPor' | 'actualizadoEn' | 'actualizadoPor' | 'version'>): ClienteInterno {
-  const cuando = ahora();
   return {
     ...datos,
-    creadoEn: cuando,
+    creadoEn: AHORA,
     creadoPor: VENDEDOR_DEMO,
-    actualizadoEn: cuando,
+    actualizadoEn: AHORA,
     actualizadoPor: VENDEDOR_DEMO,
     version: 1,
   };
@@ -430,7 +400,7 @@ const clientesSemilla: ClienteInterno[] = [
 
 const lineaDeTiempoSemilla: EventoLineaTiempo[] = [
   {
-    id: generarId('evento'),
+    id: 'evento-pame-presentacion',
     clienteId: 'cliente-pame-garelik-bags',
     tipo: 'presentacion',
     ocurridoEn: sumarDias(ahora(), -20),
@@ -439,7 +409,7 @@ const lineaDeTiempoSemilla: EventoLineaTiempo[] = [
     referenciaId: 'referencia-presentacion-pame',
   },
   {
-    id: generarId('evento'),
+    id: 'evento-pame-mensualidad',
     clienteId: 'cliente-pame-garelik-bags',
     tipo: 'mensualidad',
     ocurridoEn: sumarDias(ahora(), -6),
@@ -448,7 +418,7 @@ const lineaDeTiempoSemilla: EventoLineaTiempo[] = [
     referenciaId: 'referencia-mensualidad-pame',
   },
   {
-    id: generarId('evento'),
+    id: 'evento-repuestos-etapa',
     clienteId: 'cliente-repuestos-san-roque',
     tipo: 'cambio_etapa',
     ocurridoEn: sumarDias(ahora(), -5),
@@ -457,7 +427,7 @@ const lineaDeTiempoSemilla: EventoLineaTiempo[] = [
     referenciaId: 'cliente-repuestos-san-roque',
   },
   {
-    id: generarId('evento'),
+    id: 'evento-repuestos-cotizacion',
     clienteId: 'cliente-repuestos-san-roque',
     tipo: 'cotizacion',
     ocurridoEn: sumarDias(ahora(), -2),
@@ -466,7 +436,7 @@ const lineaDeTiempoSemilla: EventoLineaTiempo[] = [
     referenciaId: 'referencia-cotizacion-repuestos',
   },
   {
-    id: generarId('evento'),
+    id: 'evento-mercedes-apertura',
     clienteId: 'cliente-hotel-las-mercedes',
     tipo: 'acceso_enlace',
     ocurridoEn: sumarDias(ahora(), -1),
@@ -478,7 +448,7 @@ const lineaDeTiempoSemilla: EventoLineaTiempo[] = [
 
 const seguimientosSemilla: Seguimiento[] = [
   {
-    id: generarId('seguimiento'),
+    id: 'seguimiento-repuestos-1',
     clienteId: 'cliente-repuestos-san-roque',
     vendedorId: VENDEDOR_DEMO,
     origen: 'texto',
@@ -489,8 +459,8 @@ const seguimientosSemilla: Seguimiento[] = [
     productosMencionados: ['radar-stock'],
     pasos: [
       {
-        id: generarId('paso'),
-        seguimientoId: 'seguimiento-referencia',
+        id: 'paso-repuestos-1',
+        seguimientoId: 'seguimiento-repuestos-1',
         titulo: 'Enviar la información conversada',
         venceEn: sumarDias(ahora(), 1),
         estado: 'aceptado',
@@ -501,7 +471,7 @@ const seguimientosSemilla: Seguimiento[] = [
     confirmadoPorUsuario: true,
   },
   {
-    id: generarId('seguimiento'),
+    id: 'seguimiento-liz-1',
     clienteId: 'cliente-dra-liz-acosta',
     vendedorId: VENDEDOR_DEMO,
     origen: 'voz',
@@ -509,7 +479,7 @@ const seguimientosSemilla: Seguimiento[] = [
     registradoEn: sumarDias(ahora(), -1),
     texto: 'La doctora comentó que pierde turnos porque atiende el teléfono mientras trabaja con pacientes.',
     audio: {
-      id: generarId('audio'),
+      id: 'audio-liz-1',
       duracionSegundos: 42,
       formato: 'audio/webm',
       almacenamientoRef: 'audio-demo-liz-1',
@@ -574,11 +544,9 @@ function aCliente(interno: ClienteInterno): Cliente {
 // Fábrica de la capa
 // ---------------------------------------------------------------------------
 
-export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock): CapaClientes {
+export function crearCapaClientesMock(nucleo: NucleoMock): CapaClientes {
   return {
     async listarClientes(filtro: FiltroClientes, pagina?: OpcionesPagina) {
-      const config = obtenerConfiguracion();
-      if (config.forzarVacio) return responder(obtenerConfiguracion, paginar<Cliente>([], pagina));
       let items = clientes.slice();
       if (filtro.tipo) items = items.filter((c) => c.tipo === filtro.tipo);
       if (filtro.actividadId) items = items.filter((c) => c.actividadId === filtro.actividadId);
@@ -592,26 +560,21 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
         items = items.filter((c) => c.nombre.toLowerCase().includes(texto));
       }
       items = items.filter((c) => !c.archivadoEn);
-      return responder(obtenerConfiguracion, paginar(items.map(aCliente), pagina));
+      return nucleo.responder(nucleo.paginar(items.map(aCliente), pagina?.cursor, pagina?.limite));
     },
 
     async obtenerCliente(id: Id) {
       const encontrado = clientes.find((c) => c.id === id);
       if (!encontrado) {
-        const config = obtenerConfiguracion();
-        await esperar(config.latenciaMs);
-        return {
-          ok: false,
-          error: { codigo: 'no_encontrado', mensajeAmable: 'No encontramos ese cliente.' },
-        };
+        return nucleo.responderError<ClienteDetalle>({ codigo: 'no_encontrado', mensajeAmable: 'No encontramos ese cliente.' });
       }
-      return responder(obtenerConfiguracion, aClienteDetalle(encontrado));
+      return nucleo.responder(aClienteDetalle(encontrado));
     },
 
     async crearCliente(datos: NuevoCliente, clave) {
       return idempotente(clave, () => {
         const nuevo = clienteBase({
-          id: generarId('cliente'),
+          id: nucleo.identificador('cliente'),
           tipo: datos.tipo,
           nombre: datos.nombre,
           actividadId: datos.actividadId,
@@ -623,7 +586,7 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
           proximoPasoEn: null,
           motivoPerdida: null,
           archivadoEn: null,
-          contactos: (datos.contactos ?? []).map((c) => ({ ...c, id: generarId('contacto'), clienteId: '' })),
+          contactos: (datos.contactos ?? []).map((c) => ({ ...c, id: nucleo.identificador('contacto'), clienteId: '' })),
           productosVigentes: [],
           productosPropuestos: [],
           planId: null,
@@ -631,24 +594,21 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
         });
         const conClienteId = { ...nuevo, contactos: nuevo.contactos.map((c) => ({ ...c, clienteId: nuevo.id })) };
         clientes = [...clientes, conClienteId];
-        return responder(obtenerConfiguracion, aCliente(conClienteId));
+        return nucleo.responder(aCliente(conClienteId));
       });
     },
 
     async actualizarCliente(id: Id, cambios: Partial<NuevoCliente>, version: Version) {
       const indice = clientes.findIndex((c) => c.id === id);
       if (indice === -1) {
-        return { ok: false, error: { codigo: 'no_encontrado', mensajeAmable: 'No encontramos ese cliente.' } };
+        return nucleo.responderError<Cliente>({ codigo: 'no_encontrado', mensajeAmable: 'No encontramos ese cliente.' });
       }
       const actual = clientes[indice]!;
       if (actual.version !== version) {
-        return {
-          ok: false,
-          error: {
-            codigo: 'conflicto_version',
-            mensajeAmable: 'Este cliente cambió mientras lo editabas. Volvé a abrirlo para ver lo último.',
-          },
-        };
+        return nucleo.responderError<Cliente>({
+          codigo: 'conflicto_version',
+          mensajeAmable: 'Este cliente cambió mientras lo editabas. Volvé a abrirlo para ver lo último.',
+        });
       }
       const actualizado: ClienteInterno = {
         ...actual,
@@ -662,43 +622,39 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
         actualizadoPor: VENDEDOR_DEMO,
       };
       clientes = clientes.map((c, i) => (i === indice ? actualizado : c));
-      return responder(obtenerConfiguracion, aCliente(actualizado));
+      return nucleo.responder(aCliente(actualizado));
     },
 
     async listarContactos(clienteId: Id) {
-      const config = obtenerConfiguracion();
-      if (config.forzarVacio) return responder(obtenerConfiguracion, [] as ReadonlyArray<Contacto>);
       const cliente = clientes.find((c) => c.id === clienteId);
-      return responder(obtenerConfiguracion, cliente?.contactos ?? []);
+      return nucleo.responder(nucleo.listar(cliente?.contactos ?? []));
     },
 
     async lineaDeTiempo(clienteId: Id, pagina?: OpcionesPagina) {
-      const config = obtenerConfiguracion();
-      if (config.forzarVacio) return responder(obtenerConfiguracion, paginar<EventoLineaTiempo>([], pagina));
       const eventos = lineaDeTiempo
         .filter((e) => e.clienteId === clienteId)
         .slice()
         .sort((a, b) => (a.ocurridoEn < b.ocurridoEn ? 1 : -1));
-      return responder(obtenerConfiguracion, paginar(eventos, pagina));
+      return nucleo.responder(nucleo.paginar(eventos, pagina?.cursor, pagina?.limite));
     },
 
     async soporteDictado() {
       const soporte: SoporteDictado = { disponible: true, motivoNoDisponible: null };
-      return responder(obtenerConfiguracion, soporte);
+      return nucleo.responder(soporte);
     },
 
     async subirAudio(archivo: Blob, clave) {
       return idempotente(clave, () => {
         const audio: AudioSeguimiento = {
-          id: generarId('audio'),
+          id: nucleo.identificador('audio'),
           duracionSegundos: 0,
           formato: archivo.type || 'audio/webm',
-          almacenamientoRef: generarId('almacenamiento'),
+          almacenamientoRef: nucleo.identificador('almacenamiento'),
           retencionHasta: sumarDias(ahora(), RETENCION_AUDIO_DIAS),
           borradoEn: null,
           borradoPor: null,
         };
-        return responder(obtenerConfiguracion, audio);
+        return nucleo.responder(audio);
       });
     },
 
@@ -714,12 +670,12 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
             ? 'Gracias por la charla de hoy. Te comparto lo que conversamos y quedo atento/a a tu confirmación.'
             : null,
       };
-      return responder(obtenerConfiguracion, propuesta);
+      return nucleo.responder(propuesta);
     },
 
     async guardarSeguimiento(datos: SeguimientoConfirmado, clave) {
       if (datos.confirmadoPorUsuario !== true) {
-        return { ok: false, error: { codigo: 'validacion', mensajeAmable: 'Falta confirmar el seguimiento antes de guardarlo.' } };
+        return nucleo.responderError<Seguimiento>({ codigo: 'validacion', mensajeAmable: 'Falta confirmar el seguimiento antes de guardarlo.' });
       }
       return idempotente(clave, () => {
         const audio = datos.audioId
@@ -734,7 +690,7 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
             }
           : null;
         const nuevo: Seguimiento = {
-          id: generarId('seguimiento'),
+          id: nucleo.identificador('seguimiento'),
           clienteId: datos.clienteId,
           vendedorId: VENDEDOR_DEMO,
           origen: datos.origen,
@@ -744,7 +700,7 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
           audio,
           productosMencionados: datos.productosMencionados,
           pasos: datos.pasosAceptados.map((p) => ({
-            id: generarId('paso'),
+            id: nucleo.identificador('paso'),
             seguimientoId: '',
             titulo: p.titulo,
             venceEn: p.venceEn,
@@ -760,7 +716,7 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
         lineaDeTiempo = [
           ...lineaDeTiempo,
           {
-            id: generarId('evento'),
+            id: nucleo.identificador('evento'),
             clienteId: datos.clienteId,
             tipo: 'seguimiento',
             ocurridoEn: datos.ocurridoEn,
@@ -790,13 +746,11 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
           );
         }
 
-        return responder(obtenerConfiguracion, conSeguimientoId);
+        return nucleo.responder(conSeguimientoId);
       });
     },
 
     async listarSeguimientos(filtro: FiltroSeguimientos, pagina?: OpcionesPagina) {
-      const config = obtenerConfiguracion();
-      if (config.forzarVacio) return responder(obtenerConfiguracion, paginar<Seguimiento>([], pagina));
       let items = seguimientos.slice();
       if (filtro.clienteId) items = items.filter((s) => s.clienteId === filtro.clienteId);
       if (filtro.origen) items = items.filter((s) => s.origen === filtro.origen);
@@ -804,13 +758,13 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
       if (filtro.hasta) items = items.filter((s) => s.ocurridoEn <= filtro.hasta!);
       if (filtro.conPasosAbiertos) items = items.filter((s) => s.pasos.some((p) => p.estado === 'propuesto' || p.estado === 'aceptado'));
       items = items.slice().sort((a, b) => (a.ocurridoEn < b.ocurridoEn ? 1 : -1));
-      return responder(obtenerConfiguracion, paginar(items, pagina));
+      return nucleo.responder(nucleo.paginar(items, pagina?.cursor, pagina?.limite));
     },
 
     async borrarAudio(audioId: Id, _motivo: string) {
       const indice = seguimientos.findIndex((s) => s.audio?.id === audioId);
       if (indice === -1) {
-        return { ok: false, error: { codigo: 'no_encontrado', mensajeAmable: 'No encontramos ese audio.' } };
+        return nucleo.responderError<void>({ codigo: 'no_encontrado', mensajeAmable: 'No encontramos ese audio.' });
       }
       const actual = seguimientos[indice]!;
       const actualizado: Seguimiento = {
@@ -818,7 +772,7 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
         audio: actual.audio ? { ...actual.audio, borradoEn: ahora(), borradoPor: VENDEDOR_DEMO } : null,
       };
       seguimientos = seguimientos.map((s, i) => (i === indice ? actualizado : s));
-      return responder<void>(obtenerConfiguracion, undefined);
+      return nucleo.responder<void>(undefined);
     },
 
     async actualizarPaso(pasoId: Id, estado: EstadoPaso) {
@@ -838,9 +792,9 @@ export function crearCapaClientes(obtenerConfiguracion: () => ConfiguracionMock)
         return { ...s, pasos };
       });
       if (!encontrado) {
-        return { ok: false, error: { codigo: 'no_encontrado', mensajeAmable: 'No encontramos ese paso.' } };
+        return nucleo.responderError<PasoSugerido>({ codigo: 'no_encontrado', mensajeAmable: 'No encontramos ese paso.' });
       }
-      return responder(obtenerConfiguracion, encontrado);
+      return nucleo.responder(encontrado);
     },
   };
 }
