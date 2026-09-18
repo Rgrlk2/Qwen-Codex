@@ -20,6 +20,21 @@ import * as formato from '../apps/escritorio/src/nucleo/formato.ts';
 import * as http from '../apps/escritorio/src/datos/http.ts';
 import * as vistaMod from '../apps/escritorio/src/vistas/ingreso/vista.ts';
 
+/**
+ * ⛔ NINGUNA CONTRASENA VIVE EN EL REPOSITORIO, tampoco en las pruebas.
+ *
+ * El mock no guarda claves: acepta cualquiera que no este vacia. Asi que en
+ * vez de escribir una, cada corrida inventa la suya, distinta, y sólo existe
+ * en memoria mientras corre la prueba. Si alguien vuelve a pegar una clave
+ * literal aca, verificar-portafolio.mjs lo rechaza.
+ */
+const claveDePrueba = () => `prueba-${Math.random().toString(36).slice(2)}`;
+
+/** Los usuarios salen de los datos, no de literales: no se quedan viejos. */
+const CUENTAS = mockMod.CUENTAS_DE_EJEMPLO;
+const VENDEDOR = CUENTAS.find((c) => c.rol === 'vendedor').usuario;
+const ADMIN = CUENTAS.find((c) => c.rol === 'administrador').usuario;
+
 let ok = 0;
 const fallos = [];
 let grupo = '';
@@ -137,10 +152,23 @@ const capa = mockMod.crearCapaDatosMock({ configuracion: { latenciaMs: 0, rol: '
 const sinSesion = await capa.sesionActual();
 comprobar('sin ingresar no hay sesion', !sinSesion.ok && sinSesion.error.codigo === 'no_autenticado');
 
-const usuarioInexistente = await capa.ingresar('no-existe-nadie', 'loquesea');
-const claveMala = await capa.ingresar('vendedora', 'clave-incorrecta');
+const usuarioInexistente = await capa.ingresar('no-existe-nadie', claveDePrueba());
+/**
+ * Con mock no existe "clave incorrecta": no hay clave guardada. Lo que si
+ * tiene que fallar es la clave VACIA, y fallar exactamente igual que un
+ * usuario inexistente.
+ */
+const claveMala = await capa.ingresar(VENDEDOR, '   ');
 comprobar('usuario inexistente falla', !usuarioInexistente.ok);
-comprobar('clave incorrecta falla', !claveMala.ok);
+comprobar('clave vacia falla', !claveMala.ok);
+comprobar(
+  '⛔ el mock no guarda ninguna contrasena',
+  CUENTAS.every((c) => !Object.prototype.hasOwnProperty.call(c, 'clave')),
+);
+comprobar(
+  '⛔ toda cuenta nace obligada a cambiar la clave inicial',
+  CUENTAS.every((c) => c.debeCambiarClave === true),
+);
 comprobar(
   '⛔ el mensaje NO revela si el usuario existe',
   !usuarioInexistente.ok && !claveMala.ok
@@ -154,7 +182,7 @@ comprobar(
   !usuarioInexistente.ok && !/no-existe-nadie/i.test(usuarioInexistente.error.mensajeAmable),
 );
 
-const entrada = await capa.ingresar('vendedora', 'ejemplo-vendedora');
+const entrada = await capa.ingresar(VENDEDOR, claveDePrueba());
 comprobar('ingreso valido devuelve sesion', entrada.ok);
 igual('el rol viene en la sesion', entrada.ok ? entrada.datos.rol : null, 'vendedor');
 comprobar('⛔ la sesion marca datos de ejemplo', entrada.ok && entrada.datos.datosDeEjemplo === true);
@@ -164,7 +192,7 @@ comprobar('vendedor NO tiene verAdministracion', capacidades.ok && capacidades.d
 comprobar('vendedor NO aprueba cotizaciones', capacidades.ok && capacidades.datos.aprobarCotizaciones === false);
 
 const capaAdmin = mockMod.crearCapaDatosMock({ configuracion: { latenciaMs: 0 } });
-const entradaAdmin = await capaAdmin.ingresar('administracion', 'ejemplo-administracion');
+const entradaAdmin = await capaAdmin.ingresar(ADMIN, claveDePrueba());
 igual('un solo login sirve para el administrador', entradaAdmin.ok ? entradaAdmin.datos.rol : null, 'administrador');
 const capAdmin = await capaAdmin.capacidades();
 comprobar('administrador SI tiene verAdministracion', capAdmin.ok && capAdmin.datos.verAdministracion === true);
@@ -173,13 +201,13 @@ const registros = await capaAdmin.listarRegistroAcceso({});
 comprobar('el ingreso quedo registrado', registros.ok && registros.datos.items.some((r) => r.accion === 'ingreso'));
 
 const capaFallos = mockMod.crearCapaDatosMock({ configuracion: { latenciaMs: 0 } });
-await capaFallos.ingresar('vendedora', 'mal');
-await capaFallos.ingresar('administracion', 'ejemplo-administracion');
+await capaFallos.ingresar(VENDEDOR, '');
+await capaFallos.ingresar(ADMIN, claveDePrueba());
 const conFallidos = await capaFallos.listarRegistroAcceso({ accion: 'intento_fallido' });
 comprobar('el intento fallido quedo registrado', conFallidos.ok && conFallidos.datos.items.length === 1);
 comprobar(
   '⛔ el registro del intento fallido no guarda la clave tecleada',
-  conFallidos.ok && !JSON.stringify(conFallidos.datos.items).includes('mal"'),
+  conFallidos.ok && !/clave|contrase/i.test(JSON.stringify(conFallidos.datos.items)),
 );
 
 const cerrada = await capa.cerrarSesion();
@@ -192,10 +220,10 @@ comprobar('tras cerrar no hay sesion', !(await capa.sesionActual()).ok);
 seccion('Nucleo del mock — con datos, vacio y error');
 
 const palancas = mockMod.crearCapaDatosMock({ configuracion: { latenciaMs: 0 } });
-await palancas.ingresar('administracion', 'ejemplo-administracion');
+await palancas.ingresar(ADMIN, claveDePrueba());
 
 const conDatos = await palancas.listarVendedores({});
-comprobar('con datos: hay vendedores de ejemplo', conDatos.ok && conDatos.datos.items.length === 2);
+comprobar('con datos: hay cuentas de ejemplo', conDatos.ok && conDatos.datos.items.length === CUENTAS.length);
 
 palancas.mock.configurar({ forzarVacio: true });
 const vacio = await palancas.listarVendedores({});
@@ -351,9 +379,15 @@ comprobar('region de mensajes con role=alert', contenedor.querySelector('[role="
 comprobar('⛔ chip permanente "Datos de ejemplo"', /Datos de ejemplo/.test(contenedor.textContent));
 comprobar('⛔ no hay una segunda pantalla de ingreso de administrador', !/administrador/i.test(contenedor.textContent));
 
-// Estado de error: credenciales invalidas
-campoUsuario.value = 'vendedora';
-campoClave.value = 'clave-que-no-es';
+/**
+ * Estado de error: credenciales invalidas.
+ * Se usa un usuario que NO existe, con una clave inventada: con mock, una
+ * clave no vacia sobre una cuenta real entraria, y lo que hay que probar aca
+ * es la pantalla de error.
+ */
+const USUARIO_INEXISTENTE = 'no-existe-nadie';
+campoUsuario.value = USUARIO_INEXISTENTE;
+campoClave.value = claveDePrueba();
 formulario.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
 await new Promise((listo) => setTimeout(listo, 10));
 const textoError = contenedor.querySelector('.ingreso-error')?.textContent ?? '';
@@ -361,7 +395,7 @@ comprobar('estado de error visible', textoError.length > 0);
 comprobar('⛔ el error es generico', /Usuario o contrase/i.test(textoError));
 comprobar('⛔ no dice si el usuario existe', !/no existe|usuario no|no registrado|inexistente/i.test(textoError));
 comprobar('el reintento queda disponible', contenedor.querySelector('button[type="submit"]').disabled === false);
-comprobar('se conserva lo tecleado en usuario', contenedor.querySelector('#ingreso-usuario').value === 'vendedora');
+comprobar('se conserva lo tecleado en usuario', contenedor.querySelector('#ingreso-usuario').value === USUARIO_INEXISTENTE);
 comprobar('⛔ la contrasena NO se conserva', contenedor.querySelector('#ingreso-clave').value === '');
 comprobar('los campos quedan marcados aria-invalid', contenedor.querySelector('#ingreso-usuario').getAttribute('aria-invalid') === 'true');
 
@@ -372,8 +406,8 @@ await new Promise((listo) => setTimeout(listo, 10));
 comprobar('campos vacios: se pide completarlos', /Complet/i.test(contenedor.querySelector('.ingreso-error')?.textContent ?? ''));
 
 // Ingreso valido
-contenedor.querySelector('#ingreso-usuario').value = 'vendedora';
-contenedor.querySelector('#ingreso-clave').value = 'ejemplo-vendedora';
+contenedor.querySelector('#ingreso-usuario').value = VENDEDOR;
+contenedor.querySelector('#ingreso-clave').value = claveDePrueba();
 contenedor.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
 await new Promise((listo) => setTimeout(listo, 10));
 comprobar('ingreso valido entrega la sesion al nucleo', sesionRecibida !== null && sesionRecibida.rol === 'vendedor');
@@ -386,8 +420,8 @@ const capaCaida = mockMod.crearCapaDatosMock({ configuracion: { latenciaMs: 0 } 
 capaCaida.mock.configurar({ fallaForzada: { codigo: 'no_autenticado', mensajeAmable: 'x' } });
 const vista2 = vistaMod.crearVista({ alIngresar: () => {} });
 await vista2.montar({ datos: capaCaida, raiz: contenedor, rol: 'vendedor', senal: new dom.window.AbortController().signal, datosDeEjemplo: true });
-contenedor.querySelector('#ingreso-usuario').value = 'vendedora';
-contenedor.querySelector('#ingreso-clave').value = 'ejemplo-vendedora';
+contenedor.querySelector('#ingreso-usuario').value = VENDEDOR;
+contenedor.querySelector('#ingreso-clave').value = claveDePrueba();
 capaCaida.mock.configurar({ fallaForzada: { codigo: 'servicio_no_disponible', mensajeAmable: 'No pudimos conectarnos en este momento.', pista: 'Proba de nuevo en unos segundos.' } });
 contenedor.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
 await new Promise((listo) => setTimeout(listo, 10));
@@ -402,8 +436,8 @@ vista2.desmontar();
 const capaSinRuta = mockMod.crearCapaDatosMock({ configuracion: { latenciaMs: 0 } });
 const vista3 = vistaMod.crearVista({ alIngresar: () => {} });
 await vista3.montar({ datos: capaSinRuta, raiz: contenedor, rol: 'vendedor', senal: new dom.window.AbortController().signal, datosDeEjemplo: true });
-contenedor.querySelector('#ingreso-usuario').value = 'vendedora';
-contenedor.querySelector('#ingreso-clave').value = 'ejemplo-vendedora';
+contenedor.querySelector('#ingreso-usuario').value = VENDEDOR;
+contenedor.querySelector('#ingreso-clave').value = claveDePrueba();
 capaSinRuta.mock.configurar({ fallaForzada: { codigo: 'no_encontrado', mensajeAmable: 'No encontramos lo que buscabas.', pista: 'Avisa a Administracion.' } });
 contenedor.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
 await new Promise((listo) => setTimeout(listo, 10));

@@ -26,21 +26,31 @@ import {
 const AHORA = '2026-09-15T08:00:00-03:00';
 
 /**
- * Las credenciales de ejemplo. Existen sólo mientras el Escritorio corre con
- * mock, y por eso la interfaz muestra el chip permanente "Datos de ejemplo".
+ * Las cuentas de ejemplo del Escritorio.
+ *
+ * ⛔ NINGUNA CONTRASEÑA VIVE EN EL REPOSITORIO.
+ *    Ni acá, ni en los mocks, ni en las pruebas, ni en el HTML, ni comentada.
+ *
+ * Con mock, `ingresar` acepta **cualquier clave no vacía** para una cuenta
+ * activa. No es una puerta abierta por descuido: es que el mock **no guarda
+ * contraseñas**, así que no hay nada contra qué comparar. Cuando se conecte la
+ * autenticación real, la comparación ocurre en el servidor y esta capa no
+ * cambia de forma — sólo deja de aceptar cualquier cosa.
+ *
+ * Las seis cuentas de vendedor y la de administración nacen con
+ * `debeCambiarClave: true`: la clave inicial se entrega por fuera del código y
+ * el primer ingreso real obliga a cambiarla.
+ *
  * ⛔ Sólo los dos roles del sistema: vendedor y administrador.
  */
-interface CuentaDeEjemplo {
-  readonly usuario: Usuario;
-  readonly clave: string;
-}
-
 function usuarioDeEjemplo(
   id: Id, nombre: string, email: string, usuario: string, rol: Rol, ultimoIngresoEn: string | null,
 ): Usuario {
   return {
     id, nombre, email, usuario, rol,
     activo: true,
+    /** ⛔ Todas arrancan con la clave inicial sin cambiar. */
+    debeCambiarClave: true,
     ultimoIngresoEn,
     creadoEn: '2026-01-05T09:00:00-03:00',
     creadoPor: 'usr-sistema',
@@ -50,26 +60,48 @@ function usuarioDeEjemplo(
   };
 }
 
-export const CUENTAS_DE_EJEMPLO: ReadonlyArray<CuentaDeEjemplo> = [
-  {
-    usuario: usuarioDeEjemplo(
-      'usr-vendedora', 'Vendedora de ejemplo', 'vendedora@ejemplo.labia',
-      'vendedora', 'vendedor', '2026-09-14T17:20:00-03:00',
-    ),
-    clave: 'ejemplo-vendedora',
-  },
-  {
-    usuario: usuarioDeEjemplo(
-      'usr-administrador', 'Administrador de ejemplo', 'administracion@ejemplo.labia',
-      'administracion', 'administrador', '2026-09-14T19:05:00-03:00',
-    ),
-    clave: 'ejemplo-administracion',
-  },
+/**
+ * ⛔ Una cuenta es un `Usuario` y nada más. No existe un campo `clave`, y no
+ *    debe agregarse: la verificación del repositorio lo rechaza.
+ */
+export const CUENTAS_DE_EJEMPLO: ReadonlyArray<Usuario> = [
+  usuarioDeEjemplo(
+    'usr-jpfdz', 'Juan Pablo Fernandez', 'jpfernandez@labia.com.py',
+    'JPFdz', 'vendedor', '2026-09-16T17:20:00-03:00',
+  ),
+  usuarioDeEjemplo(
+    'usr-pcrrs', 'Pablo Carreras', 'pcarreras@labia.com.py',
+    'PCrrs', 'vendedor', '2026-09-16T11:40:00-03:00',
+  ),
+  usuarioDeEjemplo(
+    'usr-ntpns', 'Natalia Pellens', 'npellens@labia.com.py',
+    'NTPns', 'vendedor', '2026-09-17T09:05:00-03:00',
+  ),
+  usuarioDeEjemplo(
+    'usr-ctrrz', 'Carlos Torres', 'ctorres@labia.com.py',
+    'CTrrz', 'vendedor', '2026-09-15T16:10:00-03:00',
+  ),
+  usuarioDeEjemplo(
+    'usr-strrz', 'Sebastián Torres', 'storres@labia.com.py',
+    'STrrz', 'vendedor', null,
+  ),
+  usuarioDeEjemplo(
+    'usr-respn', 'Ramón Espinola', 'respinola@labia.com.py',
+    'REspn', 'vendedor', null,
+  ),
+  /**
+   * La cuenta de administración. Es quien aprueba cotizaciones, firma como CEO
+   * y cierra períodos: por eso existe una sola y es nominal, no genérica.
+   */
+  usuarioDeEjemplo(
+    'usr-rgrlk', 'Rodrigo Garelik', 'rgarelik@labia.com.py',
+    'RGrlk', 'administrador', '2026-09-17T19:05:00-03:00',
+  ),
 ];
 
 /** La cuenta con la que arranca el mock, según el rol configurado. */
-function cuentaPorRol(rol: Rol): CuentaDeEjemplo {
-  const encontrada = CUENTAS_DE_EJEMPLO.find((c) => c.usuario.rol === rol);
+function cuentaPorRol(rol: Rol): Usuario {
+  const encontrada = CUENTAS_DE_EJEMPLO.find((c) => c.rol === rol);
   if (!encontrada) throw new Error(`Falta una cuenta de ejemplo para el rol ${rol}.`);
   return encontrada;
 }
@@ -155,23 +187,28 @@ export function crearCapaSesionMock(nucleo: NucleoMock): CapaSesionMock {
 
   return {
     async ingresar(usuario, clave) {
-      const cuenta = CUENTAS_DE_EJEMPLO.find(
-        (c) => c.usuario.usuario === usuario.trim().toLowerCase(),
-      );
+      const buscado = usuario.trim().toLowerCase();
+      const cuenta = CUENTAS_DE_EJEMPLO.find((c) => c.usuario.toLowerCase() === buscado);
       /**
-       * ⛔ La comparación se hace igual exista o no la cuenta, y el error es
-       *    exactamente el mismo en los dos casos: ni el mensaje ni el tiempo
-       *    de respuesta pueden revelar si el usuario existe.
+       * ⛔ El mock NO guarda contraseñas, así que no hay nada contra qué
+       *    comparar: alcanza con que la clave no esté vacía. Lo que sí se
+       *    conserva es la propiedad que importa — el resultado y el mensaje
+       *    son idénticos exista o no la cuenta, así que ni el texto ni el
+       *    tiempo de respuesta revelan si el usuario existe.
+       *
+       * Al conectar la autenticación real, la comparación ocurre en el
+       * servidor y esta función no cambia de forma.
        */
-      const valida = cuenta !== undefined && cuenta.clave === clave && cuenta.usuario.activo;
+      const hayClave = clave.trim().length > 0;
+      const valida = cuenta !== undefined && hayClave && cuenta.activo;
       if (!valida) {
         anotar('intento_fallido', 'usuario', ACTOR_DESCONOCIDO, null);
         return nucleo.responderError<Sesion>(ERROR_CREDENCIALES);
       }
-      const sesion = aSesion(cuenta.usuario);
+      const sesion = aSesion(cuenta);
       abierta = sesion;
-      nucleo.fijarRol(cuenta.usuario.rol);
-      anotar('ingreso', 'usuario', cuenta.usuario, cuenta.usuario.id);
+      nucleo.fijarRol(cuenta.rol);
+      anotar('ingreso', 'usuario', cuenta, cuenta.id);
       return nucleo.responder(sesion);
     },
 
@@ -198,9 +235,21 @@ export function crearCapaSesionMock(nucleo: NucleoMock): CapaSesionMock {
           campo: 'nueva',
         });
       }
-      const cuenta = CUENTAS_DE_EJEMPLO.find((c) => c.usuario.id === abierta?.usuario.id);
-      if (!cuenta || cuenta.clave !== actual) {
+      /**
+       * ⛔ Tampoco acá hay una clave guardada contra la cual comparar. Se exige
+       *    que la actual venga escrita y que la nueva sea distinta: el resto lo
+       *    valida el servidor cuando exista.
+       */
+      const cuenta = CUENTAS_DE_EJEMPLO.find((c) => c.id === abierta?.usuario.id);
+      if (!cuenta || actual.trim().length === 0) {
         return nucleo.responderError<void>(ERROR_CREDENCIALES);
+      }
+      if (nueva === actual) {
+        return nucleo.responderError<void>({
+          codigo: 'validacion',
+          mensajeAmable: 'La contraseña nueva tiene que ser distinta de la actual.',
+          campo: 'nueva',
+        });
       }
       return nucleo.responder<void>(undefined);
     },
@@ -224,7 +273,7 @@ export function crearCapaSesionMock(nucleo: NucleoMock): CapaSesionMock {
     },
 
     usuarios(filtro) {
-      return CUENTAS_DE_EJEMPLO.map((c) => c.usuario).filter((u) => {
+      return CUENTAS_DE_EJEMPLO.filter((u) => {
         if (filtro.rol && u.rol !== filtro.rol) return false;
         if (filtro.activo !== undefined && u.activo !== filtro.activo) return false;
         if (filtro.texto) {
@@ -242,7 +291,7 @@ export function crearCapaSesionMock(nucleo: NucleoMock): CapaSesionMock {
 /** Sesión de ejemplo lista para usar, sin pasar por el ingreso. Para pruebas. */
 export function sesionDeEjemplo(rol: Rol): Sesion {
   return {
-    usuario: cuentaPorRol(rol).usuario,
+    usuario: cuentaPorRol(rol),
     rol,
     iniciadaEn: AHORA,
     datosDeEjemplo: true,

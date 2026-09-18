@@ -167,7 +167,26 @@ Un campo de texto libre. **Acepta cualquier rubro escrito.** "Motel", "veterinar
    | `adaptable` | Sirve, pero requiere una adaptación real, que se explica. |
    | `no_recomendado` | No corresponde a este negocio. Se dice por qué. |
 
-7. **Adaptación necesaria.** En `cercano` y `adaptable`, texto concreto: qué hay que ajustar y qué hay que confirmar antes de prometerlo.
+   ⛔ **Qué se ofrece, y en qué orden.** Decisión del CEO, 18/09/2026:
+
+   > Se ofrece **sólo lo directamente útil o lo que necesita un ajuste chico**.
+   > De fácil a difícil.
+
+   | Encaje | ¿Se ofrece? |
+   |---|---|
+   | `directo` | **Sí**, primero |
+   | `cercano` | **Sí**, después |
+   | `adaptable` | ⛔ **No.** Queda fuera de la propuesta |
+   | `no_recomendado` | ⛔ Nunca |
+
+   El motor **evalúa los trece** por dentro y los ordena, pero el plan que ve el
+   vendedor sale sólo con `directo` y `cercano`, en ese orden. Nadie abre una
+   relación comercial vendiendo lo difícil.
+
+   Caso resuelto de referencia: a un **motel** no se le ofrece Merma IA, porque
+   quedó clasificado como `adaptable` (CEO, 18/09/2026).
+
+7. **Adaptación necesaria.** En `cercano`, texto concreto: qué hay que ajustar y qué hay que confirmar antes de prometerlo.
 8. **Estrategia de entrada.** Por dónde empezar la conversación, con qué producto, con qué gancho.
 9. **Argumentos.** Apoyados en el copy aprobado del producto, citando de dónde salen.
 10. **Preguntas de confirmación.** Qué preguntarle al cliente para validar o descartar cada dolor inferido.

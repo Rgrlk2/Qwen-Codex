@@ -22,6 +22,17 @@ export interface Usuario extends Trazado {
   readonly rol: Rol;
   readonly activo: boolean;
   readonly ultimoIngresoEn: ISODate | null;
+  /**
+   * `true` mientras la persona siga usando la clave inicial que le entregaron.
+   *
+   * ⛔ Ninguna contraseña vive en el repositorio: la inicial se entrega por
+   *    fuera del código y la comparación ocurre en el servidor. Este campo es
+   *    lo único que viaja, y sólo dice **si hay que cambiarla**, nunca cuál es.
+   *
+   * Al conectarse la autenticación real, el primer ingreso con este campo en
+   * `true` obliga a cambiar la clave antes de dejar entrar a ninguna vista.
+   */
+  readonly debeCambiarClave: boolean;
 }
 
 export interface NuevoUsuario {

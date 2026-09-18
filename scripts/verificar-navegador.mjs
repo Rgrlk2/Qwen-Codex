@@ -19,6 +19,24 @@
  */
 
 const BASE = process.env.BASE ?? 'http://localhost:5173';
+
+/**
+ * ⛔ NINGUNA CONTRASENA VIVE EN EL REPOSITORIO, tampoco en las pruebas.
+ * El mock no guarda claves: acepta cualquiera no vacia. Cada corrida inventa
+ * la suya y sólo existe en memoria mientras corre la prueba.
+ */
+const claveDePrueba = () => `prueba-${Math.random().toString(36).slice(2)}`;
+
+/**
+ * Este script corre contra un navegador real, sin empaquetar, asi que no puede
+ * importar los datos en TypeScript. Los nombres de usuario van literales: un
+ * nombre de usuario NO es un secreto. Lo que no puede estar escrito en ningun
+ * lado es la contrasena, y por eso se inventa arriba.
+ * Si estos dos dejan de existir en packages/mock/src/datos-sesion.ts, la
+ * prueba falla en el primer ingreso y hay que actualizarlos aca.
+ */
+const VENDEDOR = 'JPFdz';
+const ADMIN = 'RGrlk';
 const ANCHOS = [360, 390, 768, 1024, 1440];
 
 let chromium;
@@ -91,14 +109,15 @@ async function intentar(usuario, clave) {
   await pagina.waitForSelector('.ingreso-error', { timeout: 10_000 });
   return pagina.locator('.ingreso-error').innerText();
 }
-const conClaveMala = await intentar('vendedora', 'clave-que-no-es');
-const conUsuarioInexistente = await intentar('no-existe-nadie', 'clave-que-no-es');
-ok('Enter envia el formulario', conClaveMala.length > 0);
-ok('⛔ el mensaje es el mismo exista o no el usuario', conClaveMala === conUsuarioInexistente, `"${conClaveMala}" vs "${conUsuarioInexistente}"`);
+/** Con mock no hay "clave incorrecta": lo que falla es la clave VACIA. */
+const conClaveVacia = await intentar(VENDEDOR, '   ');
+const conUsuarioInexistente = await intentar('no-existe-nadie', claveDePrueba());
+ok('Enter envia el formulario', conClaveVacia.length > 0);
+ok('⛔ el mensaje es el mismo exista o no el usuario', conClaveVacia === conUsuarioInexistente, `"${conClaveVacia}" vs "${conUsuarioInexistente}"`);
 
 console.log('\nGuardia de rol — vendedor');
-await pagina.fill('#ingreso-usuario', 'vendedora');
-await pagina.fill('#ingreso-clave', 'ejemplo-vendedora');
+await pagina.fill('#ingreso-usuario', VENDEDOR);
+await pagina.fill('#ingreso-clave', claveDePrueba());
 await pagina.press('#ingreso-clave', 'Enter');
 await pagina.waitForSelector('nav.lateral', { timeout: 15_000 });
 const destinos = await pagina.locator('nav.lateral a').allInnerTexts();
@@ -121,8 +140,8 @@ console.log('\nGuardia de rol — administrador (mismo login)');
 await pagina.goto(`${BASE}/#/inicio`, { waitUntil: 'networkidle' });
 await pagina.click('button.btn-texto');
 await pagina.waitForSelector('#ingreso-usuario', { timeout: 15_000 });
-await pagina.fill('#ingreso-usuario', 'administracion');
-await pagina.fill('#ingreso-clave', 'ejemplo-administracion');
+await pagina.fill('#ingreso-usuario', ADMIN);
+await pagina.fill('#ingreso-clave', claveDePrueba());
 await pagina.press('#ingreso-clave', 'Enter');
 await pagina.waitForSelector('nav.lateral', { timeout: 15_000 });
 const destinosAdmin = await pagina.locator('nav.lateral a').allInnerTexts();
