@@ -111,33 +111,41 @@ function periodoOAnterior(periodo: PeriodoMensual, referencia: PeriodoMensual): 
 // Vendedores y administrador
 // ---------------------------------------------------------------------------
 
-const VD_MARTA: Id = 'usr-v-marta';
-const VD_DIEGO: Id = 'usr-v-diego';
-const VD_LAURA: Id = 'usr-v-laura';
-const ADMIN: Id = 'usr-admin-1';
+/**
+ * ⛔ Los vendedores de ejemplo son los REALES, los mismos que declara
+ *    datos-sesion.ts. Nada de nombres inventados: el panel de Administración
+ *    tiene que mostrar a la gente que de verdad va a usar el Escritorio.
+ *
+ * Tres de los seis tienen movimiento. Sebastián Torres y Ramón Espinola son
+ * nuevos y todavía no vendieron, que es justamente lo coherente.
+ */
+const VD_JPF: Id = 'usr-jpfdz';
+const VD_PC: Id = 'usr-pcrrs';
+const VD_NTP: Id = 'usr-ntpns';
+const ADMIN: Id = 'usr-rgrlk';
 
 let usuarios: Usuario[] = [
   {
-    id: VD_MARTA, nombre: 'Marta Rojas', email: 'mrojas@labia.example', usuario: 'mrojas',
-    rol: 'vendedor', activo: true, ultimoIngresoEn: `${HOY}T08:12:00-04:00`,
+    id: VD_JPF, nombre: 'Juan Pablo Fernandez', email: 'jpfernandez@labia.com.py', usuario: 'JPFdz',
+    rol: 'vendedor', activo: true, debeCambiarClave: true, ultimoIngresoEn: `${HOY}T08:12:00-04:00`,
     creadoEn: '2026-03-02T09:00:00-04:00', creadoPor: ADMIN,
-    actualizadoEn: `${HOY}T08:12:00-04:00`, actualizadoPor: VD_MARTA, version: 4,
+    actualizadoEn: `${HOY}T08:12:00-04:00`, actualizadoPor: VD_JPF, version: 4,
   },
   {
-    id: VD_DIEGO, nombre: 'Diego Fernández', email: 'dfernandez@labia.example', usuario: 'dfernandez',
-    rol: 'vendedor', activo: true, ultimoIngresoEn: '2026-09-12T14:40:00-04:00',
+    id: VD_PC, nombre: 'Pablo Carreras', email: 'pcarreras@labia.com.py', usuario: 'PCrrs',
+    rol: 'vendedor', activo: true, debeCambiarClave: true, ultimoIngresoEn: '2026-09-12T14:40:00-04:00',
     creadoEn: '2026-04-14T09:00:00-04:00', creadoPor: ADMIN,
-    actualizadoEn: '2026-09-12T14:40:00-04:00', actualizadoPor: VD_DIEGO, version: 3,
+    actualizadoEn: '2026-09-12T14:40:00-04:00', actualizadoPor: VD_PC, version: 3,
   },
   {
-    id: VD_LAURA, nombre: 'Laura Bogado', email: 'lbogado@labia.example', usuario: 'lbogado',
-    rol: 'vendedor', activo: true, ultimoIngresoEn: '2026-08-08T09:20:00-04:00',
+    id: VD_NTP, nombre: 'Natalia Pellens', email: 'npellens@labia.com.py', usuario: 'NTPns',
+    rol: 'vendedor', activo: true, debeCambiarClave: true, ultimoIngresoEn: '2026-08-08T09:20:00-04:00',
     creadoEn: '2026-01-20T09:00:00-04:00', creadoPor: ADMIN,
-    actualizadoEn: '2026-08-08T09:20:00-04:00', actualizadoPor: VD_LAURA, version: 2,
+    actualizadoEn: '2026-08-08T09:20:00-04:00', actualizadoPor: VD_NTP, version: 2,
   },
   {
-    id: ADMIN, nombre: 'Valeria Duarte', email: 'vduarte@labia.example', usuario: 'vduarte',
-    rol: 'administrador', activo: true, ultimoIngresoEn: `${HOY}T07:50:00-04:00`,
+    id: ADMIN, nombre: 'Rodrigo Garelik', email: 'rgarelik@labia.com.py', usuario: 'RGrlk',
+    rol: 'administrador', activo: true, debeCambiarClave: true, ultimoIngresoEn: `${HOY}T07:50:00-04:00`,
     creadoEn: '2026-01-05T09:00:00-04:00', creadoPor: ADMIN,
     actualizadoEn: `${HOY}T07:50:00-04:00`, actualizadoPor: ADMIN, version: 6,
   },
@@ -224,25 +232,25 @@ function participacionVigente(productoId: ProductoId): ParticipacionProducto {
 let mensualidades: Mensualidad[] = [
   {
     id: 'me-1', clienteId: 'cl-repuestos-anibal', nombreCliente: 'Repuestos Don Aníbal',
-    productoId: 'agendar-ia', plan: null, importe: dinero(790_000), vendedorId: VD_MARTA,
+    productoId: 'agendar-ia', plan: null, importe: dinero(790_000), vendedorId: VD_JPF,
     cotizacionId: 'cot-hist-1', altaEn: '2026-08-03', bajaEn: null, motivoBaja: null,
     estado: 'activa', diaCobro: 5, mesesAcumulados: 2, mesesDeParticipacionRestantes: null,
   },
   {
     id: 'me-2', clienteId: 'cl-clinica-san-roque', nombreCliente: 'Clínica Odontológica San Roque',
-    productoId: 'park-ia', plan: 'Control', importe: dinero(790_000), vendedorId: VD_MARTA,
+    productoId: 'park-ia', plan: 'Control', importe: dinero(790_000), vendedorId: VD_JPF,
     cotizacionId: 'cot-hist-2', altaEn: '2026-07-10', bajaEn: null, motivoBaja: null,
     estado: 'activa', diaCobro: 10, mesesAcumulados: 3, mesesDeParticipacionRestantes: null,
   },
   {
     id: 'me-3', clienteId: 'cl-ferreteria-central', nombreCliente: 'Ferretería Central',
-    productoId: 'cotiza-facil', plan: null, importe: dinero(690_000), vendedorId: VD_DIEGO,
+    productoId: 'cotiza-facil', plan: null, importe: dinero(690_000), vendedorId: VD_PC,
     cotizacionId: 'cot-hist-3', altaEn: '2026-08-20', bajaEn: null, motivoBaja: null,
     estado: 'activa', diaCobro: 20, mesesAcumulados: 1, mesesDeParticipacionRestantes: null,
   },
   {
     id: 'me-4', clienteId: 'cl-hotel-palmeras', nombreCliente: 'Hotel Las Palmeras',
-    productoId: 'ojo-digital', plan: null, importe: dinero(600_000), vendedorId: VD_DIEGO,
+    productoId: 'ojo-digital', plan: null, importe: dinero(600_000), vendedorId: VD_PC,
     cotizacionId: 'cot-hist-4', altaEn: '2025-11-15', bajaEn: null, motivoBaja: null,
     estado: 'activa', diaCobro: 15, mesesAcumulados: 10,
     // participación limitada a 12 meses: quedan 2.
@@ -250,14 +258,14 @@ let mensualidades: Mensualidad[] = [
   },
   {
     id: 'me-5', clienteId: 'cl-farmacia-bogado', nombreCliente: 'Farmacia Bogado',
-    productoId: 'merma-ia', plan: null, importe: dinero(150_000), vendedorId: VD_MARTA,
+    productoId: 'merma-ia', plan: null, importe: dinero(150_000), vendedorId: VD_JPF,
     cotizacionId: 'cot-hist-5', altaEn: '2026-04-01', bajaEn: '2026-08-31',
     motivoBaja: 'El cliente cerró la sucursal analizada.',
     estado: 'baja', diaCobro: null, mesesAcumulados: 4, mesesDeParticipacionRestantes: null,
   },
   {
     id: 'me-6', clienteId: 'cl-distribuidora-abc', nombreCliente: 'Distribuidora ABC',
-    productoId: 'precio-vivo', plan: null, importe: dinero(200_00, 'USD'), vendedorId: VD_DIEGO,
+    productoId: 'precio-vivo', plan: null, importe: dinero(200_00, 'USD'), vendedorId: VD_PC,
     cotizacionId: 'cot-hist-6', altaEn: '2026-08-05', bajaEn: null, motivoBaja: null,
     estado: 'activa', diaCobro: 5, mesesAcumulados: 2, mesesDeParticipacionRestantes: null,
   },
@@ -307,74 +315,74 @@ function nuevaLinea(datos: {
 let lineasParticipacion: LineaParticipacion[] = [
   // Repuestos Don Aníbal — setup cobrado en agosto, ya liquidado.
   nuevaLinea({
-    vendedorId: VD_MARTA, clienteId: 'cl-repuestos-anibal', nombreCliente: 'Repuestos Don Aníbal',
+    vendedorId: VD_JPF, clienteId: 'cl-repuestos-anibal', nombreCliente: 'Repuestos Don Aníbal',
     productoId: 'agendar-ia', origen: 'setup', referenciaId: 'cot-hist-1',
     base: dinero(3_000_000), periodo: PERIODO_ANTERIOR, devengadaEn: '2026-08-03T10:00:00-04:00',
     liquidacionId: 'liq-2026-08-marta',
   }),
   nuevaLinea({
-    vendedorId: VD_MARTA, clienteId: 'cl-repuestos-anibal', nombreCliente: 'Repuestos Don Aníbal',
+    vendedorId: VD_JPF, clienteId: 'cl-repuestos-anibal', nombreCliente: 'Repuestos Don Aníbal',
     productoId: 'agendar-ia', origen: 'mensualidad', referenciaId: 'me-1',
     base: dinero(790_000), periodo: PERIODO_ANTERIOR, devengadaEn: '2026-08-05T10:00:00-04:00',
     liquidacionId: 'liq-2026-08-marta',
   }),
   nuevaLinea({
-    vendedorId: VD_MARTA, clienteId: 'cl-repuestos-anibal', nombreCliente: 'Repuestos Don Aníbal',
+    vendedorId: VD_JPF, clienteId: 'cl-repuestos-anibal', nombreCliente: 'Repuestos Don Aníbal',
     productoId: 'agendar-ia', origen: 'mensualidad', referenciaId: 'me-1',
     base: dinero(790_000), periodo: PERIODO_ACTUAL, devengadaEn: '2026-09-05T10:00:00-04:00',
   }),
   // Clínica San Roque — setup y mensualidades.
   nuevaLinea({
-    vendedorId: VD_MARTA, clienteId: 'cl-clinica-san-roque', nombreCliente: 'Clínica Odontológica San Roque',
+    vendedorId: VD_JPF, clienteId: 'cl-clinica-san-roque', nombreCliente: 'Clínica Odontológica San Roque',
     productoId: 'park-ia', origen: 'setup', referenciaId: 'cot-hist-2',
     base: dinero(4_900_000), periodo: '2026-07', devengadaEn: '2026-07-10T10:00:00-04:00',
     liquidacionId: 'liq-2026-08-marta',
   }),
   nuevaLinea({
-    vendedorId: VD_MARTA, clienteId: 'cl-clinica-san-roque', nombreCliente: 'Clínica Odontológica San Roque',
+    vendedorId: VD_JPF, clienteId: 'cl-clinica-san-roque', nombreCliente: 'Clínica Odontológica San Roque',
     productoId: 'park-ia', origen: 'mensualidad', referenciaId: 'me-2',
     base: dinero(790_000), periodo: PERIODO_ANTERIOR, devengadaEn: '2026-08-10T10:00:00-04:00',
     liquidacionId: 'liq-2026-08-marta',
   }),
   nuevaLinea({
-    vendedorId: VD_MARTA, clienteId: 'cl-clinica-san-roque', nombreCliente: 'Clínica Odontológica San Roque',
+    vendedorId: VD_JPF, clienteId: 'cl-clinica-san-roque', nombreCliente: 'Clínica Odontológica San Roque',
     productoId: 'park-ia', origen: 'mensualidad', referenciaId: 'me-2',
     base: dinero(790_000), periodo: PERIODO_ACTUAL, devengadaEn: '2026-09-10T10:00:00-04:00',
   }),
   // Ferretería Central — sólo la primera mensualidad está cobrada; el setup sigue pendiente.
   nuevaLinea({
-    vendedorId: VD_DIEGO, clienteId: 'cl-ferreteria-central', nombreCliente: 'Ferretería Central',
+    vendedorId: VD_PC, clienteId: 'cl-ferreteria-central', nombreCliente: 'Ferretería Central',
     productoId: 'cotiza-facil', origen: 'mensualidad', referenciaId: 'me-3',
     base: dinero(690_000), periodo: PERIODO_ACTUAL, devengadaEn: '2026-09-20T10:00:00-04:00',
   }),
   // Hotel Las Palmeras — dentro del plazo de participación configurado (12 meses).
   nuevaLinea({
-    vendedorId: VD_DIEGO, clienteId: 'cl-hotel-palmeras', nombreCliente: 'Hotel Las Palmeras',
+    vendedorId: VD_PC, clienteId: 'cl-hotel-palmeras', nombreCliente: 'Hotel Las Palmeras',
     productoId: 'ojo-digital', origen: 'mensualidad', referenciaId: 'me-4',
     base: dinero(600_000), periodo: PERIODO_ANTERIOR, devengadaEn: '2026-08-15T10:00:00-04:00',
     liquidacionId: 'liq-2026-08-diego',
   }),
   nuevaLinea({
-    vendedorId: VD_DIEGO, clienteId: 'cl-hotel-palmeras', nombreCliente: 'Hotel Las Palmeras',
+    vendedorId: VD_PC, clienteId: 'cl-hotel-palmeras', nombreCliente: 'Hotel Las Palmeras',
     productoId: 'ojo-digital', origen: 'mensualidad', referenciaId: 'me-4',
     base: dinero(600_000), periodo: PERIODO_ACTUAL, devengadaEn: '2026-09-15T10:00:00-04:00',
   }),
   // Farmacia Bogado — histórico antes de la baja, con la participación 55/45 de Merma IA.
   nuevaLinea({
-    vendedorId: VD_MARTA, clienteId: 'cl-farmacia-bogado', nombreCliente: 'Farmacia Bogado',
+    vendedorId: VD_JPF, clienteId: 'cl-farmacia-bogado', nombreCliente: 'Farmacia Bogado',
     productoId: 'merma-ia', origen: 'mensualidad', referenciaId: 'me-5',
     base: dinero(150_000), periodo: PERIODO_ANTERIOR, devengadaEn: '2026-08-01T10:00:00-04:00',
     liquidacionId: 'liq-2026-08-marta',
   }),
   // Distribuidora ABC — en dólares. Nunca se mezcla con las líneas en guaraníes.
   nuevaLinea({
-    vendedorId: VD_DIEGO, clienteId: 'cl-distribuidora-abc', nombreCliente: 'Distribuidora ABC',
+    vendedorId: VD_PC, clienteId: 'cl-distribuidora-abc', nombreCliente: 'Distribuidora ABC',
     productoId: 'precio-vivo', origen: 'setup', referenciaId: 'cot-hist-6',
     base: dinero(50_000, 'USD'), periodo: PERIODO_ANTERIOR, devengadaEn: '2026-08-05T10:00:00-04:00',
     liquidacionId: 'liq-2026-08-diego',
   }),
   nuevaLinea({
-    vendedorId: VD_DIEGO, clienteId: 'cl-distribuidora-abc', nombreCliente: 'Distribuidora ABC',
+    vendedorId: VD_PC, clienteId: 'cl-distribuidora-abc', nombreCliente: 'Distribuidora ABC',
     productoId: 'precio-vivo', origen: 'mensualidad', referenciaId: 'me-6',
     base: dinero(20_000, 'USD'), periodo: PERIODO_ACTUAL, devengadaEn: '2026-09-05T10:00:00-04:00',
   }),
@@ -387,7 +395,7 @@ let lineasParticipacion: LineaParticipacion[] = [
 let ajustes: Ajuste[] = [
   {
     id: 'aj-1', liquidacionOrigenId: 'liq-2026-08-diego', periodoAplicacion: PERIODO_ACTUAL,
-    vendedorId: VD_DIEGO, importe: dinero(35_000), motivo:
+    vendedorId: VD_PC, importe: dinero(35_000), motivo:
       'Diferencia a favor del vendedor: la mensualidad de agosto de Hotel Las Palmeras se cobró con un ajuste de precio que la línea original no reflejaba.',
     observacionId: 'ob-1', creadoPor: ADMIN, creadoEn: '2026-09-02T11:00:00-04:00',
   },
@@ -395,13 +403,13 @@ let ajustes: Ajuste[] = [
 
 let observaciones: Observacion[] = [
   {
-    id: 'ob-1', lineaParticipacionId: 'ln-8', abiertaPor: VD_DIEGO,
+    id: 'ob-1', lineaParticipacionId: 'ln-8', abiertaPor: VD_PC,
     descripcion: 'El cobro de agosto de Hotel Las Palmeras incluyó Gs. 70.000 adicionales que la línea no reconoce.',
     estado: 'procede', resolucion: 'Confirmado con administración. Se emite el ajuste aj-1 en el período siguiente.',
     resueltaPor: ADMIN, resueltaEn: '2026-09-02T11:00:00-04:00', abiertaEn: '2026-09-01T09:30:00-04:00',
   },
   {
-    id: 'ob-2', lineaParticipacionId: 'ln-6', abiertaPor: VD_DIEGO,
+    id: 'ob-2', lineaParticipacionId: 'ln-6', abiertaPor: VD_PC,
     descripcion: 'La mensualidad de Ferretería Central figura devengada pero el cliente todavía no pagó el setup: ¿corresponde separar los dos cobros?',
     estado: 'abierta', resolucion: null, resueltaPor: null, resueltaEn: null,
     abiertaEn: '2026-09-10T16:00:00-04:00',
@@ -414,17 +422,17 @@ let observaciones: Observacion[] = [
 
 let presupuestos: Presupuesto[] = [
   {
-    id: 'pr-marta-2026-09', vendedorId: VD_MARTA, nombreVendedor: nombreVendedor(VD_MARTA),
+    id: 'pr-marta-2026-09', vendedorId: VD_JPF, nombreVendedor: nombreVendedor(VD_JPF),
     periodo: PERIODO_ACTUAL, metaVendido: dinero(15_000_000), metaCobrado: dinero(12_000_000),
     definidoPor: ADMIN, definidoEn: '2026-08-25T09:00:00-04:00', version: 1,
   },
   {
-    id: 'pr-diego-2026-09', vendedorId: VD_DIEGO, nombreVendedor: nombreVendedor(VD_DIEGO),
+    id: 'pr-diego-2026-09', vendedorId: VD_PC, nombreVendedor: nombreVendedor(VD_PC),
     periodo: PERIODO_ACTUAL, metaVendido: dinero(10_000_000), metaCobrado: null,
     definidoPor: ADMIN, definidoEn: '2026-08-25T09:00:00-04:00', version: 1,
   },
   {
-    id: 'pr-laura-2026-09', vendedorId: VD_LAURA, nombreVendedor: nombreVendedor(VD_LAURA),
+    id: 'pr-laura-2026-09', vendedorId: VD_NTP, nombreVendedor: nombreVendedor(VD_NTP),
     periodo: PERIODO_ACTUAL, metaVendido: dinero(5_000_000), metaCobrado: null,
     definidoPor: ADMIN, definidoEn: '2026-08-25T09:00:00-04:00', version: 1,
   },
@@ -437,14 +445,14 @@ let presupuestos: Presupuesto[] = [
 let lineasPorCobrar: LineaPorCobrar[] = [
   {
     id: 'pc-1', clienteId: 'cl-ferreteria-central', nombreCliente: 'Ferretería Central',
-    vendedorId: VD_DIEGO, nombreVendedor: nombreVendedor(VD_DIEGO), productoId: 'cotiza-facil',
+    vendedorId: VD_PC, nombreVendedor: nombreVendedor(VD_PC), productoId: 'cotiza-facil',
     origen: 'setup', importe: dinero(4_900_000), venceEn: '2026-09-05',
     diasDeAntiguedad: diasEntre('2026-08-20', HOY), estado: 'atrasado',
   },
 ];
 
 // ---------------------------------------------------------------------------
-// Liquidaciones — período 2026-08 cerrado para Marta y Diego
+// Liquidaciones — período 2026-08 cerrado para Juan Pablo y Pablo
 // ---------------------------------------------------------------------------
 
 function totalesLiquidacion(vendedorId: Id, periodo: PeriodoMensual): TotalesPorMoneda {
@@ -457,14 +465,14 @@ function totalesLiquidacion(vendedorId: Id, periodo: PeriodoMensual): TotalesPor
 
 let liquidaciones: Liquidacion[] = [
   {
-    id: 'liq-2026-08-marta', vendedorId: VD_MARTA, periodo: PERIODO_ANTERIOR,
-    totalesPorMoneda: totalesLiquidacion(VD_MARTA, PERIODO_ANTERIOR),
+    id: 'liq-2026-08-marta', vendedorId: VD_JPF, periodo: PERIODO_ANTERIOR,
+    totalesPorMoneda: totalesLiquidacion(VD_JPF, PERIODO_ANTERIOR),
     estado: 'cerrada', cerradaEn: '2026-09-01T10:00:00-04:00', cerradaPor: ADMIN,
     comprobanteDocumentoId: 'doc-liq-2026-08-marta',
   },
   {
-    id: 'liq-2026-08-diego', vendedorId: VD_DIEGO, periodo: PERIODO_ANTERIOR,
-    totalesPorMoneda: totalesLiquidacion(VD_DIEGO, PERIODO_ANTERIOR),
+    id: 'liq-2026-08-diego', vendedorId: VD_PC, periodo: PERIODO_ANTERIOR,
+    totalesPorMoneda: totalesLiquidacion(VD_PC, PERIODO_ANTERIOR),
     estado: 'cerrada', cerradaEn: '2026-09-01T10:00:00-04:00', cerradaPor: ADMIN,
     comprobanteDocumentoId: 'doc-liq-2026-08-diego',
   },
@@ -478,46 +486,46 @@ const ACTIVIDAD_GENERICA = 'act-generica';
 
 let clientesTodos: Cliente[] = [
   { id: 'cl-repuestos-anibal', tipo: 'empresa', nombre: 'Repuestos Don Aníbal', actividadId: ACTIVIDAD_GENERICA,
-    operacionesConfirmadas: [], vendedorId: VD_MARTA, etapa: 'cliente_activo', ciudad: 'Asunción',
+    operacionesConfirmadas: [], vendedorId: VD_JPF, etapa: 'cliente_activo', ciudad: 'Asunción',
     ultimaInteraccionEn: '2026-09-10T09:00:00-04:00', proximoPasoEn: null, motivoPerdida: null,
-    archivadoEn: null, creadoEn: '2026-07-20T09:00:00-04:00', creadoPor: VD_MARTA,
-    actualizadoEn: '2026-09-10T09:00:00-04:00', actualizadoPor: VD_MARTA, version: 5 },
+    archivadoEn: null, creadoEn: '2026-07-20T09:00:00-04:00', creadoPor: VD_JPF,
+    actualizadoEn: '2026-09-10T09:00:00-04:00', actualizadoPor: VD_JPF, version: 5 },
   { id: 'cl-clinica-san-roque', tipo: 'profesional', nombre: 'Clínica Odontológica San Roque', actividadId: ACTIVIDAD_GENERICA,
-    operacionesConfirmadas: [], vendedorId: VD_MARTA, etapa: 'cliente_activo', ciudad: 'Luque',
+    operacionesConfirmadas: [], vendedorId: VD_JPF, etapa: 'cliente_activo', ciudad: 'Luque',
     ultimaInteraccionEn: '2026-09-08T09:00:00-04:00', proximoPasoEn: null, motivoPerdida: null,
-    archivadoEn: null, creadoEn: '2026-06-25T09:00:00-04:00', creadoPor: VD_MARTA,
-    actualizadoEn: '2026-09-08T09:00:00-04:00', actualizadoPor: VD_MARTA, version: 6 },
+    archivadoEn: null, creadoEn: '2026-06-25T09:00:00-04:00', creadoPor: VD_JPF,
+    actualizadoEn: '2026-09-08T09:00:00-04:00', actualizadoPor: VD_JPF, version: 6 },
   { id: 'cl-ferreteria-central', tipo: 'empresa', nombre: 'Ferretería Central', actividadId: ACTIVIDAD_GENERICA,
-    operacionesConfirmadas: [], vendedorId: VD_DIEGO, etapa: 'cliente_activo', ciudad: 'San Lorenzo',
+    operacionesConfirmadas: [], vendedorId: VD_PC, etapa: 'cliente_activo', ciudad: 'San Lorenzo',
     ultimaInteraccionEn: '2026-09-11T09:00:00-04:00', proximoPasoEn: '2026-09-19T09:00:00-04:00', motivoPerdida: null,
-    archivadoEn: null, creadoEn: '2026-08-01T09:00:00-04:00', creadoPor: VD_DIEGO,
-    actualizadoEn: '2026-09-11T09:00:00-04:00', actualizadoPor: VD_DIEGO, version: 4 },
+    archivadoEn: null, creadoEn: '2026-08-01T09:00:00-04:00', creadoPor: VD_PC,
+    actualizadoEn: '2026-09-11T09:00:00-04:00', actualizadoPor: VD_PC, version: 4 },
   { id: 'cl-hotel-palmeras', tipo: 'empresa', nombre: 'Hotel Las Palmeras', actividadId: ACTIVIDAD_GENERICA,
-    operacionesConfirmadas: [], vendedorId: VD_DIEGO, etapa: 'cliente_activo', ciudad: 'Encarnación',
+    operacionesConfirmadas: [], vendedorId: VD_PC, etapa: 'cliente_activo', ciudad: 'Encarnación',
     ultimaInteraccionEn: '2026-09-01T09:00:00-04:00', proximoPasoEn: null, motivoPerdida: null,
-    archivadoEn: null, creadoEn: '2025-11-01T09:00:00-04:00', creadoPor: VD_DIEGO,
-    actualizadoEn: '2026-09-01T09:00:00-04:00', actualizadoPor: VD_DIEGO, version: 9 },
+    archivadoEn: null, creadoEn: '2025-11-01T09:00:00-04:00', creadoPor: VD_PC,
+    actualizadoEn: '2026-09-01T09:00:00-04:00', actualizadoPor: VD_PC, version: 9 },
   { id: 'cl-farmacia-bogado', tipo: 'empresa', nombre: 'Farmacia Bogado', actividadId: ACTIVIDAD_GENERICA,
-    operacionesConfirmadas: [], vendedorId: VD_MARTA, etapa: 'perdido', ciudad: 'Asunción',
+    operacionesConfirmadas: [], vendedorId: VD_JPF, etapa: 'perdido', ciudad: 'Asunción',
     ultimaInteraccionEn: '2026-08-31T09:00:00-04:00', proximoPasoEn: null,
     motivoPerdida: 'Cerró la sucursal donde se usaba Merma IA.', archivadoEn: null,
-    creadoEn: '2026-03-15T09:00:00-04:00', creadoPor: VD_MARTA,
-    actualizadoEn: '2026-08-31T09:00:00-04:00', actualizadoPor: VD_MARTA, version: 7 },
+    creadoEn: '2026-03-15T09:00:00-04:00', creadoPor: VD_JPF,
+    actualizadoEn: '2026-08-31T09:00:00-04:00', actualizadoPor: VD_JPF, version: 7 },
   { id: 'cl-distribuidora-abc', tipo: 'empresa', nombre: 'Distribuidora ABC', actividadId: ACTIVIDAD_GENERICA,
-    operacionesConfirmadas: [], vendedorId: VD_DIEGO, etapa: 'cliente_activo', ciudad: 'Ciudad del Este',
+    operacionesConfirmadas: [], vendedorId: VD_PC, etapa: 'cliente_activo', ciudad: 'Ciudad del Este',
     ultimaInteraccionEn: '2026-09-05T09:00:00-04:00', proximoPasoEn: null, motivoPerdida: null,
-    archivadoEn: null, creadoEn: '2026-07-28T09:00:00-04:00', creadoPor: VD_DIEGO,
-    actualizadoEn: '2026-09-05T09:00:00-04:00', actualizadoPor: VD_DIEGO, version: 3 },
+    archivadoEn: null, creadoEn: '2026-07-28T09:00:00-04:00', creadoPor: VD_PC,
+    actualizadoEn: '2026-09-05T09:00:00-04:00', actualizadoPor: VD_PC, version: 3 },
   { id: 'cl-panaderia-espiga', tipo: 'empresa', nombre: 'Panadería La Espiga', actividadId: ACTIVIDAD_GENERICA,
-    operacionesConfirmadas: [], vendedorId: VD_DIEGO, etapa: 'cotizacion', ciudad: 'Fernando de la Mora',
+    operacionesConfirmadas: [], vendedorId: VD_PC, etapa: 'cotizacion', ciudad: 'Fernando de la Mora',
     ultimaInteraccionEn: '2026-09-13T09:00:00-04:00', proximoPasoEn: '2026-09-18T09:00:00-04:00', motivoPerdida: null,
-    archivadoEn: null, creadoEn: '2026-09-01T09:00:00-04:00', creadoPor: VD_DIEGO,
-    actualizadoEn: '2026-09-13T09:00:00-04:00', actualizadoPor: VD_DIEGO, version: 3 },
+    archivadoEn: null, creadoEn: '2026-09-01T09:00:00-04:00', creadoPor: VD_PC,
+    actualizadoEn: '2026-09-13T09:00:00-04:00', actualizadoPor: VD_PC, version: 3 },
   { id: 'cl-veterinaria-san-francisco', tipo: 'empresa', nombre: 'Veterinaria San Francisco', actividadId: ACTIVIDAD_GENERICA,
-    operacionesConfirmadas: [], vendedorId: VD_MARTA, etapa: 'cotizacion', ciudad: 'Lambaré',
+    operacionesConfirmadas: [], vendedorId: VD_JPF, etapa: 'cotizacion', ciudad: 'Lambaré',
     ultimaInteraccionEn: '2026-09-14T09:00:00-04:00', proximoPasoEn: '2026-09-20T09:00:00-04:00', motivoPerdida: null,
-    archivadoEn: null, creadoEn: '2026-08-22T09:00:00-04:00', creadoPor: VD_MARTA,
-    actualizadoEn: '2026-09-14T09:00:00-04:00', actualizadoPor: VD_MARTA, version: 4 },
+    archivadoEn: null, creadoEn: '2026-08-22T09:00:00-04:00', creadoPor: VD_JPF,
+    actualizadoEn: '2026-09-14T09:00:00-04:00', actualizadoPor: VD_JPF, version: 4 },
 ];
 
 let lineasDeTiempo: Record<Id, EventoLineaTiempo[]> = {
@@ -570,7 +578,7 @@ let cotizacionesEnCola: CotizacionDetalle[] = [
       nombreEmpresaOProfesional: 'Panadería La Espiga', profesion: null, ruc: null, ciudad: 'Fernando de la Mora',
     },
     objeto: { productoId: 'agendar-ia', nombreProducto: NOMBRE_PRODUCTO['agendar-ia'], variante: null },
-    vendedorId: VD_DIEGO, nombreVendedor: nombreVendedor(VD_DIEGO),
+    vendedorId: VD_PC, nombreVendedor: nombreVendedor(VD_PC),
     fechaEmision: '2026-09-13', fechaValidez: '2026-09-27',
     precios: {
       setupLista: dinero(3_000_000), setupEspecial: dinero(2_700_000), ahorroSetup: dinero(300_000), ahorroSetupPorcentaje: 10,
@@ -599,26 +607,26 @@ let cotizacionesEnCola: CotizacionDetalle[] = [
     logos: { labIa: 'labia', rgrlkGroup: 'rgrlk-group', producto: 'agendar-ia', variante: null },
     totalesPorMoneda: agrupar([dinero(2_700_000), dinero(750_000)]),
     presentacionId: 'pre-1', versionCatalogo: 1, motivoPerdida: null,
-    creadoEn: '2026-09-13T09:00:00-04:00', creadoPor: VD_DIEGO,
-    actualizadoEn: '2026-09-13T09:00:00-04:00', actualizadoPor: VD_DIEGO,
+    creadoEn: '2026-09-13T09:00:00-04:00', creadoPor: VD_PC,
+    actualizadoEn: '2026-09-13T09:00:00-04:00', actualizadoPor: VD_PC,
     revision: {
-      id: 'rev-1', cotizacionId: 'cot-rev-1', version: 1, vendedorId: VD_DIEGO, revisorId: null,
+      id: 'rev-1', cotizacionId: 'cot-rev-1', version: 1, vendedorId: VD_PC, revisorId: null,
       estado: 'pendiente', creadoEn: '2026-09-13T09:05:00-04:00', resueltoEn: null,
       eventos: [
-        { id: 'evr-1', cotizacionId: 'cot-rev-1', version: 1, actorId: VD_DIEGO, accion: 'enviar',
+        { id: 'evr-1', cotizacionId: 'cot-rev-1', version: 1, actorId: VD_PC, accion: 'enviar',
           comentario: 'Primera cotización para Panadería La Espiga.', ocurridoEn: '2026-09-13T09:05:00-04:00' },
       ],
       calculosRecalculados: false, alternativasAprobadas: [],
     },
     versiones: [
-      { version: 1, estado: 'en_revision', creadaEn: '2026-09-13T09:00:00-04:00', creadaPor: VD_DIEGO,
+      { version: 1, estado: 'en_revision', creadaEn: '2026-09-13T09:00:00-04:00', creadaPor: VD_PC,
         totalesPorMoneda: agrupar([dinero(2_700_000), dinero(750_000)]), motivoCambio: null },
     ],
     documentos: [], enlaces: [],
     comparacion: comparacion('agendar-ia', dinero(2_700_000), dinero(750_000)),
     firmas: [
-      { id: 'firma-1', rol: 'vendedor', firmanteId: VD_DIEGO, nombreFirmante: nombreVendedor(VD_DIEGO),
-        aclaracion: `${nombreVendedor(VD_DIEGO)} — Vendedor`, referenciaProtegida: 'firma-protegida-diego-1',
+      { id: 'firma-1', rol: 'vendedor', firmanteId: VD_PC, nombreFirmante: nombreVendedor(VD_PC),
+        aclaracion: `${nombreVendedor(VD_PC)} — Vendedor`, referenciaProtegida: 'firma-protegida-diego-1',
         firmadoEn: '2026-09-13T09:04:00-04:00', versionFirmada: 1, anulada: false, anuladaEn: null, motivoAnulacion: null },
     ],
     avisos: [],
@@ -630,7 +638,7 @@ let cotizacionesEnCola: CotizacionDetalle[] = [
       nombreEmpresaOProfesional: 'Veterinaria San Francisco', profesion: null, ruc: null, ciudad: 'Lambaré',
     },
     objeto: { productoId: 'park-ia', nombreProducto: NOMBRE_PRODUCTO['park-ia'], variante: 'Base' },
-    vendedorId: VD_MARTA, nombreVendedor: nombreVendedor(VD_MARTA),
+    vendedorId: VD_JPF, nombreVendedor: nombreVendedor(VD_JPF),
     fechaEmision: '2026-09-14', fechaValidez: '2026-09-28',
     precios: {
       setupLista: dinero(2_900_000), setupEspecial: dinero(2_900_000), ahorroSetup: dinero(0), ahorroSetupPorcentaje: 0,
@@ -659,32 +667,32 @@ let cotizacionesEnCola: CotizacionDetalle[] = [
     logos: { labIa: 'labia', rgrlkGroup: 'rgrlk-group', producto: 'park-ia', variante: null },
     totalesPorMoneda: agrupar([dinero(2_900_000), dinero(450_000)]),
     presentacionId: 'pre-2', versionCatalogo: 1, motivoPerdida: null,
-    creadoEn: '2026-09-08T09:00:00-04:00', creadoPor: VD_MARTA,
-    actualizadoEn: '2026-09-14T09:00:00-04:00', actualizadoPor: VD_MARTA,
+    creadoEn: '2026-09-08T09:00:00-04:00', creadoPor: VD_JPF,
+    actualizadoEn: '2026-09-14T09:00:00-04:00', actualizadoPor: VD_JPF,
     revision: {
-      id: 'rev-2', cotizacionId: 'cot-rev-2', version: 2, vendedorId: VD_MARTA, revisorId: null,
+      id: 'rev-2', cotizacionId: 'cot-rev-2', version: 2, vendedorId: VD_JPF, revisorId: null,
       estado: 'pendiente', creadoEn: '2026-09-14T09:10:00-04:00', resueltoEn: null,
       eventos: [
-        { id: 'evr-2', cotizacionId: 'cot-rev-2', version: 1, actorId: VD_MARTA, accion: 'enviar',
+        { id: 'evr-2', cotizacionId: 'cot-rev-2', version: 1, actorId: VD_JPF, accion: 'enviar',
           comentario: 'Primer envío.', ocurridoEn: '2026-09-08T09:00:00-04:00' },
         { id: 'evr-3', cotizacionId: 'cot-rev-2', version: 1, actorId: ADMIN, accion: 'corregir',
           comentario: 'Falta especificar quién aporta la conexión a internet para la instalación.', ocurridoEn: '2026-09-10T09:00:00-04:00' },
-        { id: 'evr-4', cotizacionId: 'cot-rev-2', version: 2, actorId: VD_MARTA, accion: 'enviar',
+        { id: 'evr-4', cotizacionId: 'cot-rev-2', version: 2, actorId: VD_JPF, accion: 'enviar',
           comentario: 'Corregido: se agregó el aporte de conexión cableada.', ocurridoEn: '2026-09-14T09:10:00-04:00' },
       ],
       calculosRecalculados: false, alternativasAprobadas: [],
     },
     versiones: [
-      { version: 1, estado: 'corregida', creadaEn: '2026-09-08T09:00:00-04:00', creadaPor: VD_MARTA,
+      { version: 1, estado: 'corregida', creadaEn: '2026-09-08T09:00:00-04:00', creadaPor: VD_JPF,
         totalesPorMoneda: agrupar([dinero(2_900_000), dinero(450_000)]), motivoCambio: null },
-      { version: 2, estado: 'en_revision', creadaEn: '2026-09-14T09:10:00-04:00', creadaPor: VD_MARTA,
+      { version: 2, estado: 'en_revision', creadaEn: '2026-09-14T09:10:00-04:00', creadaPor: VD_JPF,
         totalesPorMoneda: agrupar([dinero(2_900_000), dinero(450_000)]), motivoCambio: 'Se agregó el aporte de conexión cableada.' },
     ],
     documentos: [], enlaces: [],
     comparacion: comparacion('park-ia', dinero(2_900_000), dinero(450_000)),
     firmas: [
-      { id: 'firma-2', rol: 'vendedor', firmanteId: VD_MARTA, nombreFirmante: nombreVendedor(VD_MARTA),
-        aclaracion: `${nombreVendedor(VD_MARTA)} — Vendedora`, referenciaProtegida: 'firma-protegida-marta-2',
+      { id: 'firma-2', rol: 'vendedor', firmanteId: VD_JPF, nombreFirmante: nombreVendedor(VD_JPF),
+        aclaracion: `${nombreVendedor(VD_JPF)} — Vendedora`, referenciaProtegida: 'firma-protegida-marta-2',
         firmadoEn: '2026-09-14T09:09:00-04:00', versionFirmada: 2, anulada: false, anuladaEn: null, motivoAnulacion: null },
     ],
     avisos: [],
@@ -736,9 +744,9 @@ let notificacionesPorConstancia: Record<Id, ResultadoNotificaciones> = {
 
 let actividadesPendientes: Actividad[] = [
   { id: 'act-criadero-pollos', nombre: 'Criadero de pollos', sinonimos: ['avícola'],
-    estado: 'pendiente_de_revision', creadaPor: VD_DIEGO, creadaEn: '2026-09-09T10:00:00-04:00', fusionadaEn: null },
+    estado: 'pendiente_de_revision', creadaPor: VD_PC, creadaEn: '2026-09-09T10:00:00-04:00', fusionadaEn: null },
   { id: 'act-gomeria-movil', nombre: 'Gomería móvil', sinonimos: [],
-    estado: 'pendiente_de_revision', creadaPor: VD_MARTA, creadaEn: '2026-09-11T10:00:00-04:00', fusionadaEn: null },
+    estado: 'pendiente_de_revision', creadaPor: VD_JPF, creadaEn: '2026-09-11T10:00:00-04:00', fusionadaEn: null },
 ];
 
 // ---------------------------------------------------------------------------
@@ -750,21 +758,21 @@ let sugerencias: SugerenciaProducto[] = [
     id: 'sg-1', titulo: 'Control de stock para taller mecánico', problemaCliente: 'No sabe qué repuestos tiene en el depósito hasta que los busca.',
     clienteId: 'cl-repuestos-anibal', actividadId: ACTIVIDAD_GENERICA, frecuenciaObservada: 'ocasional',
     productosQueNoAlcanzan: ['radar-stock'], porQueNoAlcanzan: 'Radar Stock está pensado para comercio minorista, no para repuestos por número de pieza.',
-    adjuntos: [], creadaPor: VD_MARTA, creadaEn: '2026-08-28T10:00:00-04:00',
+    adjuntos: [], creadaPor: VD_JPF, creadaEn: '2026-08-28T10:00:00-04:00',
     estado: 'en_evaluacion', resolucion: null, productoQueLoCubre: null, duplicadaDe: null, resueltaPor: null, resueltaEn: null,
   },
   {
     id: 'sg-2', titulo: 'Recordatorios de vacunación para veterinarias', problemaCliente: 'Se olvida de avisarle al dueño de la mascota cuándo toca la próxima vacuna.',
     clienteId: 'cl-veterinaria-san-francisco', actividadId: ACTIVIDAD_GENERICA, frecuenciaObservada: 'frecuente',
     productosQueNoAlcanzan: ['vendedor-24-7'], porQueNoAlcanzan: 'Vendedor 24/7 atiende consultas pero no programa recordatorios periódicos.',
-    adjuntos: [], creadaPor: VD_MARTA, creadaEn: '2026-09-01T10:00:00-04:00',
+    adjuntos: [], creadaPor: VD_JPF, creadaEn: '2026-09-01T10:00:00-04:00',
     estado: 'recibida', resolucion: null, productoQueLoCubre: null, duplicadaDe: null, resueltaPor: null, resueltaEn: null,
   },
   {
     id: 'sg-3', titulo: 'Agenda de turnos para peluquería', problemaCliente: 'Quiere que los clientes reserven turno solos.',
     clienteId: null, actividadId: ACTIVIDAD_GENERICA, frecuenciaObservada: 'unica',
     productosQueNoAlcanzan: [], porQueNoAlcanzan: 'El vendedor no revisó Agendar.IA antes de sugerir.',
-    adjuntos: [], creadaPor: VD_DIEGO, creadaEn: '2026-08-15T10:00:00-04:00',
+    adjuntos: [], creadaPor: VD_PC, creadaEn: '2026-08-15T10:00:00-04:00',
     estado: 'ya_cubierta_por_producto_existente',
     resolucion: 'Agendar.IA ya resuelve reservas de turno con recordatorios automáticos.',
     productoQueLoCubre: 'agendar-ia', duplicadaDe: null, resueltaPor: ADMIN, resueltaEn: '2026-08-16T10:00:00-04:00',
@@ -779,17 +787,17 @@ let usoPorVendedor: Array<{
   readonly vendedorId: Id; readonly ultimoIngresoEn: ISODate | null; readonly ingresosEnPeriodo: number;
   readonly planesCreados: number; readonly seguimientosRegistrados: number; readonly cotizacionesEnviadas: number;
 }> = [
-  { vendedorId: VD_MARTA, ultimoIngresoEn: `${HOY}T08:12:00-04:00`, ingresosEnPeriodo: 22, planesCreados: 6, seguimientosRegistrados: 14, cotizacionesEnviadas: 3 },
-  { vendedorId: VD_DIEGO, ultimoIngresoEn: '2026-09-12T14:40:00-04:00', ingresosEnPeriodo: 9, planesCreados: 3, seguimientosRegistrados: 7, cotizacionesEnviadas: 2 },
-  { vendedorId: VD_LAURA, ultimoIngresoEn: '2026-08-08T09:20:00-04:00', ingresosEnPeriodo: 1, planesCreados: 0, seguimientosRegistrados: 1, cotizacionesEnviadas: 0 },
+  { vendedorId: VD_JPF, ultimoIngresoEn: `${HOY}T08:12:00-04:00`, ingresosEnPeriodo: 22, planesCreados: 6, seguimientosRegistrados: 14, cotizacionesEnviadas: 3 },
+  { vendedorId: VD_PC, ultimoIngresoEn: '2026-09-12T14:40:00-04:00', ingresosEnPeriodo: 9, planesCreados: 3, seguimientosRegistrados: 7, cotizacionesEnviadas: 2 },
+  { vendedorId: VD_NTP, ultimoIngresoEn: '2026-08-08T09:20:00-04:00', ingresosEnPeriodo: 1, planesCreados: 0, seguimientosRegistrados: 1, cotizacionesEnviadas: 0 },
 ];
 
 let registroAcceso: RegistroAcceso[] = [
-  { id: 'ra-1', actorId: VD_MARTA, nombreActor: nombreVendedor(VD_MARTA), rol: 'vendedor', accion: 'ingreso',
-    entidadTipo: 'usuario', entidadId: VD_MARTA, valorAnterior: null, valorPosterior: null,
+  { id: 'ra-1', actorId: VD_JPF, nombreActor: nombreVendedor(VD_JPF), rol: 'vendedor', accion: 'ingreso',
+    entidadTipo: 'usuario', entidadId: VD_JPF, valorAnterior: null, valorPosterior: null,
     ocurridoEn: `${HOY}T08:12:00-04:00`, origenSesion: { tipoDispositivo: 'escritorio', paisAproximado: 'Paraguay' } },
-  { id: 'ra-2', actorId: VD_DIEGO, nombreActor: nombreVendedor(VD_DIEGO), rol: 'vendedor', accion: 'ingreso',
-    entidadTipo: 'usuario', entidadId: VD_DIEGO, valorAnterior: null, valorPosterior: null,
+  { id: 'ra-2', actorId: VD_PC, nombreActor: nombreVendedor(VD_PC), rol: 'vendedor', accion: 'ingreso',
+    entidadTipo: 'usuario', entidadId: VD_PC, valorAnterior: null, valorPosterior: null,
     ocurridoEn: '2026-09-12T14:40:00-04:00', origenSesion: { tipoDispositivo: 'celular', paisAproximado: 'Paraguay' } },
   { id: 'ra-3', actorId: 'desconocido', nombreActor: 'Intento no identificado', rol: 'vendedor', accion: 'intento_fallido',
     entidadTipo: 'usuario', entidadId: null, valorAnterior: null, valorPosterior: null,
@@ -922,7 +930,7 @@ function conIdempotencia<T>(clave: ClaveIdempotencia, crear: () => T): T {
  */
 export function crearCapaFinanzas(
   config: ConfiguracionMock = CONFIGURACION_POR_DEFECTO,
-  actorId: Id = config.rol === 'administrador' ? ADMIN : VD_MARTA,
+  actorId: Id = config.rol === 'administrador' ? ADMIN : VD_JPF,
 ): CapaDinero & CapaAdministracion {
   const exigirAdministrador = (): Resultado<void> => {
     if (config.rol !== 'administrador') return sinPermiso('Esta sección es sólo para administradores.') as Resultado<void>;
@@ -1388,7 +1396,8 @@ export function crearCapaFinanzas(
       }
       const nuevo = conIdempotencia(clave, (): Usuario => ({
         id: id('usr'), nombre: datos.nombre, email: datos.email, usuario: datos.usuario, rol: datos.rol,
-        activo: true, ultimoIngresoEn: null, creadoEn: `${HOY}T12:00:00-04:00`, creadoPor: actorId,
+        activo: true, debeCambiarClave: true, ultimoIngresoEn: null,
+        creadoEn: `${HOY}T12:00:00-04:00`, creadoPor: actorId,
         actualizadoEn: `${HOY}T12:00:00-04:00`, actualizadoPor: actorId, version: 1,
       }));
       if (!usuarios.some((u) => u.id === nuevo.id)) usuarios = [...usuarios, nuevo];

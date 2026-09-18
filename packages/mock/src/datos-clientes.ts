@@ -45,7 +45,7 @@ import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
 // Actor de ejemplo — la vendedora real de Sesión 1 (datos-sesion.ts).
 // ---------------------------------------------------------------------------
 
-const VENDEDOR_DEMO: Id = CUENTAS_DE_EJEMPLO.find((c) => c.usuario.rol === 'vendedor')?.usuario.id ?? 'usr-vendedora';
+const VENDEDOR_DEMO: Id = CUENTAS_DE_EJEMPLO.find((c) => c.rol === 'vendedor')?.id ?? 'usr-jpfdz';
 const RETENCION_AUDIO_DIAS = 90;
 
 /**

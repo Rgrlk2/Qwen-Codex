@@ -38,7 +38,7 @@ import type { NucleoMock } from './nucleo';
 import { AHORA, CLIENTES_REFERENCIA } from './datos-clientes';
 import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
 
-const VENDEDOR_DEMO: Id = CUENTAS_DE_EJEMPLO.find((c) => c.usuario.rol === 'vendedor')?.usuario.id ?? 'usr-vendedora';
+const VENDEDOR_DEMO: Id = CUENTAS_DE_EJEMPLO.find((c) => c.rol === 'vendedor')?.id ?? 'usr-jpfdz';
 
 function ahora(): ISODate {
   return AHORA;
