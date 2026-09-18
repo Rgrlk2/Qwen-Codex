@@ -451,8 +451,17 @@ for (const archivo of [...archivos(join(RAIZ, 'scripts')), ...archivos(join(RAIZ
   }
 }
 
-/** Asignaciones tipo `clave = "..."` / `password: "..."` / `.fill('#...clave', '...')`. */
-const CLAVE_LITERAL = /(?:clave|contrase[nñ]a|password|pwd)\s*[:=]\s*(['"`])(?!\s*\1)(?:(?!\1).){3,}\1/i;
+/**
+ * Asignaciones tipo `password: "..."` / `claveInicial = "..."`.
+ *
+ * ⛔ OJO con la palabra "clave" a secas: en castellano tambien significa clave
+ *    de busqueda, y el repositorio la usa asi de forma legitima —la `clave` de
+ *    un mapa, `ClaveIdempotencia`—. Buscarla suelta marcaba codigo correcto
+ *    (`clave: 'dineroVendido'`), asi que solo se marca cuando viene calificada
+ *    como contrasena. El campo `clave` de una cuenta lo cubre el control
+ *    especifico de datos-sesion.ts, mas arriba.
+ */
+const CLAVE_LITERAL = /(?:contrase[nñ]a|password|passwd|pwd|clave(?:Inicial|Actual|Nueva|Temporal|Secreta|Maestra|DeAcceso|PorDefecto))\s*[:=]\s*(['"`])(?!\s*\1)(?:(?!\1).){3,}\1/i;
 for (const ambito of ['apps', 'packages', 'scripts']) {
   for (const archivo of archivos(join(RAIZ, ambito))) {
     if (archivo.endsWith('.md')) continue;
