@@ -1,0 +1,308 @@
+/*
+ * Vista Clientes — estilos.
+ *
+ * ⛔ DUEÑO: Sesión 4.
+ * ⛔ Sólo tokens de packages/ui/src/tokens.css. Ningún color, fuente ni curva
+ *    literal (DESIGN_SYSTEM.md §2.2 CO1, QA_CHECKLIST.md §7.2.8).
+ *
+ * packages/ui/src/base.css todavía no define los componentes compartidos del
+ * §5 de DESIGN_SYSTEM.md (docs/PEDIDOS.md [S4] 2026-09-15), así que esta hoja
+ * cubre acá los que la vista necesita, con los mismos nombres de clase que
+ * documenta el sistema de diseño para integrar sin retrabajo.
+ */
+
+.vista-clientes {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem clamp(1rem, 4vw, 2rem);
+  max-width: var(--ancho-contenido, 1240px);
+  margin-inline: auto;
+  color: var(--texto);
+  font-family: var(--fuente);
+}
+
+.vista-clientes * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.vista-clientes h1 {
+  font-size: clamp(28px, 3.5vw, 44px);
+  font-weight: 600;
+  margin: 0;
+}
+
+.vista-clientes .chip-ejemplo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--azul-texto);
+  background: var(--azul-suave);
+  border: 1px solid var(--linea-acento);
+  border-radius: 999px;
+  padding: 0.35em 0.9em;
+  width: fit-content;
+}
+
+.saltar {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+.saltar:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+  background: var(--bg-2);
+  color: var(--texto);
+  padding: 0.6em 1em;
+  border-radius: 8px;
+  outline: 2px solid var(--cian);
+  outline-offset: 3px;
+}
+
+/* --- Tarjeta --- */
+.tarjeta {
+  background: var(--glass);
+  border: 1px solid var(--linea);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+/* --- Botones --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  min-height: 48px;
+  min-width: 44px;
+  padding: 0.6em 1.2em;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--azul);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn-borde {
+  background: transparent;
+  border-color: var(--linea-2);
+  color: var(--texto);
+}
+.btn-texto {
+  background: transparent;
+  color: var(--azul-texto);
+  min-width: auto;
+  padding: 0.4em 0.6em;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:focus-visible, .btn-borde:focus-visible, .btn-texto:focus-visible,
+.chip:focus-visible, .pestana:focus-visible, .entrada:focus-visible,
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--cian);
+  outline-offset: 3px;
+}
+
+/* --- Campos --- */
+.campo { display: flex; flex-direction: column; gap: 0.4em; }
+.campo label { font-size: 14px; color: var(--texto-2); }
+.entrada, .vista-clientes textarea, .vista-clientes select {
+  min-height: 48px;
+  border-radius: 10px;
+  border: 1px solid var(--linea-2);
+  background: var(--superficie);
+  color: var(--texto);
+  padding: 0.6em 0.8em;
+  font: inherit;
+}
+.vista-clientes textarea { min-height: 96px; resize: vertical; }
+
+/* --- Chips --- */
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip {
+  min-height: 44px;
+  padding: 0.4em 1em;
+  border-radius: 999px;
+  border: 1px solid var(--linea-2);
+  background: transparent;
+  color: var(--texto-2);
+  font: inherit;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] {
+  border-color: var(--cian);
+  color: var(--cian);
+  background: var(--cian-suave);
+}
+
+/* --- Pestañas --- */
+.pestanas { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--linea); flex-wrap: wrap; }
+.pestana {
+  min-height: 44px;
+  padding: 0.6em 1em;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--texto-2);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pestana[aria-selected="true"] { color: var(--texto); border-bottom-color: var(--cian); }
+
+/* --- Lista --- */
+.lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.lista-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--linea);
+  background: var(--superficie);
+}
+.lista-item__cabecera { display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.lista-item__titulo { font-weight: 600; }
+.lista-item__meta { color: var(--texto-2); font-size: 14px; }
+
+/* --- Estado (etapa) --- */
+.etapa {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--linea-2);
+  color: var(--texto-2);
+  width: fit-content;
+}
+.etapa--ganado, .etapa--cliente_activo { color: var(--cian); border-color: var(--linea-acento); }
+.etapa--perdido { color: var(--peligro); border-color: var(--peligro-suave); }
+
+/* --- Tabla --- */
+.tabla-contenedor { overflow-x: auto; border-radius: 12px; border: 1px solid var(--linea); }
+.tabla { border-collapse: collapse; width: 100%; min-width: 640px; }
+.tabla th, .tabla td { text-align: left; padding: 0.75em 1em; border-bottom: 1px solid var(--linea); white-space: nowrap; }
+.tabla td.tabla__importe { font-variant-numeric: tabular-nums; }
+
+/* --- Cargando / esqueleto --- */
+.cargando { display: flex; flex-direction: column; gap: 0.75rem; }
+.hueso {
+  height: 64px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--superficie) 25%, var(--superficie-2) 50%, var(--superficie) 75%);
+  background-size: 200% 100%;
+  animation: vista-clientes-brillo 1.4s ease-in-out infinite;
+}
+@keyframes vista-clientes-brillo {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* --- Vacío / error / aviso --- */
+.vacio, .error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px dashed var(--linea-2);
+  color: var(--texto-2);
+}
+.error { border-color: var(--peligro-suave); color: var(--texto); }
+.aviso {
+  padding: 0.75em 1em;
+  border-radius: 10px;
+  background: var(--cian-suave);
+  border: 1px solid var(--linea-acento);
+  color: var(--texto);
+}
+.aviso--peligro { background: var(--peligro-suave); border-color: var(--peligro); }
+
+/* --- Dato investigado / confianza (reutilizado para clasificar menciones) --- */
+.dato { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
+.dato--verificado { color: var(--cian); }
+.dato--inferido { color: var(--azul-texto); }
+.dato--no-encontrado { color: var(--mudo); }
+
+/* --- Rejilla de cartera --- */
+.clientes-rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 1rem;
+}
+
+.clientes-fila {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+/* --- Ficha --- */
+.clientes-ficha { display: flex; flex-direction: column; gap: 1.5rem; }
+.clientes-ficha__cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.clientes-ficha__grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.clientes-ficha__dl { display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 1rem; margin: 0; }
+.clientes-ficha__dl dt { color: var(--texto-2); }
+.clientes-ficha__dl dd { margin: 0; overflow-wrap: anywhere; }
+
+/* --- Captura de seguimiento --- */
+.clientes-captura { display: flex; flex-direction: column; gap: 1rem; }
+.clientes-captura__grabando {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-weight: 600;
+  color: var(--peligro);
+}
+.clientes-captura__punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--peligro);
+  flex: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .clientes-captura__punto { animation: vista-clientes-pulso 1.2s ease-in-out infinite; }
+}
+@keyframes vista-clientes-pulso {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.clientes-propuesta { display: flex; flex-direction: column; gap: 1rem; }
+.clientes-propuesta__paso { display: flex; align-items: flex-start; gap: 0.6rem; }
+.clientes-propuesta__paso input[type="checkbox"] { width: 20px; height: 20px; flex: none; margin-top: 0.2em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vista-clientes *, .vista-clientes *::before, .vista-clientes *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .clientes-ficha__cabecera { flex-direction: column; }
+  .lista-item__cabecera { flex-direction: column; }
+}
