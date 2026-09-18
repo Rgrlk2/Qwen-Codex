@@ -499,7 +499,7 @@ for (const ambito of ['apps', 'packages', 'scripts']) {
  * rechaza. Es el mismo trato que el logo de Park.IA.
  */
 const DIR_FICHAS = join(RAIZ, 'apps/escritorio/public/fichas');
-const FICHAS_ESPERADAS = [...PRODUCTOS.map((p) => `${p}.html`), 'indice-soluciones.html'];
+const FICHAS_ESPERADAS = PRODUCTOS.map((p) => `${p}.html`);
 if (!existsSync(DIR_FICHAS)) {
   fallos.push('Falta apps/escritorio/public/fichas/: son las trece fichas oficiales y el indice.');
 } else {

@@ -14,7 +14,6 @@ encima**: decide qué bloques se ven, en qué orden y cuál se destaca, y agrega
 |---|---|
 | `ojo-digital.html` · `pulso-digital.html` · `vendedor-24-7.html` · `radar-stock.html` · `faro-digital.html` · `merma-ia.html` · `cotiza-facil.html` · `precio-vivo.html` · `ruta-ia.html` | Las nueve específicas |
 | `park-ia.html` · `smart-commerce.html` · `agendar-ia.html` · `exeq-ia.html` | Las cuatro integrales |
-| `indice-soluciones.html` | El índice del portafolio |
 
 Origen: entregadas por el CEO el 18/09/2026. `fichas.sha256` guarda la huella
 de cada una: si alguna cambia, la verificación lo detecta.
@@ -62,14 +61,17 @@ Decisión del CEO, 18/09/2026: **valen los cuadrados, no los alargados.**
 | `assets/marca/logo-rgrlk-group-cuadrado.webp` | RGrlk Group 420×420 con la bajada *"Strategic Leadership"*. **El que usan las fichas.** |
 | `assets/marca/logo-rgrlk-group.webp` | Versión alargada. ⛔ Descartada por decisión del CEO. |
 
-### Lo que falta, y es tuyo
+### Todas en HTML plano
 
-Dos archivos siguen pesados, y **no se arreglan desde acá**:
+Las trece pesan entre **17 y 29 KB**. Agendar.IA venía como un paquete que se
+armaba con JavaScript —2,1 MB, y un buscador la veía en blanco—. El CEO la
+reexportó el 18/09/2026: quedó en 29 KB, y sus tres imágenes resultaron ser las
+mismas que ya usaban las otras doce.
 
-| Archivo | Peso | Problema |
-|---|---|---|
-| `agendar-ia.html` | 2,1 MB | ⛔ **No es una página: es un paquete que se arma con JavaScript.** Un buscador la ve en blanco. Es la única de las trece en ese formato. |
-| `indice-soluciones.html` | 8,4 MB | 8,4 MB de JavaScript incrustado. |
+### El índice del portafolio no vive acá
 
-Los dos hay que **reexportarlos en HTML plano**, como las otras doce.
+⛔ El índice "Soluciones Lab.IA" lo **genera el sistema** desde el catálogo de
+los trece productos —ver `IndicePortafolio` en `fichas.ts`—. No se guarda una
+copia estática: quedaría vieja el día que cambie un producto.
 
+Ver `packages/compartido/src/fichas.ts` y `docs/MASTER_SPEC.md` §2.3.

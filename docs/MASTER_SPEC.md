@@ -294,8 +294,9 @@ navegación usa la misma taxonomía del motor, y muestra **sólo `directo` y
 
 #### Los archivos
 
-Las trece fichas oficiales y el índice viven en
-`apps/escritorio/public/fichas/`, con la huella de cada una en `fichas.sha256`.
+Las trece fichas oficiales viven en `apps/escritorio/public/fichas/`, con la
+huella de cada una en `fichas.sha256`. ⛔ El índice **no** se guarda: lo genera
+el sistema desde el catálogo, así no queda viejo cuando cambie un producto.
 Origen y detalle: el `LEEME.md` de esa carpeta.
 
 ---
