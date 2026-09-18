@@ -56,6 +56,11 @@ import type {
 import type { AlternativaCalculada, BaseCalculo, CodigoAlternativa } from './alternativas';
 
 import type {
+  AvisoCopyDesactualizado, EntradaPorNecesidad, FichaOficial, FichaPersonalizada,
+  FichaPublica, IndicePortafolio, NuevaFichaPersonalizada, OpcionesEnlaceFicha,
+} from './fichas';
+
+import type {
   ConstanciaRespuesta, CotizacionPublica, Firma, ResultadoNotificaciones,
   RespuestaDelCliente, RolFirmante,
 } from './aceptacion';
@@ -235,6 +240,50 @@ export interface CapaAgenda {
   ajustarEntrada(ajuste: AjusteEntrada): R<EntradaAgenda>;
   completarEntrada(entradaId: Id, clave: ClaveIdempotencia): R<EntradaAgenda>;
   descartarEntrada(entradaId: Id, motivo: string): R<EntradaAgenda>;
+}
+
+// ===========================================================================
+// Fichas de producto — el eslabon entre el motor y la propuesta
+// ===========================================================================
+
+/**
+ * ⛔ Metodos que deliberadamente NO EXISTEN, y no deben agregarse:
+ *
+ *   editarBloqueFicha, reescribirFicha, guardarCopyDeFicha
+ *       → la ficha oficial es fuente maestra. La personalizacion es una capa
+ *         encima y sólo decide presentacion: visible, orden, destacado.
+ *         No hay por donde escribir el contenido de un bloque.
+ *
+ * La regla no se defiende con una validacion: se defiende porque el metodo
+ * no existe y `PersonalizacionBloque` no tiene campo de texto.
+ */
+export interface CapaFichas {
+  /** La ficha oficial, servida desde el copy congelado. ⛔ Sólo lectura. */
+  obtenerFichaOficial(productoId: ProductoId): R<FichaOficial>;
+  /** El indice "Soluciones Lab.IA": nueve especificas y cuatro integrales. */
+  indicePortafolio(): R<IndicePortafolio>;
+  /** Entrada por dolor, no por nombre de producto. ⛔ Sólo `directo` y `cercano`. */
+  fichasPorNecesidad(necesidadId: Id): R<EntradaPorNecesidad>;
+
+  // La capa del vendedor, para un prospecto
+  listarFichasPersonalizadas(clienteId: Id, pagina?: OpcionesPagina): R<Pagina<FichaPersonalizada>>;
+  obtenerFichaPersonalizada(id: Id): R<FichaPersonalizada>;
+  prepararFicha(datos: NuevaFichaPersonalizada, clave: ClaveIdempotencia): R<FichaPersonalizada>;
+  actualizarFicha(id: Id, cambios: Partial<NuevaFichaPersonalizada>, version: Version): R<FichaPersonalizada>;
+  /** ⛔ No borra la ficha oficial: descarta la capa. */
+  descartarFicha(id: Id, motivo: string): R<void>;
+
+  /**
+   * Avisa si el copy cambio desde que el vendedor preparo la ficha.
+   * ⛔ El enlace sirve siempre el copy VIGENTE; esto es para que el vendedor
+   *    no se entere delante del cliente.
+   */
+  revisarCopyDeFicha(id: Id): R<AvisoCopyDesactualizado | null>;
+
+  /** Enlace responsive para WhatsApp o correo. Token opaco, igual que el resto. */
+  compartirFicha(id: Id, opciones: OpcionesEnlaceFicha, clave: ClaveIdempotencia): R<EnlaceCompartido>;
+  revocarEnlaceFicha(enlaceId: Id, motivo: string): R<EnlaceCompartido>;
+  aperturasDeFicha(id: Id, pagina?: OpcionesPagina): R<Pagina<AccesoEnlace>>;
 }
 
 // ===========================================================================
@@ -455,6 +504,14 @@ export interface CapaAdministracion {
  * ⛔ Nunca revela cuántas aperturas hubo.
  */
 export interface CapaPublica {
+  /**
+   * La ficha que el vendedor compartio. ⛔ Sin datos operativos del vendedor:
+   * ni comisiones, ni plan interno, ni ranking, ni por que se eligio este
+   * producto. Unica accion: "Hablemos".
+   */
+  obtenerFichaPublica(token: string): R<FichaPublica>;
+  /** El portafolio publico, navegable por producto o por necesidad. */
+  obtenerIndicePublico(): R<IndicePortafolio>;
   obtenerPresentacionPublica(token: string, codigo?: string): R<PresentacionPublica>;
   /** ⛔ Sólo de cotizaciones `aprobada` o `enviada_al_cliente`. */
   obtenerCotizacionPublica(token: string, codigo?: string): R<CotizacionPublica>;
@@ -496,6 +553,7 @@ export interface CapaDatos
     CapaMotor,
     CapaClientes,
     CapaAgenda,
+    CapaFichas,
     CapaPropuestas,
     CapaDinero,
     CapaAdministracion {}

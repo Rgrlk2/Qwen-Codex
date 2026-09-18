@@ -38,13 +38,38 @@ guarda `visible`, `orden` y `destacado` por bloque.
 
 ## Peso
 
-18 MB en total, y **el 90 % son imágenes incrustadas en base64** — Merma IA,
-por ejemplo, pesa 258 KB de los cuales 233 son imagen. El texto real de las
-trece no llega a 300 KB.
+Las imágenes **ya no viajan incrustadas**: viven como archivos en
+`apps/escritorio/public/assets/fichas/`, y las de marca en `assets/marca/`.
+Las fichas las referencian.
 
-⚠️ Conviene extraer esas imágenes a archivos y referenciarlas, en vez de
-incrustarlas: el navegador las cachearía, varias se repiten entre fichas, y el
-paquete bajaría de forma notable. No se hizo todavía porque tocar los archivos
-cambia su huella, y la decisión es del CEO.
+| | Antes | Ahora |
+|---|---|---|
+| Cada ficha de producto | 200 KB a 1,8 MB | **17 a 25 KB** |
+| Imágenes | incrustadas, repetidas en cada archivo | 3 MB aparte, se cargan una vez y quedan en caché |
 
-Ver `packages/compartido/src/fichas.ts` y `docs/MASTER_SPEC.md` §2.3.
+Seis imágenes se repetían entre fichas y otras cinco dentro de una misma
+ficha. Ahora hay **una sola copia de cada una**, así que la identidad no puede
+desalinearse: si se cambia el logo, se cambia un archivo, no catorce.
+
+### Logos de marca
+
+Decisión del CEO, 18/09/2026: **valen los cuadrados, no los alargados.**
+
+| Archivo | Qué es |
+|---|---|
+| `assets/marca/logo-labia.webp` | Lab.IA 640×640, con la bajada *"AI applied for business"*. **Principal.** |
+| `assets/marca/logo-labia-compacto.webp` | Lab.IA 420×420 sin bajada. Variante para usos chicos. |
+| `assets/marca/logo-rgrlk-group-cuadrado.webp` | RGrlk Group 420×420 con la bajada *"Strategic Leadership"*. **El que usan las fichas.** |
+| `assets/marca/logo-rgrlk-group.webp` | Versión alargada. ⛔ Descartada por decisión del CEO. |
+
+### Lo que falta, y es tuyo
+
+Dos archivos siguen pesados, y **no se arreglan desde acá**:
+
+| Archivo | Peso | Problema |
+|---|---|---|
+| `agendar-ia.html` | 2,1 MB | ⛔ **No es una página: es un paquete que se arma con JavaScript.** Un buscador la ve en blanco. Es la única de las trece en ese formato. |
+| `indice-soluciones.html` | 8,4 MB | 8,4 MB de JavaScript incrustado. |
+
+Los dos hay que **reexportarlos en HTML plano**, como las otras doce.
+
