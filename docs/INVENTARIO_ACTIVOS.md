@@ -22,7 +22,7 @@
 
 | Archivo | Marca | Enlace / id de Drive | Uso posible | Versión elegida | Estado |
 |---|---|---|---|---|---|
-| `Logo_LabIA_T.png` | Lab.IA | `1_SQ7zl5IkxOQEBL2xJwxk8UX5AXkeMZN` | Barra lateral, cabecera, membrete de PDF | **Sí** | **elegido** |
+| `Logo_LabIA_T.png` | Lab.IA | `1_SQ7zl5IkxOQEBL2xJwxk8UX5AXkeMZN` | Barra lateral, cabecera, membrete de PDF | **Sí** | **elegido — incorporado** en `apps/escritorio/public/assets/marca/logo-labia.webp` |
 | `Logo_LabIA_V.png` | Lab.IA | `1fg4lQhWl02xVhEznpruks9Bx9-yDW0b1` | Versión vertical: portada de presentaciones | — | alternativo |
 | `labia-header-black.webp` | Lab.IA | `1j3PedGCf3dfkFLeZxaSChZ8EZJCMJO7l` | Cabecera sobre fondo claro | — | alternativo |
 | `labia-institut-wordmark.webp` | Lab.IA Institut | `1xUVbM_-WD1fUTdZenO4tkQGRGC4E-qSF` | Otra unidad de negocio | — | descartado |
@@ -36,8 +36,8 @@
 
 | Archivo | Marca | Enlace / id de Drive | Uso posible | Versión elegida | Estado |
 |---|---|---|---|---|---|
-| `rgrlk-group-horizontal.webp` | RGrlk Group | `17PCeZOp-YO_gB90eTjIIShDyzikCfOlp` | Pie de documentos, membrete | **Sí** | **elegido** |
-| `logo-rgrlk-group-160.webp` | RGrlk Group | `1ldsrWZD0TVOq5L1Al-hQFvFYcbk1DCOC` | Versión reducida, favicon | **Sí** | **elegido** |
+| `rgrlk-group-horizontal.webp` | RGrlk Group | `17PCeZOp-YO_gB90eTjIIShDyzikCfOlp` | Pie de documentos, membrete | **Sí** | **elegido — incorporado** en `apps/escritorio/public/assets/marca/logo-rgrlk-group.webp` |
+| `logo-rgrlk-group-160.webp` | RGrlk Group | `1ldsrWZD0TVOq5L1Al-hQFvFYcbk1DCOC` | Versión reducida, favicon | **Sí** | **elegido — incorporado** en `apps/escritorio/public/assets/marca/logo-rgrlk-group-160.webp` |
 | `carousel-rgrlk-new.png` | RGrlk Group | `1kTqSksOFOuMO5obkNeGaeaVDDNGS0mCC` | Pieza de carrusel | — | alternativo |
 | `Logo_Insigth_V.png` | RGrlk Insights | `1ooVnSJbg-hk4MKjUt9bBYaAsLZxE6Qi2` | Otra unidad | — | descartado |
 | `Logo_Pharma_T1.png` | Pharma.IA | `1rZikYO8t2n0h8XYdj9iy33O-5aPnD8a9` | Otra unidad | — | descartado |
@@ -68,6 +68,10 @@
 | 13 | Exeq.IA | `4 ExequIA Logos.png` | `1OjDs4QGjDLg8YjoJ3mvH2lbkTJaJJkcK` | **Sí** | **elegido** |
 
 **Los 13 productos tienen logo oficial, y los 13 están disponibles.** 12 salen de la carpeta canónica de Drive; el de Park.IA lo aportó el CEO y **ya está en el repositorio** (§3.2).
+
+✅ **Los 13 están incorporados al repositorio**, optimizados a WebP en
+`apps/escritorio/public/assets/productos/<id>/logo-<id>.webp`. Detalle de
+origen, ids de Drive y hashes: `apps/escritorio/public/assets/productos/README.md`.
 
 ### 3.1 ⛔ Producto excluido, con logo en Drive
 
