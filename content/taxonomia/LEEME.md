@@ -54,16 +54,17 @@ Cada relación `Necesidad → Producto` lleva uno de estos cuatro. Se muestra **
 
 El copy aprobado nombra rubros donde cada producto "tiene más sentido". Eso sirve para escribir una landing, no para que un vendedor llegue con *"mi amigo tiene una repuestera"* y salga con un plan.
 
-Un ejemplo concreto: **motel**. No aparece en ninguno de los 13 bloques de *"Dónde tiene más sentido"*. Con mapeo literal, el motor diría "no encontrado" y el vendedor se quedaría sin nada. Razonando por capas:
+Un ejemplo concreto: **motel**. No aparece en ninguno de los 13 bloques de *"Dónde tiene más sentido"*. Con mapeo literal, el motor diría "no encontrado" y el vendedor se quedaría sin nada. Razonando por capas (desarrollado completo en `relaciones.md` §3):
 
 ```
 Actividad: motel
-  → Operaciones: administra espacios · trabaja con turnos · maneja insumos ·
-                 tiene local con circulación · precios que se mueven por temporada
-  → Necesidades: no sabe qué habitaciones rinden · pierde reservas fuera de horario ·
-                 se le pierden insumos · precios desactualizados frente al vecino
-  → Productos:   Agendar.IA (directo) · Vendedor 24/7 (directo) ·
-                 Merma IA (cercano) · Precio Vivo (adaptable) · Ojo Digital (cercano)
+  → Operaciones: trabaja con turnos · precios que se mueven ·
+                 atiende WhatsApp · maneja stock · local con circulación
+  → Necesidades: agenda desordenada · pierde ventas fuera de horario ·
+                 precios desactualizados · se le pierde mercadería
+  → Productos:   Precio Vivo (directo) · Vendedor 24/7 (directo) ·
+                 Agendar.IA (directo) · Faro Digital (cercano) ·
+                 Merma IA (adaptable) · Ojo Digital (directo)
 ```
 
 Mismos 13 productos. Un rubro que el copy no nombra. Un plan que se sostiene, con su motivo en cada paso.

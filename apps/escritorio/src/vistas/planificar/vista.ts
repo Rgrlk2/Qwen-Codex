@@ -34,4 +34,101 @@
  * MASTER_SPEC.md · USER_FLOWS.md · API_CONTRACTS.md · DESIGN_SYSTEM.md · QA_CHECKLIST.md
  */
 
-export {};
+import './estilos.css';
+import type { ContextoVista, Vista } from '../../nucleo/contrato-vista';
+import { montarEntrada } from './entrada';
+import { montarProductos } from './productos';
+
+type SeccionPlanificar = 'motor' | 'productos';
+
+function crearPestanaPrincipal(texto: string, seleccionada: boolean): HTMLButtonElement {
+  const boton = document.createElement('button');
+  boton.type = 'button';
+  boton.className = 'pestana';
+  boton.setAttribute('role', 'tab');
+  boton.setAttribute('aria-selected', String(seleccionada));
+  boton.textContent = texto;
+  return boton;
+}
+
+/**
+ * ⛔ Convención única entre las seis sesiones (apps/escritorio/src/nucleo/
+ *    contrato-vista.ts, `ModuloVista`): el módulo exporta `crearVista(): Vista`.
+ *    El núcleo la llama sin argumentos y monta lo que devuelve.
+ */
+export function crearVista(): Vista {
+  return {
+    montar,
+    desmontar,
+  };
+}
+
+function montar(contexto: ContextoVista): void {
+  contexto.raiz.replaceChildren();
+
+  const contenedor = document.createElement('div');
+  contenedor.className = 'vista planificar';
+
+  const encabezado = document.createElement('header');
+  encabezado.className = 'encabezado';
+  const titulo = document.createElement('h1');
+  titulo.textContent = 'Planificar';
+  encabezado.appendChild(titulo);
+  if (contexto.datosDeEjemplo) {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.textContent = 'Datos de ejemplo';
+    encabezado.appendChild(chip);
+  }
+  contenedor.appendChild(encabezado);
+
+  const introduccion = document.createElement('p');
+  introduccion.className = 'texto-2';
+  introduccion.textContent = 'El motor comercial: qué le vendo a este negocio y por qué.';
+  contenedor.appendChild(introduccion);
+
+  const pestanas = document.createElement('div');
+  pestanas.className = 'pestanas';
+  pestanas.setAttribute('role', 'tablist');
+  pestanas.setAttribute('aria-label', 'Secciones de Planificar');
+  const tabMotor = crearPestanaPrincipal('El motor comercial', true);
+  const tabProductos = crearPestanaPrincipal('Los 13 productos', false);
+  pestanas.append(tabMotor, tabProductos);
+  contenedor.appendChild(pestanas);
+
+  const panel = document.createElement('div');
+  panel.setAttribute('role', 'tabpanel');
+  contenedor.appendChild(panel);
+
+  contexto.raiz.appendChild(contenedor);
+
+  function mostrar(seccion: SeccionPlanificar): void {
+    tabMotor.setAttribute('aria-selected', String(seccion === 'motor'));
+    tabProductos.setAttribute('aria-selected', String(seccion === 'productos'));
+    panel.replaceChildren();
+    if (seccion === 'motor') {
+      montarEntrada(contexto, panel);
+    } else {
+      montarProductos({ contexto, contenedor: panel });
+    }
+  }
+
+  tabMotor.addEventListener('click', () => mostrar('motor'));
+  tabProductos.addEventListener('click', () => mostrar('productos'));
+  // Navegación con flechas entre pestañas (docs/DESIGN_SYSTEM.md §5, .pestanas).
+  pestanas.addEventListener('keydown', (evento) => {
+    if (evento.key !== 'ArrowRight' && evento.key !== 'ArrowLeft') return;
+    evento.preventDefault();
+    // Sólo hay dos pestañas: "siguiente" y "anterior" son la misma, la otra.
+    const otra = document.activeElement === tabMotor ? tabProductos : tabMotor;
+    otra.focus();
+  });
+
+  mostrar('motor');
+}
+
+function desmontar(): void {
+  // Las tareas en vuelo (investigar, recalcular, cargar el portafolio)
+  // consultan `contexto.senal.aborted` antes de tocar el DOM: no hay
+  // escuchas globales, temporizadores ni grabaciones que liberar acá.
+}

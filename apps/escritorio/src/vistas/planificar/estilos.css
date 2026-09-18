@@ -1,0 +1,196 @@
+/*
+ * Estilos propios de Planificar.
+ *
+ * ⛔ DUEÑO: Sesión 3. Prefijo `.planificar-` en todo lo que no sea un
+ *    componente compartido (docs/DESIGN_SYSTEM.md §5, packages/ui/base.css).
+ * ⛔ Ningún color literal: sólo var(--token). Los ocho colores oficiales
+ *    viven en packages/ui/src/marca-labia.css (Sesión 2); acá no se declara
+ *    ni un hex ni un rgba() nuevo.
+ * ⛔ Sin overflow-x: hidden. Todo desborde se corrige en su causa
+ *    (min-width: 0, overflow-wrap, grillas que bajan de columnas).
+ *
+ * Anchos validados sin scroll horizontal de página: 360, 390, 768, 1024, 1440.
+ */
+
+.planificar-entrada,
+.planificar-plan,
+.planificar-investigacion,
+.planificar-productos-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.planificar-acciones-protagonistas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .planificar-acciones-protagonistas {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.planificar-acciones-protagonistas .accion-protagonista {
+  min-height: 120px;
+  min-width: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .planificar-acciones-protagonistas .accion-protagonista {
+    min-height: 160px;
+  }
+}
+
+.planificar-formulario-activo,
+.planificar-form {
+  min-width: 0;
+}
+
+.planificar-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 42rem;
+}
+
+.planificar-form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  max-width: none;
+}
+
+.planificar-form-inline .entrada {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.planificar-seccion {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.planificar-dato {
+  border-block-start: 1px solid var(--linea);
+  padding-block-start: 0.75rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.planificar-dato:first-child {
+  border-block-start: none;
+  padding-block-start: 0;
+}
+
+.planificar-dato-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.planificar-destacados .rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 1rem;
+}
+
+.planificar-destacados .rejilla > * {
+  min-width: 0;
+}
+
+.ranking.planificar-plan .ranking-fila,
+.planificar-plan .ranking-fila {
+  border-block-start: 1px solid var(--linea);
+  padding-block: 0.75rem;
+  min-width: 0;
+}
+
+.planificar-ranking-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.ranking-fila--fuera-de-top10 {
+  opacity: 0.82;
+}
+
+.planificar-copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.planificar-copy > * {
+  max-width: 100%;
+}
+
+.planificar-precios {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.25rem 1rem;
+  min-width: 0;
+}
+
+@media (min-width: 480px) {
+  .planificar-precios {
+    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  }
+}
+
+.planificar-precios dt {
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.planificar-precios dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.planificar-productos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.planificar-producto-boton {
+  min-height: 44px;
+  text-align: left;
+  width: 100%;
+}
+
+.planificar-ficha {
+  min-width: 0;
+}
+
+.planificar-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.planificar-acciones .btn,
+.planificar-acciones .btn-borde {
+  min-height: 48px;
+}
+
+.planificar-campos-faltantes {
+  border-inline-start: 3px solid var(--cian);
+  padding-inline-start: 1rem;
+}
