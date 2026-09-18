@@ -418,6 +418,52 @@ if (/Park\.IA\s+no\s+tiene\s+logo/i.test(invActivos)) {
   fallos.push('INVENTARIO_ACTIVOS.md sigue afirmando que Park.IA no tiene logo. Lo tiene: adjunto del CEO del 15/09/2026 (§3.2).');
 }
 
+// --- 12g. Ninguna contrasena vive en el repositorio -----------------------
+/**
+ * Instruccion del CEO: ninguna contrasena escrita en HTML, JS, TS, mocks ni
+ * ningun archivo del repositorio.
+ *
+ * El mock no guarda claves —acepta cualquiera no vacia— y las pruebas
+ * inventan la suya en cada corrida. Estos tres controles impiden que vuelva
+ * a entrar una:
+ *   a) las cuentas de ejemplo no declaran un campo `clave`;
+ *   b) nadie llama a `ingresar` con una cadena literal por contrasena;
+ *   c) no aparece una asignacion de clave/password a un literal.
+ */
+const sesionMock = codigoEfectivo(
+  readFileSync(join(RAIZ, 'packages/mock/src/datos-sesion.ts'), 'utf8'), '.ts',
+);
+if (/\bclave\s*:\s*['"`]/.test(sesionMock)) {
+  fallos.push('datos-sesion.ts declara una contrasena literal. Ninguna clave vive en el repositorio.');
+}
+if (!sesionMock.includes('debeCambiarClave')) {
+  fallos.push('datos-sesion.ts no marca debeCambiarClave: la clave inicial tiene que cambiarse al primer ingreso real.');
+}
+
+/** `ingresar(usuario, 'algo')` con la clave literal. El usuario si puede serlo. */
+const INGRESO_CON_CLAVE_LITERAL = /\.?ingresar\(\s*[^,)]+,\s*(['"`])(?!\s*\1)(?:(?!\1).){3,}\1/;
+for (const archivo of [...archivos(join(RAIZ, 'scripts')), ...archivos(join(RAIZ, 'apps')), ...archivos(join(RAIZ, 'packages'))]) {
+  if (archivo.endsWith('.md')) continue;
+  const texto = codigoEfectivo(readFileSync(archivo, 'utf8'), extname(archivo));
+  const m = texto.match(INGRESO_CON_CLAVE_LITERAL);
+  if (m) {
+    fallos.push(`${rel(archivo)}: "${m[0].trim()}" pasa una contrasena literal a ingresar(). Las pruebas inventan la clave en cada corrida.`);
+  }
+}
+
+/** Asignaciones tipo `clave = "..."` / `password: "..."` / `.fill('#...clave', '...')`. */
+const CLAVE_LITERAL = /(?:clave|contrase[nñ]a|password|pwd)\s*[:=]\s*(['"`])(?!\s*\1)(?:(?!\1).){3,}\1/i;
+for (const ambito of ['apps', 'packages', 'scripts']) {
+  for (const archivo of archivos(join(RAIZ, ambito))) {
+    if (archivo.endsWith('.md')) continue;
+    const texto = codigoEfectivo(readFileSync(archivo, 'utf8'), extname(archivo));
+    const m = texto.match(CLAVE_LITERAL);
+    if (m) {
+      fallos.push(`${rel(archivo)}: "${m[0].trim()}" parece una contrasena escrita en el repositorio.`);
+    }
+  }
+}
+
 // --- 13. Referencias cruzadas entre documentos ---------------------------
 /**
  * Con cinco rondas de renumeracion, una referencia "MASTER_SPEC §12" que ya no
@@ -490,4 +536,5 @@ console.log('OK — las cuatro alternativas financieras, con sus parametros exac
 console.log('OK — respuesta del cliente: seis opciones excluyentes, casilla obligatoria y constancia comercial.');
 console.log('OK — sin celular del CEO ni firma expuesta en codigo del navegador.');
 console.log('OK — los 13 logos oficiales, con el de Park.IA intacto y cuadrado.');
+console.log('OK — ninguna contrasena escrita en el repositorio.');
 console.log('OK — todas las referencias cruzadas entre documentos apuntan a secciones reales.');
