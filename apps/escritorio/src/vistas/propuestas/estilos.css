@@ -1,0 +1,456 @@
+/**
+ * Estilos de la vista Propuestas.
+ *
+ * ⛔ DUEÑO: Sesión 5. Prefijo `.propuestas-` en toda clase propia, tal como
+ *    exige DESIGN_SYSTEM.md para el CSS de una vista.
+ *
+ * `packages/ui/src/base.css` (Sesión 2) todavía no declara los componentes
+ * compartidos (.tarjeta, .btn, .campo, .cargando, .vacio, .error…): esta hoja
+ * define su propia versión, con el mismo vocabulario de tokens, para no
+ * esperar a que esa sesión termine. Cuando esos componentes existan, esta
+ * hoja puede simplificarse para consumirlos.
+ *
+ * Responsive: sin `overflow-x: hidden`. El único desborde permitido es el de
+ * `.propuestas-tabla-contenedor`, con `overflow-x: auto`, del elemento, nunca
+ * de la página. Validado en 360, 390, 768, 1024 y 1440 px.
+ */
+
+.propuestas-vista {
+  box-sizing: border-box;
+  max-width: var(--ancho-contenido, 1240px);
+  margin-inline: auto;
+  padding-inline: 16px;
+  padding-block: 24px;
+  color: var(--texto, #F2F7FF);
+  font-family: var(--fuente, Inter, system-ui, sans-serif);
+}
+
+.propuestas-vista *,
+.propuestas-vista *::before,
+.propuestas-vista *::after {
+  box-sizing: border-box;
+}
+
+.propuestas-vista h1 {
+  font-size: 1.5rem;
+  margin: 0 0 4px;
+}
+
+.propuestas-vista h2 {
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+
+.propuestas-vista h3 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+
+.propuestas-explicacion {
+  color: var(--texto-2, #AEB8C8);
+  max-width: 68ch;
+}
+
+.propuestas-chip-ejemplo {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--cian-suave, rgba(0, 217, 255, .14));
+  color: var(--cian, #00D9FF);
+  font-size: .8rem;
+  margin-bottom: 8px;
+}
+
+.propuestas-pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid var(--linea, rgba(174, 184, 200, .16));
+  margin-block: 16px;
+}
+
+.propuestas-pestana {
+  min-height: 44px;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--texto-2, #AEB8C8);
+  font: inherit;
+  cursor: pointer;
+}
+
+.propuestas-pestana--activa {
+  color: var(--azul-texto, #098CFF);
+  border-bottom-color: var(--cian, #00D9FF);
+}
+
+.propuestas-panel {
+  min-width: 0;
+}
+
+.propuestas-encabezado-seccion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.propuestas-lista {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .propuestas-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.propuestas-tarjeta {
+  min-width: 0;
+  background: var(--superficie, rgba(6, 22, 47, .72));
+  border: 1px solid var(--linea, rgba(174, 184, 200, .16));
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.propuestas-tarjeta--clicable {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.propuestas-tarjeta__encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.propuestas-meta {
+  color: var(--texto-3, rgba(174, 184, 200, .72));
+  font-size: .85rem;
+}
+
+.propuestas-referencia {
+  color: var(--azul-texto, #098CFF);
+  font-size: .9rem;
+}
+
+.propuestas-seccion {
+  min-width: 0;
+  border-top: 1px solid var(--linea, rgba(174, 184, 200, .16));
+  padding-block: 16px;
+}
+
+.propuestas-dato {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+  min-width: 0;
+}
+
+.propuestas-dato__etiqueta {
+  color: var(--texto-2, #AEB8C8);
+  min-width: 220px;
+}
+
+.propuestas-dato__valor {
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+
+.propuestas-importe {
+  font-variant-numeric: tabular-nums;
+}
+
+.propuestas-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--superficie-2, rgba(10, 85, 217, .10));
+  color: var(--texto, #F2F7FF);
+  font-size: .8rem;
+  white-space: nowrap;
+}
+
+.propuestas-badge--aprobada,
+.propuestas-badge--enviada_al_cliente,
+.propuestas-badge--aceptada {
+  color: var(--cian, #00D9FF);
+}
+
+.propuestas-badge--rechazada,
+.propuestas-badge--perdida,
+.propuestas-badge--vencida {
+  color: var(--peligro, #FF6B6B);
+  background: var(--peligro-suave, rgba(255, 107, 107, .14));
+}
+
+.propuestas-cargando {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.propuestas-hueso {
+  display: block;
+  height: 14px;
+  border-radius: 6px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--linea, rgba(174,184,200,.16)) 25%, var(--linea-2, rgba(174,184,200,.28)) 37%, var(--linea, rgba(174,184,200,.16)) 63%);
+  background-size: 400% 100%;
+  animation: propuestas-brillo 1.4s ease infinite;
+}
+
+.propuestas-hueso--corto { width: 60%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .propuestas-hueso { animation: none; }
+}
+
+@keyframes propuestas-brillo {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.propuestas-solo-lectura-visual {
+  color: var(--texto-3, rgba(174, 184, 200, .72));
+  font-size: .85rem;
+}
+
+.propuestas-vacio {
+  color: var(--texto-2, #AEB8C8);
+  padding: 16px 0;
+}
+
+.propuestas-error {
+  color: var(--peligro, #FF6B6B);
+  background: var(--peligro-suave, rgba(255, 107, 107, .14));
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.propuestas-error__pista {
+  color: var(--texto-2, #AEB8C8);
+  font-size: .9rem;
+}
+
+.propuestas-aviso {
+  color: var(--azul-texto, #098CFF);
+  font-size: .9rem;
+}
+
+.propuestas-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.propuestas-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.propuestas-campo input,
+.propuestas-campo select,
+.propuestas-campo textarea,
+.propuestas-formulario > select,
+.propuestas-formulario > textarea {
+  min-height: 44px;
+  min-width: 0;
+  width: 100%;
+  background: var(--bg-2, #06162F);
+  border: 1px solid var(--linea-2, rgba(174, 184, 200, .28));
+  border-radius: 8px;
+  color: var(--texto, #F2F7FF);
+  padding: 8px 12px;
+  font: inherit;
+}
+
+.propuestas-campo textarea {
+  min-height: 72px;
+}
+
+.propuestas-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.propuestas-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.propuestas-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 4px 10px;
+  border: 1px solid var(--linea-2, rgba(174, 184, 200, .28));
+  border-radius: 999px;
+}
+
+.propuestas-fila-aporte {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+.propuestas-fila-aporte input[type='text'],
+.propuestas-fila-aporte input:not([type]) {
+  flex: 1 1 200px;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.propuestas-acciones,
+.propuestas-accion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.propuestas-btn,
+.propuestas-btn-borde,
+.propuestas-btn-texto {
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.propuestas-btn {
+  background: var(--azul, #0A55D9);
+  color: var(--texto, #F2F7FF);
+  border: none;
+}
+
+.propuestas-btn-borde {
+  background: transparent;
+  color: var(--azul-texto, #098CFF);
+  border: 1px solid var(--linea-acento, rgba(0, 217, 255, .32));
+}
+
+.propuestas-btn-texto {
+  background: none;
+  border: none;
+  color: var(--azul-texto, #098CFF);
+}
+
+.propuestas-btn:disabled,
+.propuestas-btn-borde:disabled,
+.propuestas-btn-texto:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.propuestas-vista :focus-visible {
+  outline: 2px solid var(--cian, #00D9FF);
+  outline-offset: 3px;
+}
+
+.propuestas-logos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.propuestas-logo {
+  height: 48px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+.propuestas-tabla-contenedor {
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.propuestas-tabla {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 640px;
+}
+
+.propuestas-tabla th,
+.propuestas-tabla td {
+  border-bottom: 1px solid var(--linea, rgba(174, 184, 200, .16));
+  padding: 8px 12px;
+  text-align: left;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.propuestas-calendarios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* --- La vista pública del cliente --- */
+
+.propuestas-publico {
+  box-sizing: border-box;
+  max-width: 640px;
+  margin-inline: auto;
+  padding: 24px 16px;
+  color: var(--texto, #F2F7FF);
+  background: var(--bg, #020711);
+  font-family: var(--fuente, Inter, system-ui, sans-serif);
+  min-height: 100vh;
+}
+
+.propuestas-publico * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.propuestas-opcion-radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 0;
+}
+
+.propuestas-alternativas-publicas {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.propuestas-publico__pie {
+  margin-top: 24px;
+  color: var(--texto-3, rgba(174, 184, 200, .72));
+  font-size: .8rem;
+}
+
+@media (max-width: 389px) {
+  .propuestas-dato__etiqueta { min-width: 0; width: 100%; }
+}
