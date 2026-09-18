@@ -1165,6 +1165,19 @@ export function crearCapaPublica(config: ConfiguracionMock): CapaPublica {
   const almacen = obtenerAlmacen();
 
   return {
+    /**
+     * Fichas de producto. Especificadas en fichas.ts, todavia sin ensamblar:
+     * la ficha oficial se sirve del copy congelado y la personalizacion es
+     * una capa encima. ⛔ La superficie publica no lleva datos operativos del
+     * vendedor, y la unica accion es "Hablemos".
+     */
+    obtenerFichaPublica(_token) {
+      return ejecutar(config, () => error('servicio_no_disponible', 'Las fichas todavía no están conectadas al enlace público.'));
+    },
+    obtenerIndicePublico() {
+      return ejecutar(config, () => error('servicio_no_disponible', 'El índice del portafolio todavía no está conectado.'));
+    },
+
     obtenerPresentacionPublica(token, _codigo) {
       return ejecutar(config, () => {
         const resultadoEnlace = resolverEnlace(almacen, token);

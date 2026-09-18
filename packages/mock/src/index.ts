@@ -157,6 +157,26 @@ export function crearCapaDatosMock(opciones: OpcionesCapaDatosMock = {}): CapaDa
     descartarEntrada: pendiente('la Sesión 4', 'descartarEntrada'),
 
     // =======================================================================
+    // =======================================================================
+    // Fichas de producto — especificadas, pendientes de ensamblado
+    //
+    // El eslabon entre el motor y la propuesta. La ficha oficial se sirve del
+    // copy congelado; la personalizacion es una capa encima que sólo decide
+    // presentacion. Ver packages/compartido/src/fichas.ts.
+    // =======================================================================
+    obtenerFichaOficial: pendiente('la Sesión 3', 'obtenerFichaOficial'),
+    indicePortafolio: pendiente('la Sesión 3', 'indicePortafolio'),
+    fichasPorNecesidad: pendiente('la Sesión 3', 'fichasPorNecesidad'),
+    listarFichasPersonalizadas: pendiente('la Sesión 4', 'listarFichasPersonalizadas'),
+    obtenerFichaPersonalizada: pendiente('la Sesión 4', 'obtenerFichaPersonalizada'),
+    prepararFicha: pendiente('la Sesión 4', 'prepararFicha'),
+    actualizarFicha: pendiente('la Sesión 4', 'actualizarFicha'),
+    descartarFicha: pendiente('la Sesión 4', 'descartarFicha'),
+    revisarCopyDeFicha: pendiente('la Sesión 4', 'revisarCopyDeFicha'),
+    compartirFicha: pendiente('la Sesión 5', 'compartirFicha'),
+    revocarEnlaceFicha: pendiente('la Sesión 5', 'revocarEnlaceFicha'),
+    aperturasDeFicha: pendiente('la Sesión 5', 'aperturasDeFicha'),
+
     // S5 · Presentaciones y cotizaciones — pendiente de ensamblado
     // =======================================================================
     listarPresentaciones: pendiente('la Sesión 5', 'listarPresentaciones'),

@@ -59,6 +59,20 @@ function archivos(dir) {
 const rel = (p) => p.replace(RAIZ, '');
 
 /**
+ * Las fichas oficiales son ACTIVOS entregados por el CEO, no codigo nuestro.
+ *
+ * Quedan fuera de dos controles, y por buenas razones:
+ *   · el de copy duplicado — llevar el copy aprobado es justamente su
+ *     proposito, no una copia que pueda derivar;
+ *   · el de overflow-x — no las editamos, asi que taparlo o no taparlo no es
+ *     una decision nuestra. Lo que se encuentre se informa, no se corrige.
+ *
+ * A cambio quedan protegidas por algo mas fuerte: su SHA-256, verificado mas
+ * abajo. Si alguien las toca, la verificacion lo rechaza.
+ */
+const esFichaOficial = (p) => p.includes('/public/fichas/');
+
+/**
  * Quita comentarios antes de buscar terminos prohibidos.
  * Sin esto, cada "⛔ prohibido usar X" del propio repositorio se reporta como
  * una violacion de X, y la verificacion se vuelve ruido.
@@ -115,7 +129,7 @@ const FRASES_COPY = [
   'Cada vehiculo registrado', 'Cada vehículo registrado',
 ];
 for (const archivo of [...archivos(join(RAIZ, 'packages')), ...archivos(join(RAIZ, 'apps'))]) {
-  if (archivo.endsWith('.md')) continue;
+  if (archivo.endsWith('.md') || esFichaOficial(archivo)) continue;
   const texto = codigoEfectivo(readFileSync(archivo, 'utf8'), extname(archivo));
   for (const frase of FRASES_COPY) {
     if (texto.includes(frase)) {
@@ -189,6 +203,11 @@ for (const ambito of ['apps', 'packages/ui']) {
     if (!['.css', '.html', '.ts'].includes(extname(archivo))) continue;
     const texto = codigoEfectivo(readFileSync(archivo, 'utf8'), extname(archivo));
     if (/overflow-x:\s*hidden/.test(texto) && !/tabla-contenedor/.test(texto)) {
+      if (esFichaOficial(archivo)) {
+        // Activo del CEO: se informa, no se corrige por cuenta propia.
+        avisos.push(`${rel(archivo)}: usa overflow-x: hidden. Es un activo oficial, asi que no se toca desde aca — conviene corregirlo en el origen (DESIGN_SYSTEM §7).`);
+        continue;
+      }
       fallos.push(`${rel(archivo)}: usa overflow-x: hidden. Se corrige la causa del desborde, no se tapa (DESIGN_SYSTEM §7).`);
     }
   }
@@ -473,6 +492,59 @@ for (const ambito of ['apps', 'packages', 'scripts']) {
   }
 }
 
+// --- 12h. Las trece fichas oficiales, intactas ---------------------------
+/**
+ * Las fichas son la fuente maestra de la experiencia comercial. Si alguien las
+ * regenera, las recorta o les reescribe el copy, cambia el SHA-256 y esto lo
+ * rechaza. Es el mismo trato que el logo de Park.IA.
+ */
+const DIR_FICHAS = join(RAIZ, 'apps/escritorio/public/fichas');
+const FICHAS_ESPERADAS = [...PRODUCTOS.map((p) => `${p}.html`), 'indice-soluciones.html'];
+if (!existsSync(DIR_FICHAS)) {
+  fallos.push('Falta apps/escritorio/public/fichas/: son las trece fichas oficiales y el indice.');
+} else {
+  for (const nombre of FICHAS_ESPERADAS) {
+    if (!existsSync(join(DIR_FICHAS, nombre))) {
+      fallos.push(`Falta la ficha oficial ${nombre}.`);
+    }
+  }
+  const huellas = join(DIR_FICHAS, 'fichas.sha256');
+  if (!existsSync(huellas)) {
+    fallos.push('Falta apps/escritorio/public/fichas/fichas.sha256: sin huellas no se puede probar que las fichas esten intactas.');
+  } else {
+    for (const linea of readFileSync(huellas, 'utf8').split('\n')) {
+      const m = linea.match(/^([0-9a-f]{64})\s+(\S+)$/);
+      if (!m) continue;
+      const archivo = join(DIR_FICHAS, m[2]);
+      if (!existsSync(archivo)) continue;
+      const sha = createHash('sha256').update(readFileSync(archivo)).digest('hex');
+      if (sha !== m[1]) {
+        fallos.push(`${m[2]} fue modificada (sha256 ${sha.slice(0, 16)}..., esperado ${m[1].slice(0, 16)}...). La ficha oficial es fuente maestra: la personalizacion es una capa encima.`);
+      }
+    }
+  }
+}
+
+/** ⛔ La capa de personalizacion no puede escribir el contenido de un bloque. */
+const fichasTs = join(RAIZ, 'packages/compartido/src/fichas.ts');
+if (!existsSync(fichasTs)) {
+  fallos.push('Falta packages/compartido/src/fichas.ts (MASTER_SPEC §2.3).');
+} else {
+  const efectivo = codigoEfectivo(readFileSync(fichasTs, 'utf8'), '.ts');
+  const capa = efectivo.match(/interface PersonalizacionBloque \{[^}]*\}/);
+  if (!capa) {
+    fallos.push('fichas.ts no declara PersonalizacionBloque.');
+  } else if (/contenido|titulo|texto/i.test(capa[0])) {
+    fallos.push('PersonalizacionBloque tiene un campo de texto: la capa decide presentacion, nunca contenido. La ficha oficial queda intacta (MASTER_SPEC §2.3).');
+  }
+}
+const apiEfectivo = codigoEfectivo(api, '.ts');
+for (const m of ['editarBloqueFicha', 'reescribirFicha', 'guardarCopyDeFicha']) {
+  if (apiEfectivo.includes(`${m}(`)) {
+    fallos.push(`api.ts declara ${m}(): la ficha oficial es fuente maestra (API_CONTRACTS §2.5b).`);
+  }
+}
+
 // --- 13. Referencias cruzadas entre documentos ---------------------------
 /**
  * Con cinco rondas de renumeracion, una referencia "MASTER_SPEC §12" que ya no
@@ -546,4 +618,5 @@ console.log('OK — respuesta del cliente: seis opciones excluyentes, casilla ob
 console.log('OK — sin celular del CEO ni firma expuesta en codigo del navegador.');
 console.log('OK — los 13 logos oficiales, con el de Park.IA intacto y cuadrado.');
 console.log('OK — ninguna contrasena escrita en el repositorio.');
+console.log('OK — las 13 fichas oficiales intactas, y la personalizacion no puede tocar el copy.');
 console.log('OK — todas las referencias cruzadas entre documentos apuntan a secciones reales.');

@@ -230,6 +230,7 @@ export function crearCapaDatosHttp(opciones: OpcionesHttp): CapaDatos {
   const clientes = <T,>(m: string, c?: unknown) => llamar<T>('clientes', m, c);
   const agenda = <T,>(m: string, c?: unknown) => llamar<T>('agenda', m, c);
   const propuestas = <T,>(m: string, c?: unknown) => llamar<T>('propuestas', m, c);
+  const fichas = <T,>(m: string, c?: unknown) => llamar<T>('fichas', m, c);
   const dinero = <T,>(m: string, c?: unknown) => llamar<T>('dinero', m, c);
   /**
    * ⛔ No hay nada acá que "oculte" administración: el servidor devuelve 403
@@ -305,6 +306,20 @@ export function crearCapaDatosHttp(opciones: OpcionesHttp): CapaDatos {
     ajustarEntrada: (ajuste) => agenda('ajustarEntrada', { ajuste }),
     completarEntrada: (entradaId, clave) => agenda('completarEntrada', { entradaId, clave }),
     descartarEntrada: (entradaId, motivo) => agenda('descartarEntrada', { entradaId, motivo }),
+
+    // --- Fichas de producto --------------------------------------------------
+    obtenerFichaOficial: (productoId) => fichas('obtenerFichaOficial', { productoId }),
+    indicePortafolio: () => fichas('indicePortafolio'),
+    fichasPorNecesidad: (necesidadId) => fichas('fichasPorNecesidad', { necesidadId }),
+    listarFichasPersonalizadas: (clienteId, pagina) => fichas('listarFichasPersonalizadas', { clienteId, pagina }),
+    obtenerFichaPersonalizada: (id) => fichas('obtenerFichaPersonalizada', { id }),
+    prepararFicha: (datos, clave) => fichas('prepararFicha', { datos, clave }),
+    actualizarFicha: (id, cambios, version) => fichas('actualizarFicha', { id, cambios, version }),
+    descartarFicha: (id, motivo) => fichas('descartarFicha', { id, motivo }),
+    revisarCopyDeFicha: (id) => fichas('revisarCopyDeFicha', { id }),
+    compartirFicha: (id, opciones, clave) => fichas('compartirFicha', { id, opciones, clave }),
+    revocarEnlaceFicha: (enlaceId, motivo) => fichas('revocarEnlaceFicha', { enlaceId, motivo }),
+    aperturasDeFicha: (id, pagina) => fichas('aperturasDeFicha', { id, pagina }),
 
     // --- S5 · Presentaciones y cotizaciones --------------------------------
     listarPresentaciones: (filtro, pagina) => propuestas('listarPresentaciones', { filtro, pagina }),

@@ -191,6 +191,39 @@ actualizarPaso(pasoId: Id, estado: EstadoPaso): R<PasoSugerido>;
 - `mencionesFueraDeCatalogo` sólo puede derivar a una sugerencia, ⛔ nunca a un producto.
 - `borrarAudio` borra el audio; ⛔ **no** borra la transcripción ni el seguimiento.
 
+### 2.5b Fichas de producto
+```ts
+// Oficial — sólo lectura, servida del copy congelado
+obtenerFichaOficial(productoId: ProductoId): R<FichaOficial>;
+indicePortafolio(): R<IndicePortafolio>;
+fichasPorNecesidad(necesidadId: Id): R<EntradaPorNecesidad>;
+
+// La capa del vendedor, para un prospecto
+listarFichasPersonalizadas(clienteId: Id, pagina?): R<Pagina<FichaPersonalizada>>;
+obtenerFichaPersonalizada(id: Id): R<FichaPersonalizada>;
+prepararFicha(datos: NuevaFichaPersonalizada, clave: ClaveIdempotencia): R<FichaPersonalizada>;
+actualizarFicha(id: Id, cambios, version: Version): R<FichaPersonalizada>;
+descartarFicha(id: Id, motivo: string): R<void>;
+revisarCopyDeFicha(id: Id): R<AvisoCopyDesactualizado | null>;
+
+// Compartir
+compartirFicha(id: Id, opciones: OpcionesEnlaceFicha, clave: ClaveIdempotencia): R<EnlaceCompartido>;
+revocarEnlaceFicha(enlaceId: Id, motivo: string): R<EnlaceCompartido>;
+aperturasDeFicha(id: Id, pagina?): R<Pagina<AccesoEnlace>>;
+```
+
+**Reglas duras que el contrato defiende por ausencia:**
+
+| ⛔ Método que NO existe | Por qué |
+|---|---|
+| `editarBloqueFicha`, `reescribirFicha`, `guardarCopyDeFicha` | La ficha oficial es **fuente maestra**. La capa sólo decide presentación. |
+
+Y las que se verifican en tiempo de ejecución:
+- `prepararFicha` con más de **dos** bloques `destacado` ⇒ `validacion`.
+- `prepararFicha` con `orden` repetido ⇒ `validacion`.
+- `descartarFicha` ⛔ **no toca la ficha oficial**: descarta la capa.
+- `compartirFicha` sobre una ficha cuyo copy cambió ⇒ se comparte igual, con el **copy vigente**, y `avisos[]` lo informa.
+
 ### 2.6 Presentaciones y cotizaciones — S5
 ```ts
 // Presentación — sin precio definitivo, sin aprobación
@@ -329,6 +362,8 @@ Y las que se verifican en tiempo de ejecución:
 
 ### 2.9 Enlace público — sin sesión
 ```ts
+obtenerFichaPublica(token: string): R<FichaPublica>;
+obtenerIndicePublico(): R<IndicePortafolio>;
 obtenerPresentacionPublica(token: string, codigo?: string): R<PresentacionPublica>;
 obtenerCotizacionPublica(token: string, codigo?: string): R<CotizacionPublica>;
 descargarPdfPublico(token: string): R<{ url: string; venceEn: ISODate }>;

@@ -18,6 +18,7 @@ export * from './agenda';
 export * from './inicio';
 export * from './seguimiento';
 export * from './alternativas';
+export * from './fichas';
 export * from './propuestas';
 export * from './aceptacion';
 export * from './dinero';

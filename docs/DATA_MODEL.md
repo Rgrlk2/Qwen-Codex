@@ -295,6 +295,54 @@ Los seis importes obligatorios:
 
 ---
 
+## 7b. Fichas de producto
+
+### 7b.1 `FichaOficial` *(inmutable)*
+`productoId` · `nombreProducto` · `familia: "especifica" | "integral"` · `bloques` · `logo` · `huellaCopy` · `versionCatalogo`.
+
+⛔ Se genera del copy congelado y de la plantilla visual oficial. **No se edita desde ninguna vista**, ni la del vendedor ni la del CEO.
+
+### 7b.2 `BloqueFicha`
+`id: BloqueFichaId` · `titulo` · `contenido` · `presente` · `sensibleAlPrecio`.
+
+`BloqueFichaId`: `"slogan" | "definicion" | "datosQueNecesita" | "queHace" | "ejemplo" | "beneficios" | "casosDeUso" | "dondeTieneMasSentido" | "precioDeReferencia"`.
+
+⛔ Son **exactamente** las secciones del copy maestro. `contenido` se sirve literal. `datosQueNecesita` sólo existe en Merma IA (`COPY_LOCK.md`).
+
+### 7b.3 `PersonalizacionBloque`
+`bloqueId` · `visible` · `orden` · `destacado`.
+
+| # | Invariante |
+|---|---|
+| PF1 | ⛔ **No tiene campo de texto.** Ni `contenido`, ni `titulo`, ni `textoAlternativo`. La capa decide **presentación**, jamás contenido. |
+| PF2 | A lo sumo **dos** bloques `destacado` por ficha: si todo resalta, nada resalta. |
+| PF3 | `orden` sin repetidos dentro de la misma ficha. |
+
+### 7b.4 `FichaPersonalizada`
+`id` · `productoId` · `clienteId` · `vendedorId` · `planId` · `bloques` · `loQueConversamos` · `notaDelVendedor` · `huellaCopy` · `version`.
+
+| # | Invariante |
+|---|---|
+| PF4 | ⛔ Es una **capa encima** de `FichaOficial`. Descartarla no toca la oficial. |
+| PF5 | `loQueConversamos` y `notaDelVendedor` se muestran **visualmente separados** del copy oficial. |
+| PF6 | ⛔ `huellaCopy` se compara contra la vigente antes de compartir. Si difiere, se avisa **al vendedor**; el enlace sirve igual **el copy vigente**, nunca una copia vieja. |
+
+### 7b.5 `FichaPublica`
+`nombreProducto` · `logo` · `bloques` (sólo los visibles, ya ordenados) · `destacados` · `loQueConversamos` · `notaDelVendedor` · `nombreVendedor` · `llamadoALaAccion: "Hablemos"`.
+
+| # | Invariante |
+|---|---|
+| PF7 | ⛔ **Cero datos operativos del vendedor**: sin comisiones, sin plan interno, sin ranking, sin el motivo de la recomendación. |
+| PF8 | ⛔ Un solo llamado a la acción: **"Hablemos"**. Sin formulario de datos, sin pasarela de pago. |
+| PF9 | ⛔ Nunca revela cuántas aperturas hubo. |
+
+### 7b.6 `IndicePortafolio` y `EntradaPorNecesidad`
+`especificas: EntradaPortafolio[]` · `integrales: EntradaPortafolio[]`, con `productoId` · `nombreProducto` · `logo` · `slogan`.
+
+`EntradaPorNecesidad`: `necesidadId` · `enunciado` · `fichas`. Entrada **por dolor**, no por nombre de producto; ⛔ sólo `directo` y `cercano`, en ese orden.
+
+---
+
 ## 8. Documentos y enlaces
 
 ### 8.1 `DocumentoEmitido`

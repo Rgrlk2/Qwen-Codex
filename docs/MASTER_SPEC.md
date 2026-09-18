@@ -210,7 +210,97 @@ Dentro de Planificar vive la consulta de los 13 productos: ficha con el copy apr
 
 ---
 
-### 2.3 Vista 03 — Clientes
+### 2.3 La ficha de producto — el eslabón que faltaba
+
+> Decisión del CEO, 18/09/2026. **La ficha no es una página informativa: es la
+> pieza central de la experiencia comercial.**
+
+La cadena completa, sin saltos:
+
+```
+Planificar → Cliente → Producto recomendado → FICHA → Presentación
+→ Cotización → Seguimiento
+```
+
+El motor identifica los dolores y ordena los productos. El vendedor **abre la
+ficha que corresponde**, en vez de buscarla a mano.
+
+#### La regla que sostiene todo
+
+⛔ **La ficha oficial queda intacta como fuente maestra. La personalización es
+una capa encima. Nunca modifica el copy aprobado.**
+
+No se defiende con una validación: se defiende porque `PersonalizacionBloque`
+**no tiene ningún campo de texto** y no existe método para escribir el
+contenido de un bloque. Ver `packages/compartido/src/fichas.ts`.
+
+#### Los bloques
+
+Son exactamente las secciones del copy maestro, ni una más:
+
+`slogan` · `definicion` · `datosQueNecesita` · `queHace` · `ejemplo` ·
+`beneficios` · `casosDeUso` · `dondeTieneMasSentido` · `precioDeReferencia`
+
+⛔ `datosQueNecesita` existe **sólo en Merma IA** (`COPY_LOCK.md`). No se
+agrega a las demás para emparejar.
+
+#### Cara A · Para el vendedor
+
+Parte de la ficha oficial y prepara una versión para **ese** prospecto:
+
+- **mostrar, ocultar, mover y destacar** bloques;
+- agregar **"Lo que conversamos"** — lo que escuchó en la reunión, con sus palabras;
+- agregar una **nota del vendedor** en el cierre;
+- compartirla como **enlace responsive** por WhatsApp o correo.
+
+Durante la reunión la ficha sirve de **apoyo visual de venta consultiva**.
+
+⛔ Los dos textos propios van **visualmente separados** del copy oficial: el
+cliente tiene que distinguir qué dice Lab.IA y qué dice su vendedor.
+
+#### Cara B · Para el cliente
+
+Recibe una presentación limpia y fácil de recorrer: qué es, qué problema
+resuelve, qué hace, beneficios, casos de uso, posicionamiento y —cuando
+corresponda— precio de referencia o planes.
+
+Un solo llamado a la acción: **"Hablemos"**.
+
+| # | Regla |
+|---|---|
+| FC1 | ⛔ **No entra al Escritorio interno.** |
+| FC2 | ⛔ **No ve información operativa del vendedor:** ni comisiones, ni el plan interno, ni el ranking de productos, ni por qué se eligió éste. |
+| FC3 | ⛔ Nunca se revela cuántas veces se abrió el enlace. |
+| FC4 | El enlace lleva **token opaco**, igual que presentaciones y cotizaciones. |
+| FC5 | ⛔ El enlace sirve **el copy vigente**, nunca una copia vieja. Si cambió desde que el vendedor la armó, se le avisa **a él**, antes de compartir. |
+
+#### Cara C · Para la propuesta
+
+⛔ **La ficha no reemplaza la cotización.**
+
+Primero ayuda a que el cliente **entienda y elija** la solución. Después, desde
+Propuestas, el vendedor arma la presentación. Y la cotización formal viene
+**después, y con aprobación del CEO** (§11). El orden no se saltea.
+
+#### Cara D · Como portafolio público
+
+El índice **Soluciones Lab.IA**, dividido en **nueve específicas** y **cuatro
+integrales**, donde cada logo lleva a su ficha oficial.
+
+Y una segunda puerta de entrada: ⛔ **por dolor, no por nombre de producto.**
+El cliente muchas veces no sabe qué producto quiere; sabe qué le duele. Esa
+navegación usa la misma taxonomía del motor, y muestra **sólo `directo` y
+`cercano`**, en ese orden (§2.2).
+
+#### Los archivos
+
+Las trece fichas oficiales y el índice viven en
+`apps/escritorio/public/fichas/`, con la huella de cada una en `fichas.sha256`.
+Origen y detalle: el `LEEME.md` de esa carpeta.
+
+---
+
+### 2.3b Vista 03 — Clientes
 
 Cartera, historial y seguimiento.
 
