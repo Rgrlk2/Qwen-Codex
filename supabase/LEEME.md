@@ -67,6 +67,7 @@ con acceso directo.
 28. `la_version_de_la_cotizacion_es_la_del_documento` — dos cosas se llamaban igual y se pisaban.
 29. `fi5_de_verdad_anula_las_firmas` — la regla estaba escrita y no funcionaba.
 30. `editar_lo_ya_enviado_tambien_caduca` — FI5 no alcanzaba a lo que ya tenía el cliente.
+31. `abrir_observacion` — la única escritura del vendedor sobre el dinero.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
@@ -426,11 +427,51 @@ versión 3, con la firma del vendedor huérfana en la 1, y el circuito se trabab
 en *"faltan firmas"* sin que faltara ninguna. El sello ahora acepta un argumento
 para no tocar esa columna donde significa otra cosa.
 
+## El dinero: el vendedor observa, no edita
+
+⛔ En toda la capa de dinero hay **una sola escritura** del vendedor: abrir una
+observación. Y no toca ningún importe — deja dicho que algo no cuadra para que
+lo mire Administración.
+
+Que no pueda tocar plata no es una validación de pantalla: es que **no existe
+ningún otro método**, y las políticas de la base dan escritura sobre importes
+sólo a `es_administrador()`.
+
+Probado contra la API real, con dos vendedores y una línea de cada uno:
+
+| Intento | Resultado |
+|---|---|
+| Ver las líneas de participación | ve **una**, la suya; la del otro no existe para él |
+| Subirse su propia comisión | no mueve nada: sigue en Gs. 395.000 |
+| Publicarse una participación 90/10 | **rechazado** por RLS |
+| Cambiar el importe de un cobro | no mueve nada |
+| Crearse una liquidación | **rechazado** por RLS |
+| Abrir una observación | **permitido** — lo único |
+| Abrirla ya resuelta a su favor | **rechazado**: nace `abierta` |
+
+⛔ Dos matices honestos. Subirse la comisión y tocar un cobro devuelven `[]`
+—cero filas afectadas— en vez de un error: como esas tablas no tienen política
+de `update`, la fila no es visible para escribirse y PostgREST informa éxito
+sobre cero filas. El importe **no se mueve**, que es lo que importa, pero el
+rechazo es silencioso. Mismo patrón que el borrado en la agenda.
+
+## Las reglas del dinero, probadas al intentar romperlas
+
+Armando los datos de prueba me frenaron dos veces, y las dos tenían razón:
+
+- **G7** · Una participación se devenga **sólo contra un cobro confirmado**.
+  Inventé una referencia que no existía y la base la rechazó nombrando la regla.
+- **No hay mensualidad sin cotización.** La clave foránea no deja registrar un
+  cobro recurrente que no venga de un documento comercial.
+
+La cadena está encadenada de punta a punta: cotización → mensualidad → cobro
+confirmado → línea de participación. No se puede empezar por el medio.
+
 ## Lo que falta del servidor
 
 - La capa de datos del navegador contra Supabase, en reemplazo del mock:
-  hechas la sesión, los clientes, el motor, la agenda, las fichas y las
-  propuestas; faltan dinero, administración e inicio. Hasta que estén las nueve, el Escritorio
+  hechas la sesión, los clientes, el motor, la agenda, las fichas, las
+  propuestas y el dinero; faltan administración e inicio. Hasta que estén las nueve, el Escritorio
   sigue eligiendo entre mock y HTTP: una `CapaDatos` a medias no se puede
   enchufar.
 - Elegir proveedor de investigación y desplegar la función de servidor que lo
