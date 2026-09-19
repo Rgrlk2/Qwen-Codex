@@ -33,11 +33,17 @@
 import type {
   AudioSeguimiento, CapturaSeguimiento, Cliente, ClienteDetalle,
   EstadoPaso, EventoLineaTiempo, FiltroClientes, FiltroSeguimientos, Id,
-  ISODate, NuevoCliente, OpcionesPagina, PasoSugerido, ProductoId,
+  ISODate, NuevoCliente, OpcionesPagina, PasoSugerido,
   PropuestaDeSeguimiento, Seguimiento, SeguimientoConfirmado,
   SoporteDictado, Version,
 } from '@labia/compartido';
 import type { CapaClientes } from '@labia/compartido';
+import {
+  detectarMencionesFueraDeCatalogo,
+  detectarPasos,
+  detectarProductos,
+  sugerirEtapa,
+} from '@labia/compartido';
 import type { NucleoMock } from './nucleo';
 import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
 
@@ -66,69 +72,12 @@ function sumarDias(fecha: ISODate, dias: number): ISODate {
 }
 
 // ---------------------------------------------------------------------------
-// Heurística de captura — mock del procesamiento que en producción corre en
-// el servidor. Nunca inventa un producto fuera de los 13.
+// Heurística de captura — vive en @labia/compartido, no acá.
+//
+// ⛔ Es lógica de verdad, no un dato de ejemplo: la usan esta capa y la de
+//    Supabase. Duplicarla garantizaba que el Escritorio se comportara distinto
+//    contra los datos de ejemplo que contra el servidor.
 // ---------------------------------------------------------------------------
-
-const PALABRAS_CLAVE_PRODUCTO: ReadonlyArray<readonly [ProductoId, ReadonlyArray<string>]> = [
-  ['vendedor-24-7', ['whatsapp', 'consulta fuera de horario', 'atiende de noche']],
-  ['radar-stock', ['stock', 'inventario', 'reponer']],
-  ['precio-vivo', ['precio', 'lista de precios', 'actualizar precios']],
-  ['ruta-ia', ['reparto', 'ruta', 'delivery', 'repartidor']],
-  ['agendar-ia', ['turno', 'agenda de turnos', 'reserva']],
-  ['smart-commerce', ['tienda online', 'ecommerce', 'venta online', 'sucursal digital']],
-  ['park-ia', ['estacionamiento', 'playa de auto', 'parking']],
-  ['exeq-ia', ['encuesta', 'experiencia del cliente', 'satisfacción']],
-  ['merma-ia', ['merma', 'vencimiento de mercadería', 'pérdida de stock']],
-  ['cotiza-facil', ['cotización', 'presupuesto rápido']],
-  ['pulso-digital', ['reseña', 'opinión de clientes', 'reputación']],
-  ['ojo-digital', ['cámara', 'vidriera', 'circulación de gente']],
-  ['faro-digital', ['promoción', 'aviso', 'publicidad digital']],
-];
-
-function detectarProductos(texto: string): ProductoId[] {
-  const minusculas = texto.toLowerCase();
-  const detectados: ProductoId[] = [];
-  for (const [id, claves] of PALABRAS_CLAVE_PRODUCTO) {
-    if (claves.some((clave) => minusculas.includes(clave))) detectados.push(id);
-  }
-  return detectados;
-}
-
-const FRASES_FUERA_DE_CATALOGO = ['otro sistema', 'una app de', 'un software de', 'una planilla de'];
-
-function detectarMencionesFueraDeCatalogo(texto: string): string[] {
-  const minusculas = texto.toLowerCase();
-  return FRASES_FUERA_DE_CATALOGO.filter((frase) => minusculas.includes(frase));
-}
-
-function sugerirEtapa(texto: string): ClienteDetalle['etapa'] | null {
-  const minusculas = texto.toLowerCase();
-  if (/cerr(ó|o)|acept(ó|o)|compr(ó|o)|firm(ó|o)/.test(minusculas)) return 'ganado';
-  if (/no le interes(ó|a)|rechaz(ó|a)|se baj(ó|a)/.test(minusculas)) return 'perdido';
-  if (/cotizaci(ó|o)n|presupuesto/.test(minusculas)) return 'cotizacion';
-  if (/present(é|e)|mostr(é|e)|hicimos la demo/.test(minusculas)) return 'presentacion';
-  if (/diagnostic|relevamiento|entendimos el negocio/.test(minusculas)) return 'diagnostico';
-  return null;
-}
-
-function detectarPasos(texto: string): Array<Omit<PasoSugerido, 'id' | 'seguimientoId' | 'estado' | 'resueltoEn'>> {
-  const minusculas = texto.toLowerCase();
-  const pasos: Array<Omit<PasoSugerido, 'id' | 'seguimientoId' | 'estado' | 'resueltoEn'>> = [];
-  if (/llamar|volver a llamar/.test(minusculas)) {
-    pasos.push({ titulo: 'Llamar para seguir la conversación', venceEn: sumarDias(ahora(), 2) });
-  }
-  if (/enviar|mandar|compartir/.test(minusculas)) {
-    pasos.push({ titulo: 'Enviar la información conversada', venceEn: sumarDias(ahora(), 1) });
-  }
-  if (/visitar|pasar por|ir al local/.test(minusculas)) {
-    pasos.push({ titulo: 'Coordinar una visita', venceEn: sumarDias(ahora(), 5) });
-  }
-  if (pasos.length === 0) {
-    pasos.push({ titulo: 'Retomar contacto', venceEn: sumarDias(ahora(), 3) });
-  }
-  return pasos;
-}
 
 // ---------------------------------------------------------------------------
 // Semilla — cartera de ejemplo

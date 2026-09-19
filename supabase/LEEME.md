@@ -47,6 +47,10 @@ con acceso directo.
 8. `registro_de_ingreso` — alta de usuarios y registro de cada intento de entrada.
 9. `taxonomia_del_motor` — las tres capas del motor, extraídas del propio código (ver abajo).
 10. `sello_de_trazado` — quién creó cada cosa, quién la tocó y bloqueo optimista.
+11. `alinear_clientes_con_el_contrato` — actividad y referencia obligatorias, fecha de resolución de un paso.
+12. `altas_atomicas_e_idempotentes` — `crear_cliente` y `guardar_seguimiento` en una transacción.
+13. `alta_de_usuario_crea_cuentas_que_entran` — corrección de un error que dejaba afuera a cada vendedor nuevo.
+14. `audio_de_seguimiento` — el audio existe antes que el seguimiento; subirlo, registrarlo y borrarlo.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
@@ -130,9 +134,84 @@ Ahora lo pone la base. Probado por SQL directo, salteando la aplicación:
 | Guardar con la versión correcta | OK, sube 1 → 2 |
 | Reescribir `creado_por` / `creado_en` de una fila existente | **rechazado**, la historia no se toca |
 
+## Un vendedor nuevo no podía entrar
+
+Encontrado probando el alta contra la API real, no leyendo el código.
+
+GoTrue —el servicio de sesiones de Supabase— lee ocho columnas de token de
+`auth.users` como texto. Cuatro no tienen valor por defecto. Si quedan en
+nulo, el ingreso muere con `500 Database error querying schema`: un error que
+no dice nada, del lado del servidor, y la persona queda afuera sin
+explicación.
+
+Las siete cuentas que ya existían se habían corregido a mano en su momento,
+pero **la función que da de alta seguía creándolas mal**. O sea: cada vendedor
+que Rodrigo diera de alta desde Administración habría nacido sin poder entrar.
+Corregido en `alta_de_usuario`, y verificado: una cuenta creada con la versión
+vieja no obtiene sesión; con la nueva, sí.
+
+## Altas que se pueden reintentar
+
+Dar de alta un cliente escribe en tres tablas; guardar un seguimiento, en
+cinco. PostgREST no hace eso de forma atómica: son tres o cinco llamadas, y si
+la tercera falla queda un cliente a medio crear. Por eso las altas van por
+`crear_cliente` y `guardar_seguimiento`, que lo hacen en una transacción.
+
+Y la `ClaveIdempotencia` del contrato ahora significa algo: se guarda en
+`operacion_idempotente`. Si al vendedor se le corta el internet y aprieta
+"Guardar" otra vez, queda **un** cliente, no dos.
+
+Probado contra la API real, con el token de un vendedor de verdad:
+
+| Intento | Resultado |
+|---|---|
+| Alta de cliente con contacto | creado, todo en una transacción |
+| La misma clave otra vez, con otro nombre | **mismo id**, un solo cliente |
+| `creado_por` de lo creado | el vendedor real, no lo que mandó el navegador |
+| Seguimiento sin confirmar | **rechazado**, con el texto que ve la persona |
+| Seguimiento confirmado | guardado, con su paso, su producto y su evento |
+| La última interacción del cliente | se movió sola |
+
+## El audio existe antes que el seguimiento
+
+El recorrido es: grabar → subir → procesar el texto → recién ahí confirmar y
+guardar. O sea que hay un rato en que el audio no cuelga de nada. Por eso
+`seguimiento_id` dejó de ser obligatorio y la política de RLS mira quién lo
+subió mientras está suelto.
+
+| Intento | Resultado |
+|---|---|
+| Subir y registrar | audio con retención a 90 días |
+| La misma clave otra vez | **mismo id**, una sola fila |
+| Borrar sin decir por qué | **rechazado** |
+| Borrar con motivo | referencia soltada, **la fila queda** con quién y cuándo |
+| La transcripción | **intacta**: el texto es el registro comercial |
+| Bajar el archivo sin sesión | **rechazado**, el balde es privado |
+
+⛔ **El archivo se borra de verdad**, no sólo su referencia. Antes quedaba
+guardado y era recuperable.
+
+⛔ **Advertencia sobre el borrado y la CDN.** El balde se sirve detrás de
+Cloudflare. Comprobado: después de borrar el archivo del origen, el borde
+sigue entregando la copia cacheada un rato, aun con `cache-control: no-cache`.
+Por eso el nombre del archivo **no** es la clave de idempotencia —que la vista
+genera con un camino de respaldo basado en `Math.random()`— sino un
+`crypto.randomUUID()`. Así, pasado el borrado, sólo puede alcanzar la copia
+cacheada quien ya tenía la dirección exacta; no se llega probando rutas.
+
+## Pendiente de un clic tuyo, Rodrigo
+
+El análisis de seguridad marca una cosa que no se arregla por SQL: **la
+protección contra contraseñas filtradas está apagada**. Encendida, Supabase
+compara cada contraseña nueva contra HaveIBeenPwned y rechaza las que ya se
+filtraron. Se activa en el panel, en Authentication → Policies.
+
 ## Lo que falta del servidor
 
 - La capa de datos del navegador contra Supabase, en reemplazo del mock:
-  hecha la sesión, faltan clientes, motor, fichas, propuestas y dinero.
+  hechas la sesión y los clientes; faltan motor, agenda, fichas, propuestas,
+  dinero, administración e inicio. Hasta que estén las nueve, el Escritorio
+  sigue eligiendo entre mock y HTTP: una `CapaDatos` a medias no se puede
+  enchufar.
 - Generación del PDF y transcripción de voz (funciones de servidor).
 - Notificaciones salientes.
