@@ -43,11 +43,54 @@ con acceso directo.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
+## Autenticación — contraseñas de verdad
+
+Las siete cuentas existen en el servidor y la contraseña **se verifica**. El
+mock aceptaba cualquiera que no estuviera vacía; ahora la comprueba el
+servidor contra un resumen criptográfico, y el navegador nunca ve nada
+parecido a una clave guardada.
+
+⛔ **Ninguna contraseña está en este repositorio.** Las generó la base al azar
+y se entregaron una sola vez. Las siete están marcadas `debe_cambiar_clave`.
+
+⛔ **El correo de ingreso se DERIVA del usuario**, no se consulta. `JPFdz` →
+`jpfdz@usuarios.labia.local`, un dominio interno que no existe y al que no se
+le manda nada. Consultarlo hubiera sido un oráculo: probando nombres
+cualquiera podría averiguar qué usuarios existen, que es la mitad del trabajo
+de entrar. Derivándolo, un usuario inexistente y una contraseña equivocada
+recorren el mismo camino y devuelven el mismo texto. Verificado.
+
+El correo corporativo real de cada persona vive aparte, en `usuario.email`,
+para mostrar y para avisos.
+
+## La guardia, probada contra el servidor real
+
+No con la aplicación: con llamadas directas a la API, con el token de un
+vendedor de verdad. Es la prueba que importa, porque es lo que haría alguien
+que quiere saltearse la pantalla.
+
+| Como vendedor (Juan Pablo) | Resultado |
+|---|---|
+| Ver su propio perfil | 1 fila |
+| Ver el registro de accesos (sólo Administración) | **0 filas** |
+| Ver los presupuestos (sólo Administración) | **0 filas** |
+| Ascenderse a administrador | **rechazado**, sigue vendedor |
+| Dar de alta un usuario | **rechazado** |
+| Agregar un producto 14 | **rechazado** |
+| Leer los 13 productos | 13, como corresponde |
+
+| Como administrador (Rodrigo) | Resultado |
+|---|---|
+| Ver todos los usuarios | 7 |
+| Dar de alta un vendedor | creado |
+
+La guardia **discrimina**, no bloquea a todos: es la diferencia entre una
+puerta con llave y una pared.
+
 ## Lo que falta del servidor
 
 - Fichas, documentos emitidos, enlaces con token y registro de aperturas.
 - Dinero: participaciones, mensualidades, cobros, liquidaciones, presupuestos.
 - Notificaciones y constancias.
 - La capa de datos del navegador contra Supabase, en reemplazo del mock.
-- Autenticación real y carga inicial de los seis vendedores.
 - Generación del PDF y transcripción de voz (funciones de servidor).

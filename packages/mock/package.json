@@ -6,8 +6,20 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist", "src"],
-  "dependencies": { "@labia/compartido": "0.2.0" },
-  "scripts": { "build": "tsc -b" }
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@labia/compartido": "0.2.0"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  }
 }

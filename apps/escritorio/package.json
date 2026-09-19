@@ -7,7 +7,8 @@
   "dependencies": {
     "@labia/compartido": "0.2.0",
     "@labia/mock": "0.2.0",
-    "@labia/ui": "0.2.0"
+    "@labia/ui": "0.2.0",
+    "@supabase/supabase-js": "^2.116.0"
   },
   "scripts": {
     "dev": "vite",
