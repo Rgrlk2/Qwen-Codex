@@ -16,9 +16,10 @@ import type { Capacidades, Resultado, Rol, Sesion, Usuario } from '@labia/compar
 import { capacidadesDeRol } from '@labia/mock';
 import { supabase } from './conexion';
 import { bien, fallo } from './errores';
+import { COLUMNAS_TRAZADO, aTrazado, type FilaTrazado } from './trazado';
 
 /** Fila de `public.usuario` tal como la devuelve la base. */
-interface FilaUsuario {
+interface FilaUsuario extends FilaTrazado {
   readonly id: string;
   readonly nombre: string;
   readonly email: string;
@@ -26,12 +27,15 @@ interface FilaUsuario {
   readonly rol: Rol;
   readonly activo: boolean;
   readonly debe_cambiar_clave: boolean;
-  readonly creado_en: string;
   readonly ultimo_ingreso_en: string | null;
 }
 
+const COLUMNAS_USUARIO =
+  `id, nombre, email, usuario, rol, activo, debe_cambiar_clave, ultimo_ingreso_en, ${COLUMNAS_TRAZADO}`;
+
 function aUsuario(f: FilaUsuario): Usuario {
   return {
+    ...aTrazado(f),
     id: f.id,
     nombre: f.nombre,
     email: f.email,
@@ -39,9 +43,7 @@ function aUsuario(f: FilaUsuario): Usuario {
     rol: f.rol,
     activo: f.activo,
     debeCambiarClave: f.debe_cambiar_clave,
-    creadoEn: f.creado_en,
     ultimoIngresoEn: f.ultimo_ingreso_en,
-    ingresosEnPeriodo: 0,
   };
 }
 
@@ -99,7 +101,7 @@ export function crearCapaSesionSupabase(): CapaSesionSupabase {
 
     const { data, error } = await sb
       .from('usuario')
-      .select('id, nombre, email, usuario, rol, activo, debe_cambiar_clave, creado_en, ultimo_ingreso_en')
+      .select(COLUMNAS_USUARIO)
       .eq('id', auth.user.id)
       .maybeSingle();
 
@@ -187,8 +189,9 @@ export function crearCapaSesionSupabase(): CapaSesionSupabase {
       // ⛔ Se comprueba la actual antes de cambiarla: sin esto, quien
       //    encuentre una sesión abierta se queda con la cuenta.
       const { data: auth } = await sb.auth.getUser();
-      const correo = auth?.user?.email;
-      if (!correo) {
+      const persona = auth?.user;
+      const correo = persona?.email;
+      if (!persona || !correo) {
         return { ok: false, error: { codigo: 'no_autenticado', mensajeAmable: 'Tu sesión venció. Volvé a entrar.' } };
       }
       const { error: verificacion } = await sb.auth.signInWithPassword({ email: correo, password: actual });
@@ -202,7 +205,7 @@ export function crearCapaSesionSupabase(): CapaSesionSupabase {
       const { error } = await sb.auth.updateUser({ password: nueva });
       if (error) return fallo<void>(error);
 
-      await sb.from('usuario').update({ debe_cambiar_clave: false }).eq('id', auth.user.id);
+      await sb.from('usuario').update({ debe_cambiar_clave: false }).eq('id', persona.id);
       return bien(undefined as void);
     },
 

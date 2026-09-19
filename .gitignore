@@ -11,6 +11,7 @@ coverage/
 scripts/.salida/
 scripts/.salida-fichas/
 scripts/.salida-instantaneas/
+scripts/.salida-taxonomia/
 
 # Claves del servidor: nunca en el repositorio.
 .env

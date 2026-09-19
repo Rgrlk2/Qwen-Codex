@@ -104,7 +104,7 @@ export const VERSION_CATALOGO = 1;
 // CAPA 1 — Operaciones (canónicas, MASTER_SPEC §8.1)
 // ===========================================================================
 
-const OPERACIONES_SEMILLA: ReadonlyArray<Operacion> = [
+export const OPERACIONES_SEMILLA: ReadonlyArray<Operacion> = [
   { id: 'op-maneja-stock', nombre: 'Maneja stock o inventario', pregunta: '¿Maneja stock o inventario propio?', estado: 'confirmada' },
   { id: 'op-trabaja-turnos', nombre: 'Trabaja con turnos, citas o reservas', pregunta: '¿Atiende con turnos, citas o reservas?', estado: 'confirmada' },
   { id: 'op-atiende-whatsapp', nombre: 'Atiende consultas por WhatsApp', pregunta: '¿Recibe consultas por WhatsApp u otro chat?', estado: 'confirmada' },
@@ -129,9 +129,14 @@ function buscarOperacion(id: Id): Operacion | null {
 
 // ===========================================================================
 // CAPA 3 — Necesidades (canónicas, con su pregunta de confirmación)
+//
+// ⛔ Las cinco semillas se exportan para que el servidor pueda CARGARLAS a la
+//    base sin transcribirlas a mano. Copiar 1.400 líneas de taxonomía a un
+//    archivo SQL es garantía de que las dos versiones diverjan; extraerlas del
+//    original no.
 // ===========================================================================
 
-const NECESIDADES_SEMILLA: ReadonlyArray<Necesidad> = [
+export const NECESIDADES_SEMILLA: ReadonlyArray<Necesidad> = [
   { id: 'nec-fuera-horario', nombre: 'Pierde ventas fuera de horario', descripcion: 'Consultas que llegan cuando no hay nadie para responder.', preguntaConfirmacion: '¿Le llegan consultas fuera del horario de atención que hoy quedan sin responder?', estado: 'confirmada' },
   { id: 'nec-agenda-desordenada', nombre: 'Agenda desordenada', descripcion: 'Turnos, citas o reservas coordinados a mano, con choques y olvidos.', preguntaConfirmacion: '¿Coordina turnos o reservas a mano, por mensajes sueltos?', estado: 'confirmada' },
   { id: 'nec-no-sabe-reponer', nombre: 'No sabe qué reponer', descripcion: 'Compra por costumbre, sin cruzar lo que realmente se vende.', preguntaConfirmacion: '¿Decide qué comprar más por costumbre que por datos de venta?', estado: 'confirmada' },
@@ -170,7 +175,7 @@ function relOP(
   return { operacionId, necesidadId, probabilidad, motivo };
 }
 
-const RELACIONES_OPERACION_NECESIDAD: ReadonlyArray<RelacionOperacionNecesidad> = [
+export const RELACIONES_OPERACION_NECESIDAD: ReadonlyArray<RelacionOperacionNecesidad> = [
   relOP('op-atiende-whatsapp', 'nec-fuera-horario', 'tipica', 'Un negocio que atiende por WhatsApp recibe mensajes a cualquier hora, incluida la que nadie contesta.'),
   relOP('op-trabaja-turnos', 'nec-agenda-desordenada', 'tipica', 'Coordinar turnos a mano es la primera fuente de choques y olvidos.'),
   relOP('op-trabaja-turnos', 'nec-fuera-horario', 'frecuente', 'Los pedidos de turno también llegan fuera de horario, y hoy quedan sin respuesta hasta el día siguiente.'),
@@ -228,7 +233,7 @@ function relNP(
   return { necesidadId, productoId, encaje, adaptacionRequerida, argumento, motivo };
 }
 
-const RELACIONES_NECESIDAD_PRODUCTO: ReadonlyArray<RelacionNecesidadProducto> = [
+export const RELACIONES_NECESIDAD_PRODUCTO: ReadonlyArray<RelacionNecesidadProducto> = [
   // --- Pierde ventas fuera de horario ---
   relNP('nec-fuera-horario', 'vendedor-24-7', 'directo',
     'Responde la consulta en el momento en que hoy nadie está disponible.',
@@ -380,7 +385,7 @@ function op(operacionId: Id, probabilidad: Probabilidad, motivo: string): Operac
  * ⛔ Esto es semilla ampliada, NO el techo: cualquier otro texto pasa por el
  *    heurístico de ACTIVIDAD_DESCONOCIDA() más abajo y queda pendiente_de_revision.
  */
-const ACTIVIDADES_CURADAS: ReadonlyArray<DefinicionActividad> = [
+export const ACTIVIDADES_CURADAS: ReadonlyArray<DefinicionActividad> = [
   {
     id: 'act-repuestera', nombre: 'Repuestera', sinonimos: ['casa de repuestos', 'repuestos', 'autopartes'],
     operaciones: [

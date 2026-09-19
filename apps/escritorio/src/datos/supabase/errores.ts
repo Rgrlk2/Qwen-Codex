@@ -23,7 +23,8 @@ interface ErrorPostgres {
 /** Códigos de Postgres → códigos del contrato. */
 function codigoDesde(pg: ErrorPostgres): CodigoError {
   switch (pg.code) {
-    case '23505': return 'conflicto_version';   // clave duplicada
+    case '40001': return 'conflicto_version';   // el sello de trazado freno una escritura vieja
+    case '23505': return 'validacion';          // clave duplicada
     case '23503': return 'no_encontrado';       // clave foránea rota
     case '23514': return 'regla_comercial';     // restricción de negocio
     case '23502': return 'validacion';          // falta un dato obligatorio
@@ -48,6 +49,10 @@ function mensajeAmable(pg: ErrorPostgres, codigo: CodigoError): string {
     || /DATA_MODEL|COMMERCIAL_RULES|portafolio Lab\.IA/.test(crudo);
   if (esNuestro && crudo.length > 0) {
     return crudo.replace(/\s*\((DATA_MODEL|COMMERCIAL_RULES)[^)]*\)\s*$/, '').trim();
+  }
+
+  if (pg.code === '23505') {
+    return 'Ya existe algo registrado con ese dato. Revisá si no lo cargaste antes.';
   }
 
   switch (codigo) {
