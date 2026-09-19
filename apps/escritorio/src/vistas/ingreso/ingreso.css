@@ -28,10 +28,12 @@
   min-width: 0;
   display: grid;
   gap: 20px;
-  padding: 28px 24px;
-  border: 1px solid var(--linea);
-  border-radius: 16px;
+  padding: 30px 26px;
+  border: 1px solid var(--linea-2);
+  border-radius: var(--r-carta);
   background: var(--superficie);
+  box-shadow: var(--sombra-alzada), var(--luz-interior);
+  backdrop-filter: var(--difuminado);
 }
 
 .ingreso-marca {
@@ -66,6 +68,8 @@
 }
 
 .ingreso-etiqueta {
+  text-transform: uppercase;
+  letter-spacing: var(--etiqueta-track);
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--texto);
@@ -74,15 +78,18 @@
 .ingreso-entrada {
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--linea-2);
-  border-radius: 10px;
-  background: var(--bg-2);
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--linea);
+  border-radius: var(--r-pilula);
+  background: var(--glass);
   color: var(--texto);
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 0.9375rem;
+  transition: border-color var(--normal) var(--suave);
 }
+
+.ingreso-entrada:hover { border-color: var(--linea-2); }
 
 .ingreso-entrada::placeholder { color: var(--mudo); }
 
@@ -95,22 +102,36 @@
 
 .ingreso-entrada[aria-invalid='true'] { border-color: var(--peligro); }
 
+/* El mismo boton principal del resto del Escritorio: es la primera pantalla
+   que se ve, y tiene que ser la misma aplicacion desde el primer clic. */
 .ingreso-boton {
-  min-height: 44px;
-  padding: 12px 18px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: var(--azul);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 26px;
+  border: 1px solid var(--linea);
+  border-radius: var(--r-pilula);
+  background: var(--grad-cta);
+  box-shadow: var(--sombra-cta);
   color: var(--texto);
   font-family: inherit;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
   cursor: pointer;
+  transition: transform var(--normal) var(--suave), box-shadow var(--normal) var(--suave);
 }
+
+.ingreso-boton:hover:not([disabled]) { transform: var(--alzar); box-shadow: var(--sombra-cta-alta); }
+.ingreso-boton:active:not([disabled]) { transform: var(--apretar); }
 
 .ingreso-boton[disabled] {
   cursor: progress;
   opacity: 0.72;
+  transform: none;
+  box-shadow: none;
 }
 
 /* ⛔ Error: lenguaje claro y reintento. Nunca una pantalla en blanco. */
