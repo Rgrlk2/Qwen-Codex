@@ -195,3 +195,42 @@ paquete compartido, y la deuda no rompe nada: las copias son idénticas, no
 divergentes. Es limpieza, no corrección.
 
 Bloqueante: no
+
+### [ESPEC] 2026-09-19 — `TipoPropuesta` ya no nombra sólo propuestas
+Archivo: `packages/compartido/src/propuestas.ts` (dueña: S5)
+
+Al ensamblar la capa de fichas apareció que `CapaFichas.compartirFicha` devuelve
+un `EnlaceCompartido`, cuyo campo `tipoPropuesta` era `'presentacion' | 'cotizacion'`.
+Una ficha compartida no tenía cómo declararse: viajaba disfrazada de presentación,
+y Administración la mostraba como tal.
+
+Hecho en este cambio: se agregó `'ficha'` al tipo, y el ternario de
+`administracion/vista.ts` que etiquetaba la apertura pasó a ser un `switch`
+exhaustivo, para que el próximo tipo rompa la compilación en vez de mostrarse mal.
+
+Queda pendiente, no bloqueante: el nombre. `TipoPropuesta` hoy nombra el tipo de
+documento de un enlace, no sólo las propuestas. `TipoDocumentoEnlace` sería el
+nombre correcto. No lo renombré porque toca `propuestas.ts`, `datos-propuestas.ts`,
+`datos-finanzas.ts` y la vista de Administración a la vez, y es puro renombre.
+
+Bloqueante: no
+
+### [ESPEC] 2026-09-19 — Tres vistas no arrancaban: `export default` en vez de `crearVista` · **RESUELTO**
+Archivos: `apps/escritorio/src/vistas/propuestas/vista.ts` (dueña: S5)
+· `apps/escritorio/src/vistas/dinero/vista.ts` (dueña: S6)
+· `apps/escritorio/src/vistas/administracion/vista.ts` (dueña: S6)
+
+`main.ts` monta una vista sólo si su módulo exporta `crearVista()`
+(`esModuloVista`, contrato-vista.ts). Esas tres exportaban su vista con
+`export default`, así que el Escritorio mostraba **"en construcción"** en
+Propuestas, Dinero y Administración pese a tener el código entero —1.416, 530 y
+1.412 líneas—. S4 ya había adoptado la convención al rebasar; S5 y S6 no.
+
+Apareció al generar las instantáneas de las pantallas: las tres fallaron con
+`crearVista is not a function`, que es exactamente lo que le pasaba al núcleo en
+silencio.
+
+Resuelto: las tres exportan ahora `crearVista()`. Se dejó el `export default`
+donde estaba, para no tocar lo que ya lo importe así.
+
+Bloqueante: era sí — tres de las siete secciones no abrían.

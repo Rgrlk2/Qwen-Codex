@@ -87,6 +87,38 @@ export function bloquesDelCopy(bruto: string): ReadonlyArray<BloqueFicha> {
   });
 }
 
+/**
+ * Recorta del documento maestro la sección de un producto.
+ *
+ * Los documentos numeran los productos con `# N. Nombre`; la sección de uno
+ * llega hasta el siguiente encabezado de ese nivel. Se compara sin tildes ni
+ * mayúsculas porque el mismo producto aparece como "Cotiza Fácil" y como
+ * "COTIZA Facil" según el archivo.
+ *
+ * Devuelve `null` si no está: quien llama decide si eso es un dato faltante o
+ * un fallo de contrato.
+ */
+export function seccionDeProducto(documento: string, nombreProducto: string): string | null {
+  const normalizar = (t: string) =>
+    t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const objetivo = normalizar(nombreProducto);
+  const lineas = documento.split('\n');
+  let inicio = -1;
+  let fin = lineas.length;
+  for (let i = 0; i < lineas.length; i += 1) {
+    const encabezado = /^#\s+\d+\.\s*(.+?)\s*$/.exec(lineas[i] ?? '');
+    if (!encabezado) continue;
+    if (inicio === -1) {
+      if (normalizar(encabezado[1] ?? '') === objetivo) inicio = i + 1;
+    } else {
+      fin = i;
+      break;
+    }
+  }
+  if (inicio === -1) return null;
+  return lineas.slice(inicio, fin).join('\n').trim();
+}
+
 export function fichaOficialDe(
   copy: CopyDeProducto, logo: string, huellaCopy: string, versionCatalogo: number,
 ): FichaOficial {

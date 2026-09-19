@@ -15,7 +15,8 @@ import {
   bloquesDelCopy, personalizacionInicial, validarPersonalizacion,
   fichaPublicaDe, revisarCopy, indiceDe, porNecesidad, MAXIMO_DESTACADOS,
 } from '../packages/mock/src/datos-fichas.ts';
-import { ORDEN_CANONICO } from '../packages/compartido/src/index.ts';
+import { ORDEN_CANONICO, PRODUCTOS } from '../packages/compartido/src/index.ts';
+import { crearCapaDatosMock } from '../packages/mock/src/index.ts';
 
 let ok = 0;
 const fallos = [];
@@ -140,6 +141,103 @@ const porDolor = porNecesidad('nec-1', 'Se me pierde mercaderia', [
 ]);
 comprobar('⛔ la entrada por dolor deja fuera lo adaptable', porDolor.fichas.length === 2);
 comprobar('⛔ y pone lo directo primero', porDolor.fichas[0].nombreProducto === 'Merma IA');
+
+// ===========================================================================
+seccion('La capa de fichas del mock, ensamblada');
+
+const datos = crearCapaDatosMock({ configuracion: { latenciaMs: 0 } });
+
+const idx = await datos.indicePortafolio();
+comprobar('el indice sale del copy, no de una lista escrita a mano',
+  idx.ok && idx.datos.especificas.length === 9 && idx.datos.integrales.length === 4,
+  idx.ok ? `${idx.datos.especificas.length}+${idx.datos.integrales.length}` : idx.error?.codigo);
+
+let sinBloques = [];
+let sinLogo = [];
+for (const id of PRODUCTOS) {
+  const r = await datos.obtenerFichaOficial(id);
+  if (!r.ok) { sinBloques.push(`${id}: ${r.error.codigo}`); continue; }
+  if (r.datos.bloques.filter((b) => b.presente).length < 5) sinBloques.push(id);
+  if (r.datos.logo !== `/assets/productos/${id}/logo-${id}.webp`) sinLogo.push(id);
+}
+comprobar('las trece fichas oficiales se sirven con contenido', sinBloques.length === 0, sinBloques.join(' '));
+comprobar('cada una apunta a su logo incorporado', sinLogo.length === 0, sinLogo.join(' '));
+
+const inexistente = await datos.obtenerFichaOficial('no-existe');
+comprobar('un producto fuera del portafolio da no_encontrado',
+  !inexistente.ok && inexistente.error.codigo === 'no_encontrado');
+
+// --- La datos del vendedor -------------------------------------------------
+const oficial = (await datos.obtenerFichaOficial('park-ia')).datos;
+const partida = personalizacionInicial(oficial);
+// ⛔ Copia del CONTENIDO, no una referencia: el mock devuelve siempre el mismo
+//    objeto, asi que guardar `oficial` y compararlo despues no probaria nada.
+const copyAntes = JSON.stringify(oficial.bloques);
+
+const creada = await datos.prepararFicha(
+  { productoId: 'park-ia', clienteId: 'cliente-demo', bloques: partida }, 'clave-1');
+comprobar('preparar una ficha guarda la capa', creada.ok && creada.datos.version === 1);
+const repetida = await datos.prepararFicha(
+  { productoId: 'park-ia', clienteId: 'cliente-demo', bloques: partida }, 'clave-1');
+comprobar('la misma clave de idempotencia no duplica',
+  repetida.ok && creada.ok && repetida.datos.id === creada.datos.id);
+
+const tresDestacados = partida.map((b, i) => ({ ...b, destacado: i < 3 }));
+const rechazo = await datos.prepararFicha(
+  { productoId: 'park-ia', clienteId: 'cliente-demo', bloques: tresDestacados }, 'clave-2');
+comprobar('⛔ tres destacados se rechazan con regla_comercial',
+  !rechazo.ok && rechazo.error.codigo === 'regla_comercial', rechazo.ok ? 'paso' : rechazo.error.codigo);
+
+const todosOcultos = partida.map((b) => ({ ...b, visible: false }));
+const vacia = await datos.prepararFicha(
+  { productoId: 'park-ia', clienteId: 'cliente-demo', bloques: todosOcultos }, 'clave-3');
+comprobar('⛔ una ficha sin bloques visibles se rechaza',
+  !vacia.ok && vacia.error.codigo === 'regla_comercial');
+
+const viejaVersion = await datos.actualizarFicha(creada.datos.id, { loQueConversamos: 'x' }, 99);
+comprobar('⛔ actualizar con version vieja da conflicto_version',
+  !viejaVersion.ok && viejaVersion.error.codigo === 'conflicto_version');
+
+const puesta = await datos.actualizarFicha(
+  creada.datos.id, { loQueConversamos: 'Lo que hablamos el martes.' }, 1);
+comprobar('actualizar sube la version', puesta.ok && puesta.datos.version === 2);
+
+// ⛔ LA REGLA: no hay forma de escribir en la ficha oficial desde la datos.
+const despues = await datos.obtenerFichaOficial('park-ia');
+comprobar('⛔ la ficha oficial quedo intacta despues de personalizarla',
+  despues.ok && JSON.stringify(despues.datos.bloques) === copyAntes);
+
+const avisoE2E = await datos.revisarCopyDeFicha(creada.datos.id);
+comprobar('con el copy vigente no hay aviso', avisoE2E.ok && avisoE2E.datos === null);
+
+// --- El enlace ------------------------------------------------------------
+const enlace = await datos.compartirFicha(
+  creada.datos.id, { venceEn: '2026-10-01T00:00:00-03:00' }, 'clave-enlace');
+comprobar('el enlace de una ficha se declara como ficha',
+  enlace.ok && enlace.datos.tipoPropuesta === 'ficha');
+comprobar('⛔ el token no lleva adentro el id de la ficha ni del cliente',
+  enlace.ok && !enlace.datos.token.includes(creada.datos.id) && !enlace.datos.token.includes('cliente-demo'));
+comprobar('⛔ una ficha no pide codigo ni queda respondida',
+  enlace.ok && enlace.datos.requiereCodigo === false && enlace.datos.respondido === false);
+
+const revocado = await datos.revocarEnlaceFicha(enlace.datos.id, 'prueba');
+comprobar('revocar deja constancia de quien', revocado.ok && revocado.datos.revocadoEn !== null
+  && revocado.datos.revocadoPor !== null);
+
+// --- Descartar ------------------------------------------------------------
+const descarte = await datos.descartarFicha(creada.datos.id, 'prueba');
+comprobar('descartar la capa responde bien', descarte.ok);
+const trasDescarte = await datos.obtenerFichaOficial('park-ia');
+comprobar('⛔ descartar la capa NO borra la ficha oficial',
+  trasDescarte.ok && trasDescarte.datos.bloques.filter((b) => b.presente).length >= 5);
+
+// --- Entrada por dolor ----------------------------------------------------
+const dolor = await datos.fichasPorNecesidad('necesidad-pierdo-mercaderia');
+comprobar('la entrada por dolor responde', dolor.ok, dolor.ok ? '' : dolor.error?.codigo);
+comprobar('⛔ y deja fuera lo adaptable y lo no recomendado',
+  dolor.ok && dolor.datos.fichas.length === 2, dolor.ok ? `${dolor.datos.fichas.length}` : '');
+comprobar('⛔ lo directo va primero',
+  dolor.ok && dolor.datos.fichas[0].productoId === 'merma-ia');
 
 // ===========================================================================
 console.log('\nResultado\n');

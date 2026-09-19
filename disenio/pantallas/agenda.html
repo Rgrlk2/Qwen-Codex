@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="es-PY">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda — Escritorio Vendedores Lab.IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/*
+ * Tokens del Escritorio Vendedores Lab.IA.
+ *
+ * ⛔ DUEÑO: SESIÓN 2. Ninguna otra sesión edita este archivo.
+ * ⛔ Ninguna vista escribe un color, una fuente ni una curva literal. Sólo tokens.
+ *
+ * IDENTIDAD LAB.IA — ocho colores oficiales + Inter. Ver marca-labia.css.
+ * ⛔ Se descarta la identidad dorada con serif de la referencia operativa.
+ *    De la referencia se reutiliza la ARQUITECTURA, no la identidad visual.
+ *
+ * Todo token de color deriva de los ocho oficiales: o es uno de ellos, o es
+ * uno de ellos con transparencia. ⛔ No se inventa ningún hex nuevo.
+ *
+ * Ver docs/DESIGN_SYSTEM.md §1 y §2.
+ */
+
+@import url('./marca-labia.css');
+
+:root {
+  /* --- Fondos --- */
+  --bg:           var(--labia-negro-azulado);              /* #020711 */
+  --bg-2:         var(--labia-navy);                       /* #06162F */
+  --superficie:   rgba(6, 22, 47, .72);                    /* navy translúcido */
+  --superficie-2: rgba(10, 85, 217, .10);                  /* azul al 10 %: tarjeta elevada */
+  --glass:        rgba(6, 22, 47, .56);
+
+  /* --- Líneas --- */
+  --linea:        rgba(174, 184, 200, .16);                /* texto-2 al 16 % */
+  --linea-2:      rgba(174, 184, 200, .28);
+  --linea-acento: rgba(0, 217, 255, .32);                  /* cian al 32 % */
+
+  /* --- Texto --- */
+  --texto:   var(--labia-texto);                           /* #F2F7FF */
+  --texto-2: var(--labia-texto-2);                         /* #AEB8C8 */
+  --texto-3: rgba(174, 184, 200, .72);
+  --mudo:    rgba(174, 184, 200, .52);
+
+  /* --- Acentos --- */
+  /* ⛔ --azul es RELLENO. Nunca texto ni borde fino: 3.18 contra el fondo. */
+  --azul:         var(--labia-azul);                       /* #0A55D9 */
+  --azul-suave:   rgba(10, 85, 217, .18);
+  /* Para texto y bordes de acento, éstos: */
+  --azul-texto:   var(--labia-azul-claro);                 /* #098CFF — 5.96 */
+  --cian:         var(--labia-cian);                       /* #00D9FF — 11.88 */
+  --cian-claro:   var(--labia-cian-claro);                 /* #12D9FF */
+  --cian-suave:   rgba(0, 217, 255, .14);
+
+  /* --- Estado --- */
+  /* Sin color oficial propio: se apoyan en los de marca y en los mínimos
+     imprescindibles para peligro. ⛔ No se agregan sin autorización. */
+  --ok:            var(--labia-cian);
+  --peligro:       #FF6B6B;
+  --peligro-suave: rgba(255, 107, 107, .14);
+
+  /* --- Tipografía: Inter. ⛔ Sin serif. --- */
+  --fuente: var(--labia-fuente);
+  --fuente-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- Estructura --- */
+  --lateral: 248px;
+  /* Lateral retráctil (docs/PARALLEL_SESSIONS.md pedido S2): sólo íconos. */
+  --lateral-compacta: 76px;
+  --inferior: 64px;
+  --ancho-contenido: 1240px;
+
+  /* --- Movimiento --- */
+  --suave: cubic-bezier(.16, .8, .24, 1);
+}
+
+@media (max-width: 899px) {
+  :root { --lateral: 0px; }
+}
+
+/*
+ * Marca Lab.IA — COLORES OFICIALES.
+ *
+ * ⛔ DUEÑO: SESIÓN 2. Único archivo donde viven los hex de marca.
+ * ⛔ Estos ocho colores son los oficiales. No se cambian, no se "ajustan",
+ *    no se derivan variantes nuevas sin autorización.
+ *
+ * Tipografía oficial: Inter.
+ *
+ * Contraste medido contra los dos fondos (WCAG 2.1):
+ *
+ *   color                    vs #020711   vs #06162F   veredicto
+ *   --------------------------------------------------------------------
+ *   #0A55D9  azul                 3.18         2.85    ⛔ NO es color de texto
+ *   #098CFF  azul-claro           5.96         5.33    AA texto
+ *   #00D9FF  cian                11.88        10.63    AA texto
+ *   #12D9FF  cian-claro          11.91        10.65    AA texto
+ *   #F2F7FF  texto               18.75        16.78    AA texto
+ *   #AEB8C8  texto-2             10.08         9.02    AA texto
+ *
+ * ⛔ REGLA DURA: #0A55D9 es color de RELLENO y de SUPERFICIE.
+ *    No se usa para texto ni para bordes finos sobre fondo oscuro: no alcanza
+ *    AA para texto (3.18) y ni siquiera 3:1 sobre #06162F (2.85).
+ *    Para texto o borde de acento se usa #098CFF o #00D9FF.
+ *
+ * Ver docs/DESIGN_SYSTEM.md §1 y docs/ASSET_SOURCES.md.
+ */
+
+:root {
+  /* Fondos */
+  --labia-negro-azulado: #020711;
+  --labia-navy:          #06162F;
+
+  /* Azules */
+  --labia-azul:          #0A55D9;   /* ⛔ relleno/superficie, NO texto */
+  --labia-azul-claro:    #098CFF;
+
+  /* Cyan */
+  --labia-cian:          #00D9FF;
+  --labia-cian-claro:    #12D9FF;
+
+  /* Texto */
+  --labia-texto:         #F2F7FF;
+  --labia-texto-2:       #AEB8C8;
+
+  /* Tipografía */
+  --labia-fuente: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* 0 = marca completa. Los ocho colores oficiales están cargados. */
+  --marca-pendiente: 0;
+}
+
+/*
+ * Estilos base y componentes compartidos.
+ *
+ * ⛔ DUEÑO: SESIÓN 2. Las sesiones 3 a 6 consumen estas clases; no las editan.
+ *    Una variante propia de una vista lleva prefijo (.planificar-…) y vive en
+ *    el CSS de esa vista.
+ *
+ * COMPONENTES (docs/DESIGN_SYSTEM.md §5):
+ *   .tarjeta · .accion-protagonista · .cifra · .rejilla · .lista
+ *   .ranking/.ranking-fila · .encaje(--directo|--cercano|--adaptable|--no-recomendado)
+ *   .dato(--verificado|--inferido|--no-encontrado) · .confianza(--alta|--media|--baja)
+ *   .calendario/.calendario-dia · .cronograma dentro de .cronograma-contenedor
+ *   .entrada-agenda(--atrasada)
+ *   .btn(-borde|-texto) · .campo/.entrada · .pestanas/.pestana · .chips/.chip
+ *   .tabla dentro de .tabla-contenedor · dialog/.dialogo · .aviso
+ *   .cargando/.hueso · .vacio · .error
+ *   .lateral(--compacta, vía .app-cascara--lateral-compacta) · .inferior
+ *   .principal · .vista · .encabezado · .saltar
+ *   .icono-envoltorio(--sm|--md|--lg) · .avatar(--sm|--md|--lg)
+ *
+ * Íconos: familia SVG única en `@labia/ui/iconos`. ⛔ Sin emojis en la
+ * interfaz — sólo esta familia, envuelta en `.icono-envoltorio` para el
+ * degradado azul→cian y la sombra de profundidad.
+ *
+ * REGLAS QUE NO SE DEBILITAN
+ * ──────────────────────────
+ *   - área táctil mínima 44 × 44 px, en los CINCO anchos
+ *   - :focus-visible { outline: 2px solid var(--cian); outline-offset: 3px }
+ *   - @media (prefers-reduced-motion: reduce) anula toda animación
+ *   - box-sizing: border-box global
+ *   - min-width: 0 en hijos de flex y grid
+ *   - los importes usan font-variant-numeric: tabular-nums
+ *
+ * ⛔ RESPONSIVE — PROHIBIDO `overflow-x: hidden` PARA TAPAR UN DESBORDAMIENTO.
+ *    Esconde el síntoma, deja el problema y rompe position: sticky.
+ *    El único overflow-x permitido es el de .tabla-contenedor y el de
+ *    .cronograma-contenedor, y es del elemento, no de la página.
+ *    Toda causa se corrige en su origen (docs/DESIGN_SYSTEM.md §7.1):
+ *      min-width de más · hijo de flex/grid sin min-width:0 · tabla sin
+ *      contenedor · palabra larga sin overflow-wrap · padding sumado a 100% ·
+ *      grilla que no baja · imagen sin max-width · 100vw con scrollbar.
+ *
+ *    Validar en 360, 390, 768, 1024 y 1440 px:
+ *      document.documentElement.scrollWidth <= window.innerWidth
+ */
+
+@import url('./tokens.css');
+
+/* ===========================================================================
+   1. Reset
+   =========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--texto);
+  font-family: var(--fuente);
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100dvh;
+}
+
+/* ⛔ Nada de overflow-x: hidden acá. Si algo desborda, se corrige la causa
+   (min-width de más, hijo de flex/grid sin min-width:0, imagen sin max-width,
+   palabra larga sin overflow-wrap, 100vw con scrollbar) — nunca se tapa. Los
+   únicos overflow-x del sistema son los de .tabla-contenedor y
+   .cronograma-contenedor, y son del elemento, no de la página. */
+
+img { max-width: 100%; display: block; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: inherit; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+h1, h2, h3, h4, p { margin: 0; }
+
+[hidden] { display: none !important; }
+
+/* Palabras u URLs largas nunca desbordan su contenedor. */
+p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
+
+/* ===========================================================================
+   2. Accesibilidad transversal
+   =========================================================================== */
+
+:focus-visible {
+  outline: 2px solid var(--cian);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.saltar {
+  position: absolute;
+  top: -999px;
+  left: 0;
+  z-index: 1000;
+  padding: 12px 20px;
+  background: var(--cian);
+  color: var(--bg);
+  font-weight: 600;
+  border-radius: 0 0 8px 0;
+  text-decoration: none;
+}
+.saltar:focus {
+  top: 0;
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===========================================================================
+   3. Cáscara: lateral, inferior, principal, vista, encabezado
+   =========================================================================== */
+
+.app-cascara {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 900px) {
+  .app-cascara { flex-direction: row; }
+}
+
+.lateral {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .lateral {
+    display: flex;
+    flex-direction: column;
+    width: var(--lateral);
+    min-width: var(--lateral);
+    flex-shrink: 0;
+    height: 100dvh;
+    position: sticky;
+    top: 0;
+    background: var(--bg-2);
+    border-right: 1px solid var(--linea);
+    padding: 20px 16px;
+    gap: 24px;
+    overflow-y: auto;
+  }
+}
+
+.lateral-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lateral-marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  min-width: 0;
+  overflow: hidden;
+}
+.lateral-marca img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.lateral-marca-texto {
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/** Control retráctil: siempre visible, siempre con área táctil de 44 px. */
+.lateral-alternar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--linea-2);
+  background: var(--superficie-2);
+  color: var(--texto-2);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.lateral-alternar:hover { color: var(--cian); border-color: var(--linea-acento); }
+.lateral-alternar svg { width: 18px; height: 18px; }
+
+.lateral-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lateral-enlace {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  color: var(--texto-2);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+.lateral-enlace:hover {
+  background: var(--superficie-2);
+  color: var(--texto);
+}
+.lateral-enlace[aria-current="page"] {
+  background: var(--cian-suave);
+  color: var(--texto);
+  border-color: var(--linea-acento);
+}
+.lateral-enlace[aria-current="page"] .icono-envoltorio {
+  border-color: var(--cian);
+  box-shadow: 0 0 0 1px var(--linea-acento), 0 4px 14px rgba(0, 217, 255, .22);
+}
+.lateral-enlace-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lateral-pie {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--linea);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===========================================================================
+   3b. Lateral retráctil — expandida (ícono + texto) / compacta (sólo ícono)
+   =========================================================================== */
+
+@media (min-width: 900px) {
+  .app-cascara--lateral-compacta .lateral {
+    width: var(--lateral-compacta);
+    min-width: var(--lateral-compacta);
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .app-cascara--lateral-compacta .lateral-marca,
+  .app-cascara--lateral-compacta .lateral-enlace-texto,
+  .app-cascara--lateral-compacta .lateral-usuario-info,
+  .app-cascara--lateral-compacta .chip-datos-ejemplo,
+  .app-cascara--lateral-compacta .lateral-cerrar-texto {
+    display: none;
+  }
+  .app-cascara--lateral-compacta .lateral-encabezado {
+    justify-content: center;
+  }
+  .app-cascara--lateral-compacta .lateral-enlace {
+    justify-content: center;
+    padding: 8px;
+  }
+  .app-cascara--lateral-compacta .lateral-usuario {
+    justify-content: center;
+  }
+  .app-cascara--lateral-compacta .lateral-alternar svg {
+    transform: rotate(180deg);
+  }
+}
+
+/* ===========================================================================
+   3c. Usuario: avatar + nombre, sin truncar de más
+   =========================================================================== */
+
+.lateral-usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.lateral-usuario-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.lateral-usuario-nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+
+.lateral-usuario-rol {
+  font-size: 12px;
+  color: var(--texto-2);
+  text-transform: capitalize;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--azul), var(--azul-texto) 65%, var(--cian));
+  border: 1px solid var(--linea-acento);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .1);
+  color: var(--texto);
+  font-weight: 700;
+  overflow: hidden;
+}
+.avatar--sm { width: 32px; height: 32px; font-size: 12px; }
+.avatar--md { width: 40px; height: 40px; font-size: 15px; }
+.avatar--lg { width: 64px; height: 64px; font-size: 22px; }
+.avatar-foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.inferior {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  height: calc(var(--inferior) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--bg-2);
+  border-top: 1px solid var(--linea);
+}
+
+@media (min-width: 900px) {
+  .inferior { display: none; }
+}
+
+.inferior-enlace {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 44px;
+  color: var(--texto-2);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  background: none;
+  padding: 6px 2px;
+}
+.inferior-enlace-texto {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.inferior-enlace[aria-current="page"] {
+  color: var(--cian);
+}
+.inferior-enlace[aria-current="page"] .icono-envoltorio {
+  border-color: var(--cian);
+  box-shadow: 0 0 0 1px var(--linea-acento), 0 4px 14px rgba(0, 217, 255, .22);
+}
+
+.principal {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.encabezado {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px clamp(16px, 4vw, 32px);
+  background: rgba(2, 7, 17, 0.86);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--linea);
+  min-height: 44px;
+}
+
+.encabezado-titulo {
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 600;
+  min-width: 0;
+}
+
+.vista {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 24px clamp(16px, 4vw, 32px) calc(40px + var(--inferior));
+  max-width: var(--ancho-contenido);
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .vista { padding-bottom: 40px; }
+}
+
+.chip-datos-ejemplo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--azul-suave);
+  border: 1px solid var(--linea-acento);
+  color: var(--texto-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.chip-datos-ejemplo::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cian);
+  flex-shrink: 0;
+}
+
+/* ===========================================================================
+   3d. Íconos — una única familia SVG, contenedor con degradado y profundidad
+   =========================================================================== */
+
+.icono-envoltorio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--azul-suave), var(--cian-suave));
+  border: 1px solid var(--linea-acento);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .32), inset 0 1px 0 rgba(255, 255, 255, .05);
+  color: var(--cian);
+}
+.icono-envoltorio svg { width: 56%; height: 56%; }
+
+.icono-envoltorio--sm { width: 32px; height: 32px; border-radius: 9px; }
+.icono-envoltorio--md { width: 40px; height: 40px; border-radius: 11px; }
+.icono-envoltorio--lg {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--azul-suave), var(--cian-suave) 70%);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+/* ===========================================================================
+   4. Tarjeta
+   =========================================================================== */
+
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 16px;
+  padding: 20px;
+  min-width: 0;
+}
+
+.tarjeta-titulo {
+  font-size: clamp(18px, 1.6vw, 22px);
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.tarjeta-subtitulo {
+  font-size: clamp(15px, 1.3vw, 18px);
+  color: var(--texto-2);
+  margin: 0 0 16px;
+}
+
+/* ===========================================================================
+   5. Acción protagonista
+   =========================================================================== */
+
+.acciones-protagonistas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .acciones-protagonistas { grid-template-columns: 1fr 1fr; }
+}
+
+.accion-protagonista {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 120px;
+  min-width: 0;
+  padding: 24px;
+  border-radius: 20px;
+  background: var(--superficie-2);
+  border: 1px solid var(--linea-acento);
+  color: var(--texto);
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 180ms var(--suave), border-color 180ms var(--suave), background 180ms var(--suave);
+}
+
+@media (min-width: 900px) {
+  .accion-protagonista { min-height: 160px; }
+}
+
+.accion-protagonista:hover {
+  border-color: var(--cian);
+  background: var(--cian-suave);
+}
+.accion-protagonista:active {
+  transform: scale(0.99);
+}
+
+.accion-protagonista-titulo {
+  font-size: clamp(18px, 1.8vw, 22px);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.accion-protagonista-ejemplo {
+  font-size: 14px;
+  color: var(--texto-2);
+  font-style: italic;
+}
+
+/* ===========================================================================
+   6. Cifras y rejilla
+   =========================================================================== */
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 16px;
+}
+
+.rejilla > * { min-width: 0; }
+
+.rejilla--dos { grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+
+.cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cifra-etiqueta {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--texto-2);
+}
+
+.cifra-valor {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: clamp(22px, 3.2vw, 36px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  color: var(--texto);
+}
+
+/* ⛔ Un importe nunca se trunca con ellipsis: es dinero, no un titular. Si no
+   entra en una línea, baja de tamaño o pasa a la línea siguiente, pero se lee
+   completo. */
+.cifra-valor > * {
+  overflow-wrap: anywhere;
+}
+
+.cifra-valor--vacia {
+  color: var(--mudo);
+  font-size: clamp(16px, 1.6vw, 20px);
+  font-weight: 500;
+  white-space: normal;
+}
+
+.cifra-pista {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+/* ===========================================================================
+   7. Lista
+   =========================================================================== */
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lista-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--linea);
+  text-decoration: none;
+  color: inherit;
+  min-height: 44px;
+}
+.lista-fila:last-child { border-bottom: none; }
+a.lista-fila:hover { background: var(--superficie-2); border-radius: 8px; }
+
+.lista-fila-cuerpo {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lista-fila-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lista-fila-detalle {
+  font-size: 13px;
+  color: var(--texto-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lista-fila-meta {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--texto-3);
+  text-align: right;
+}
+.lista-fila-meta--atrasado { color: var(--peligro); font-weight: 600; }
+
+/* ===========================================================================
+   8. Ranking
+   =========================================================================== */
+
+.ranking {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ranking-fila {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--superficie-2);
+}
+
+.ranking-posicion {
+  font-weight: 700;
+  color: var(--cian);
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking-cuerpo { min-width: 0; }
+.ranking-nombre { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ranking-motivo { font-size: 13px; color: var(--texto-2); }
+
+/* ===========================================================================
+   9. Encaje, dato investigado, confianza — el color nunca es el único portador
+   =========================================================================== */
+
+.encaje {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--linea);
+  color: var(--texto-2);
+  white-space: nowrap;
+}
+.encaje--directo { color: var(--cian); border-color: var(--linea-acento); background: var(--cian-suave); }
+.encaje--cercano { color: var(--azul-texto); border-color: var(--linea-acento); background: var(--azul-suave); }
+.encaje--adaptable { color: var(--texto-2); border-color: var(--linea-2); }
+.encaje--no-recomendado { color: var(--mudo); border-color: var(--linea); text-decoration: line-through; }
+
+.dato {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.dato--verificado { color: var(--cian); }
+.dato--inferido { color: var(--azul-texto); }
+.dato--no-encontrado { color: var(--mudo); }
+
+.confianza {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--texto-2);
+}
+.confianza::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mudo);
+}
+.confianza--alta::before { background: var(--cian); }
+.confianza--media::before { background: var(--azul-texto); }
+.confianza--baja::before { background: var(--peligro); }
+
+/* ===========================================================================
+   10. Calendario y cronograma
+   =========================================================================== */
+
+.calendario {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.calendario-dia {
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--superficie-2);
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.calendario-dia:focus-visible { border-color: var(--cian); }
+.calendario-dia--fuera-de-mes { opacity: 0.4; }
+.calendario-dia--con-atrasados { border-color: var(--peligro); }
+
+.cronograma-contenedor {
+  overflow-x: auto; /* único overflow-x permitido además de .tabla-contenedor: es del propio cronograma */
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+}
+
+.cronograma {
+  min-width: 640px;
+}
+
+.cronograma-barra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--linea);
+}
+.cronograma-barra:last-child { border-bottom: none; }
+
+.cronograma-barra-pista {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+  position: relative;
+}
+.cronograma-barra-relleno {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--azul);
+}
+.cronograma-barra--riesgo .cronograma-barra-relleno { background: var(--peligro); }
+
+/* ===========================================================================
+   11. Entrada de agenda
+   =========================================================================== */
+
+.entrada-agenda {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--linea);
+  background: var(--superficie-2);
+}
+.entrada-agenda--atrasada {
+  border-color: var(--peligro);
+  background: var(--peligro-suave);
+}
+.entrada-agenda-cuerpo { min-width: 0; flex: 1 1 auto; }
+.entrada-agenda-atraso {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--peligro);
+}
+
+/* ===========================================================================
+   12. Botones
+   =========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--azul);
+  color: var(--texto);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 180ms var(--suave), border-color 180ms var(--suave), opacity 180ms var(--suave);
+}
+.btn:hover { background: var(--azul-texto); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-borde {
+  background: transparent;
+  border-color: var(--linea-2);
+  color: var(--texto);
+}
+.btn-borde:hover { border-color: var(--cian); color: var(--cian); background: var(--cian-suave); }
+
+.btn-texto {
+  background: transparent;
+  color: var(--azul-texto);
+  padding: 0 8px;
+  min-width: 44px;
+}
+.btn-texto:hover { color: var(--cian); background: none; text-decoration: underline; }
+.btn-texto svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* ===========================================================================
+   13. Campos
+   =========================================================================== */
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.campo-etiqueta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto-2);
+}
+
+.entrada {
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--linea-2);
+  background: var(--superficie);
+  color: var(--texto);
+  width: 100%;
+}
+.entrada:focus-visible {
+  outline: 2px solid var(--cian);
+  outline-offset: 1px;
+  border-color: var(--cian);
+}
+.entrada::placeholder { color: var(--mudo); }
+
+.campo-ayuda { font-size: 12px; color: var(--texto-3); }
+.campo-error { font-size: 12px; color: var(--peligro); font-weight: 600; }
+
+/* ===========================================================================
+   14. Pestañas y chips
+   =========================================================================== */
+
+.pestanas {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--linea);
+  overflow-x: auto;
+}
+
+.pestana {
+  min-height: 44px;
+  padding: 0 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--texto-2);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pestana[aria-selected="true"] {
+  color: var(--texto);
+  border-bottom-color: var(--cian);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--linea-2);
+  background: var(--superficie);
+  color: var(--texto-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] {
+  border-color: var(--cian);
+  color: var(--texto);
+  background: var(--cian-suave);
+}
+
+/* ===========================================================================
+   15. Tabla
+   =========================================================================== */
+
+.tabla-contenedor {
+  overflow-x: auto; /* la tabla se desplaza sola: la página nunca */
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+}
+
+.tabla {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla th, .tabla td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--linea);
+  white-space: nowrap;
+}
+
+.tabla th {
+  color: var(--texto-2);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.tabla td.importe, .tabla th.importe {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla tbody tr:last-child td { border-bottom: none; }
+
+/* ===========================================================================
+   16. Diálogo y aviso
+   =========================================================================== */
+
+.dialogo {
+  border: 1px solid var(--linea-2);
+  border-radius: 16px;
+  background: var(--bg-2);
+  color: var(--texto);
+  padding: 24px;
+  max-width: min(480px, 92vw);
+  width: 100%;
+}
+.dialogo::backdrop {
+  background: rgba(2, 7, 17, 0.72);
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--superficie-2);
+  border: 1px solid var(--linea);
+  font-size: 14px;
+}
+
+/* ===========================================================================
+   17. Los cuatro estados
+   =========================================================================== */
+
+.bloque-estado { min-width: 0; }
+
+.cargando { display: flex; flex-direction: column; gap: 10px; }
+
+.hueso {
+  height: 16px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--superficie-2) 25%, var(--linea-2) 50%, var(--superficie-2) 75%);
+  background-size: 200% 100%;
+  animation: hueso-brillo 1.4s ease-in-out infinite;
+}
+@keyframes hueso-brillo {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hueso { animation: none; background: var(--superficie-2); }
+}
+
+.hueso--cifra { height: 40px; width: 60%; border-radius: 8px; }
+.hueso--linea { width: 100%; }
+.hueso--linea-corta { width: 70%; }
+.hueso--tarjeta { height: 160px; border-radius: 16px; }
+
+.vacio, .error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px dashed var(--linea-2);
+  background: var(--superficie-2);
+}
+
+.error {
+  border-style: solid;
+  border-color: var(--peligro-suave);
+  background: var(--peligro-suave);
+}
+
+.vacio-titulo, .error-titulo {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.vacio-mensaje, .error-mensaje {
+  font-size: 14px;
+  color: var(--texto-2);
+}
+.error .error-mensaje { color: var(--texto); }
+
+/* ===========================================================================
+   18. Responsive: cinco anchos, todo hijo de flex/grid con min-width: 0
+   =========================================================================== */
+
+.flex, .rejilla, .lista-fila, .ranking-fila, .entrada-agenda, .cronograma-barra {
+  min-width: 0;
+}
+.flex > *, .rejilla > *, .acciones-protagonistas > * {
+  min-width: 0;
+}
+
+/*
+ * Vista Agenda — estilos.
+ *
+ * ⛔ DUEÑA: Sesión 4.
+ * ⛔ Sólo tokens de packages/ui/src/tokens.css. Ningún color, fuente ni curva
+ *    literal (DESIGN_SYSTEM.md §2.2 CO1, QA_CHECKLIST.md §7.2.8).
+ *
+ * packages/ui/src/base.css todavía no define los componentes compartidos del
+ * §5 de DESIGN_SYSTEM.md (docs/PEDIDOS.md [S4] 2026-09-15); esta hoja cubre
+ * acá los que la vista necesita, con los mismos nombres de clase.
+ */
+
+.vista-agenda {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem clamp(1rem, 4vw, 2rem);
+  max-width: var(--ancho-contenido, 1240px);
+  margin-inline: auto;
+  color: var(--texto);
+  font-family: var(--fuente);
+}
+.vista-agenda * { box-sizing: border-box; min-width: 0; }
+.vista-agenda h1 { font-size: clamp(28px, 3.5vw, 44px); font-weight: 600; margin: 0; }
+
+.chip-ejemplo {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--azul-texto); background: var(--azul-suave);
+  border: 1px solid var(--linea-acento); border-radius: 999px; padding: 0.35em 0.9em;
+  width: fit-content;
+}
+
+.saltar { position: absolute; left: -9999px; top: 0; }
+.saltar:focus {
+  left: 1rem; top: 1rem; z-index: 10; background: var(--bg-2); color: var(--texto);
+  padding: 0.6em 1em; border-radius: 8px; outline: 2px solid var(--cian); outline-offset: 3px;
+}
+
+.tarjeta { background: var(--glass); border: 1px solid var(--linea); border-radius: 16px; padding: 1.25rem; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
+  min-height: 48px; min-width: 44px; padding: 0.6em 1.2em; border-radius: 10px;
+  border: 1px solid transparent; background: var(--azul); color: var(--texto);
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn-borde { background: transparent; border-color: var(--linea-2); color: var(--texto); }
+.btn-texto { background: transparent; color: var(--azul-texto); min-width: auto; padding: 0.4em 0.6em; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:focus-visible, .btn-borde:focus-visible, .btn-texto:focus-visible,
+.pestana:focus-visible, .calendario-dia:focus-visible,
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--cian); outline-offset: 3px;
+}
+
+.campo { display: flex; flex-direction: column; gap: 0.4em; }
+.campo label { font-size: 14px; color: var(--texto-2); }
+.entrada, .vista-agenda textarea, .vista-agenda select {
+  min-height: 48px; border-radius: 10px; border: 1px solid var(--linea-2);
+  background: var(--superficie); color: var(--texto); padding: 0.6em 0.8em; font: inherit;
+}
+.vista-agenda textarea { min-height: 88px; resize: vertical; }
+
+.pestanas { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--linea); flex-wrap: wrap; }
+.pestana {
+  min-height: 44px; padding: 0.6em 1em; background: transparent; border: none;
+  border-bottom: 2px solid transparent; color: var(--texto-2); font: inherit; font-weight: 600; cursor: pointer;
+}
+.pestana[aria-selected="true"] { color: var(--texto); border-bottom-color: var(--cian); }
+
+.lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+
+.entrada-agenda {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding: 0.9rem 1rem; border-radius: 12px; border: 1px solid var(--linea); background: var(--superficie);
+}
+.entrada-agenda--atrasada { border-color: var(--peligro-suave); }
+.entrada-agenda__cabecera { display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.entrada-agenda__titulo { font-weight: 600; }
+.entrada-agenda__meta { color: var(--texto-2); font-size: 14px; }
+.entrada-agenda__atraso { color: var(--peligro); font-weight: 600; font-size: 13px; }
+.entrada-agenda__acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.agenda-secciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 1rem; align-items: start; }
+
+.cargando { display: flex; flex-direction: column; gap: 0.75rem; }
+.hueso {
+  height: 64px; border-radius: 12px;
+  background: linear-gradient(90deg, var(--superficie) 25%, var(--superficie-2) 50%, var(--superficie) 75%);
+  background-size: 200% 100%; animation: vista-agenda-brillo 1.4s ease-in-out infinite;
+}
+@keyframes vista-agenda-brillo { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+.vacio, .error {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem;
+  padding: 1.5rem; border-radius: 16px; border: 1px dashed var(--linea-2); color: var(--texto-2);
+}
+.error { border-color: var(--peligro-suave); color: var(--texto); }
+.aviso { padding: 0.75em 1em; border-radius: 10px; background: var(--cian-suave); border: 1px solid var(--linea-acento); color: var(--texto); }
+.aviso--peligro { background: var(--peligro-suave); border-color: var(--peligro); }
+
+/* --- Semana --- */
+.agenda-semana { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 0.75rem; }
+.agenda-semana__dia { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--linea); background: var(--superficie); }
+.agenda-semana__cabecera { display: flex; justify-content: space-between; font-size: 13px; color: var(--texto-2); }
+
+/* --- Calendario mensual --- */
+.calendario { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.4rem; }
+.calendario-encabezado { color: var(--texto-2); font-size: 12px; text-align: center; padding-bottom: 0.3rem; }
+.calendario-dia {
+  min-height: 64px; border-radius: 8px; border: 1px solid var(--linea);
+  background: var(--superficie); padding: 0.35rem; display: flex; flex-direction: column; gap: 0.25rem;
+  font-size: 12px; text-align: left; color: var(--texto);
+}
+.calendario-dia--fuera-de-mes { opacity: 0.4; }
+.calendario-dia--atrasados { border-color: var(--peligro-suave); }
+.calendario-dia__numero { font-weight: 600; }
+
+/* --- Cronograma --- */
+.cronograma-contenedor { overflow-x: auto; border-radius: 12px; border: 1px solid var(--linea); padding: 1rem; }
+.cronograma { display: flex; flex-direction: column; gap: 0.6rem; }
+.cronograma-fila { display: grid; grid-template-columns: 160px 1fr; align-items: center; gap: 0.75rem; }
+.cronograma-pista { position: relative; height: 22px; background: var(--superficie-2); border-radius: 999px; }
+.cronograma-barra { position: absolute; top: 0; height: 100%; border-radius: 999px; background: var(--azul); }
+.cronograma-hito { position: absolute; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--cian); transform: translateX(-50%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vista-agenda *, .vista-agenda *::before, .vista-agenda *::after {
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important; scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .entrada-agenda__cabecera { flex-direction: column; }
+}
+
+</style>
+</head>
+<body>
+<!--
+  Instantanea de la pantalla "Agenda" (ruta #/agenda) del Escritorio
+  Vendedores Lab.IA, generada por scripts/instantaneas.mjs.
+
+  Es una FOTO: el marcado y el CSS son los reales, pero nada funciona.
+  Se monto con rol vendedor, con los datos de ejemplo del mock.
+
+  Para rediseniar: cambiá el CSS y el marcado que quieras. Lo que importa es
+  que cada pieza conserve su clase, porque esa clase es la que el codigo pone.
+-->
+<div id="app"><div class="app-cascara"><aside class="lateral" aria-label="Navegación principal"><div class="lateral-encabezado"><div class="lateral-marca"><img src="../../apps/escritorio/public/assets/marca/logo-labia.webp" alt="Lab.IA" width="96" height="96"><span class="lateral-marca-texto">Lab.IA</span></div><button type="button" class="lateral-alternar" aria-expanded="true" aria-label="Contraer menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5 7 12l7.5 7.5"></path></svg></button></div><span class="chip-datos-ejemplo">Datos de ejemplo</span><nav class="lateral-nav" aria-label="Vistas"><a class="lateral-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="lateral-enlace-texto">Inicio</span></a><a class="lateral-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="lateral-enlace-texto">Planificar</span></a><a class="lateral-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="lateral-enlace-texto">Clientes</span></a><a class="lateral-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="lateral-enlace-texto">Agenda</span></a><a class="lateral-enlace" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lateral-enlace-texto">Propuestas</span></a><a class="lateral-enlace" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lateral-enlace-texto">Dinero</span></a></nav><div class="lateral-pie"><div class="lateral-usuario"><div class="avatar avatar--md" aria-hidden="true"><span class="avatar-iniciales">JF</span></div><div class="lateral-usuario-info"><p class="lateral-usuario-nombre">Juan Pablo Fernandez</p><p class="lateral-usuario-rol">vendedor</p></div></div><button type="button" class="btn-texto" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 4.6H6.4a1.5 1.5 0 0 0-1.5 1.5v11.8a1.5 1.5 0 0 0 1.5 1.5h2.8"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9.2"></path></svg><span class="lateral-cerrar-texto">Cerrar sesión</span></button></div></aside><div class="principal"><main id="contenido" class="vista" tabindex="-1">
+    <a class="saltar" href="#agenda-contenido">Ir al contenido</a>
+    <header style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+      <h1 tabindex="-1" id="agenda-titulo">Agenda</h1>
+      <span class="chip-ejemplo">Datos de ejemplo</span>
+    </header>
+    <div id="agenda-aviso" role="status" aria-live="polite"></div>
+    <div class="pestanas" role="tablist" aria-label="Vistas de la agenda">
+      <button type="button" class="pestana" role="tab" data-accion="pestana" data-valor="hoy" aria-selected="true">Hoy</button>
+      <button type="button" class="pestana" role="tab" data-accion="pestana" data-valor="semana" aria-selected="false">Semana</button>
+      <button type="button" class="pestana" role="tab" data-accion="pestana" data-valor="mes" aria-selected="false">Mes</button>
+      <button type="button" class="pestana" role="tab" data-accion="pestana" data-valor="cronograma" aria-selected="false">Cronograma</button>
+      <button type="button" class="pestana" role="tab" data-accion="pestana" data-valor="atrasados" aria-selected="false">Atrasados</button>
+      <button type="button" class="btn" data-accion="nueva-entrada" style="margin-left:auto;">Nueva entrada</button>
+    </div>
+    <div id="agenda-contenido">
+    <div class="error" role="alert">
+      <p>Esta parte del Escritorio todavía no está disponible.</p>
+      <p>Los datos de ejemplo de la Sesión 4 se incorporan al integrar.</p>
+      <button type="button" class="btn" data-accion="reintentar">Volver a intentar</button>
+    </div>
+  </div>
+  </main></div><nav class="inferior" aria-label="Navegación principal"><a class="inferior-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="inferior-enlace-texto">Inicio</span></a><a class="inferior-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="inferior-enlace-texto">Planificar</span></a><a class="inferior-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="inferior-enlace-texto">Clientes</span></a><a class="inferior-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="inferior-enlace-texto">Agenda</span></a><button type="button" class="inferior-enlace" aria-haspopup="dialog" aria-label="Más destinos"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.2" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="18.8" cy="12" r="1.5"></circle></svg></span><span class="inferior-enlace-texto">Más</span></button><dialog class="dialogo" aria-label="Más destinos"><div class="lista"><a class="lista-fila" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lista-fila-titulo">Propuestas</span></a><a class="lista-fila" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lista-fila-titulo">Dinero</span></a></div><button type="button" class="btn-borde btn">Cerrar</button></dialog></nav></div></div>
+</body>
+</html>

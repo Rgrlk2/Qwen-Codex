@@ -10,3 +10,4 @@ coverage/
 # Empaquetado temporal de la verificacion del nucleo (scripts/vite.verificacion.config.mjs).
 scripts/.salida/
 scripts/.salida-fichas/
+scripts/.salida-instantaneas/

@@ -117,6 +117,15 @@ function crearVistaPropuestas(): Vista {
   };
 }
 
+/**
+ * ⛔ El nucleo monta una vista con `crearVista()` (contrato-vista.ts →
+ *    `esModuloVista`). Sin esta exportacion la seccion aparece "en
+ *    construccion" aunque el codigo este entero: `export default` no alcanza.
+ */
+export function crearVista(): Vista {
+  return crearVistaPropuestas();
+}
+
 const vistaPropuestas: Vista = crearVistaPropuestas();
 export default vistaPropuestas;
 

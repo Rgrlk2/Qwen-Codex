@@ -314,5 +314,14 @@ function desmontar(): void {
   document.querySelectorAll('dialog.dialogo').forEach((el) => el.remove());
 }
 
+/**
+ * ⛔ El nucleo monta una vista con `crearVista()` (contrato-vista.ts →
+ *    `esModuloVista`). Sin esta exportacion la seccion aparece "en
+ *    construccion" aunque el codigo este entero: `export default` no alcanza.
+ */
+export function crearVista(): Vista {
+  return { montar, desmontar };
+}
+
 const vista: Vista = { montar, desmontar };
 export default vista;

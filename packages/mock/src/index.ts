@@ -42,6 +42,7 @@ import {
   type ConfiguracionMock, type NucleoMock,
 } from './nucleo';
 import { crearCapaSesionMock, type CapaSesionMock } from './datos-sesion';
+import { crearCapaFichasMock } from './capa-fichas';
 
 export * from './nucleo';
 export * from './datos-sesion';
@@ -67,6 +68,7 @@ export interface CapaDatosMock extends CapaDatos {
 export function crearCapaDatosMock(opciones: OpcionesCapaDatosMock = {}): CapaDatosMock {
   const nucleo = crearNucleoMock(opciones.configuracion ?? {});
   const sesion = crearCapaSesionMock(nucleo);
+  const fichas = crearCapaFichasMock(nucleo);
 
   /** Método todavía no ensamblado: error explícito, con su sesión dueña. */
   const pendiente = (duena: string, metodo: string): Pendiente =>
@@ -159,24 +161,24 @@ export function crearCapaDatosMock(opciones: OpcionesCapaDatosMock = {}): CapaDa
 
     // =======================================================================
     // =======================================================================
-    // Fichas de producto — especificadas, pendientes de ensamblado
+    // Fichas de producto — ensambladas
     //
     // El eslabon entre el motor y la propuesta. La ficha oficial se sirve del
     // copy congelado; la personalizacion es una capa encima que sólo decide
     // presentacion. Ver packages/compartido/src/fichas.ts.
     // =======================================================================
-    obtenerFichaOficial: pendiente('la Sesión 3', 'obtenerFichaOficial'),
-    indicePortafolio: pendiente('la Sesión 3', 'indicePortafolio'),
-    fichasPorNecesidad: pendiente('la Sesión 3', 'fichasPorNecesidad'),
-    listarFichasPersonalizadas: pendiente('la Sesión 4', 'listarFichasPersonalizadas'),
-    obtenerFichaPersonalizada: pendiente('la Sesión 4', 'obtenerFichaPersonalizada'),
-    prepararFicha: pendiente('la Sesión 4', 'prepararFicha'),
-    actualizarFicha: pendiente('la Sesión 4', 'actualizarFicha'),
-    descartarFicha: pendiente('la Sesión 4', 'descartarFicha'),
-    revisarCopyDeFicha: pendiente('la Sesión 4', 'revisarCopyDeFicha'),
-    compartirFicha: pendiente('la Sesión 5', 'compartirFicha'),
-    revocarEnlaceFicha: pendiente('la Sesión 5', 'revocarEnlaceFicha'),
-    aperturasDeFicha: pendiente('la Sesión 5', 'aperturasDeFicha'),
+    obtenerFichaOficial: (productoId) => fichas.obtenerFichaOficial(productoId),
+    indicePortafolio: () => fichas.indicePortafolio(),
+    fichasPorNecesidad: (necesidadId) => fichas.fichasPorNecesidad(necesidadId),
+    listarFichasPersonalizadas: (clienteId, pagina) => fichas.listarFichasPersonalizadas(clienteId, pagina),
+    obtenerFichaPersonalizada: (id) => fichas.obtenerFichaPersonalizada(id),
+    prepararFicha: (datos, clave) => fichas.prepararFicha(datos, clave),
+    actualizarFicha: (id, cambios, version) => fichas.actualizarFicha(id, cambios, version),
+    descartarFicha: (id, motivo) => fichas.descartarFicha(id, motivo),
+    revisarCopyDeFicha: (id) => fichas.revisarCopyDeFicha(id),
+    compartirFicha: (id, opciones, clave) => fichas.compartirFicha(id, opciones, clave),
+    revocarEnlaceFicha: (enlaceId, motivo) => fichas.revocarEnlaceFicha(enlaceId, motivo),
+    aperturasDeFicha: (id, pagina) => fichas.aperturasDeFicha(id, pagina),
 
     // S5 · Presentaciones y cotizaciones — pendiente de ensamblado
     // =======================================================================

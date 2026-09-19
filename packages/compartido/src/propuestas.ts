@@ -32,7 +32,19 @@ import type { ProductoId } from './catalogo';
 import type { AlternativaCalculada, BaseCalculo, CodigoAlternativa } from './alternativas';
 import type { Firma } from './aceptacion';
 
-export type TipoPropuesta = 'presentacion' | 'cotizacion';
+/**
+ * Qué documento sirve un enlace compartido.
+ *
+ * ⛔ Incluye `'ficha'` porque `CapaFichas.compartirFicha` devuelve un
+ *    `EnlaceCompartido`: el enlace de una ficha es un enlace como los otros
+ *    —token opaco, vencimiento, tope de aperturas, revocación— y tiene que
+ *    poder decir qué es. Sin este valor, una ficha compartida viajaría
+ *    disfrazada de presentación.
+ *
+ * El nombre `TipoPropuesta` quedó corto: hoy nombra el tipo de documento del
+ * enlace, no sólo las propuestas. Anotado en docs/PEDIDOS.md.
+ */
+export type TipoPropuesta = 'presentacion' | 'cotizacion' | 'ficha';
 
 /** ⛔ Etiqueta obligatoria en el documento del cliente. Internamente: precio efectivo. */
 export const ETIQUETA_PRECIO_ESPECIAL = 'Precio especial';

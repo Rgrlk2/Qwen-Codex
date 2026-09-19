@@ -27,7 +27,7 @@ import type {
   Moneda, ParametrosSistema, ParticipacionProducto, PeriodoMensual, Presupuesto, ProductoId,
   RegistroAcceso, Rol, SugerenciaProducto, Usuario,
 } from '@labia/compartido';
-import type { CodigoAlternativa } from '@labia/compartido';
+import type { CodigoAlternativa, TipoPropuesta } from '@labia/compartido';
 import type { ContextoVista, Vista } from '../../nucleo/contrato-vista';
 import {
   crearBloque, crearElemento, crearError, crearTabla, nuevaClaveIdempotencia, vaciarNodo,
@@ -41,6 +41,21 @@ import './vista.css';
 // ---------------------------------------------------------------------------
 // Utilidades locales
 // ---------------------------------------------------------------------------
+
+/**
+ * Etiqueta legible del documento de una apertura.
+ *
+ * ⛔ Un `switch` exhaustivo, no un ternario: cuando `TipoPropuesta` sume un
+ *    tipo, esto deja de compilar en vez de etiquetarlo mal en silencio. Así
+ *    pasó al sumarse las fichas, que se mostraban como "Presentación".
+ */
+function etiquetaDocumento(tipo: TipoPropuesta): string {
+  switch (tipo) {
+    case 'cotizacion': return 'Cotización';
+    case 'presentacion': return 'Presentación';
+    case 'ficha': return 'Ficha';
+  }
+}
 
 function buscarMonto(totales: readonly Dinero[], moneda: Moneda): number {
   return totales.find((d) => d.moneda === moneda)?.monto ?? 0;
@@ -641,7 +656,7 @@ function renderAccesosYUso(panel: HTMLElement, ctx: ContextoVista, periodo: Peri
       contenedor.appendChild(crearTabla(
         ['Cuándo', 'Documento', 'Dispositivo', 'País aproximado', 'Resultado'],
         p.items.map((a) => [
-          formatearFechaHora(a.ocurridoEn), a.tipoDocumento === 'cotizacion' ? 'Cotización' : 'Presentación',
+          formatearFechaHora(a.ocurridoEn), etiquetaDocumento(a.tipoDocumento),
           a.tipoDispositivo, a.paisAproximado ?? 'Sin datos', a.resultado,
         ]),
       ));
@@ -1406,6 +1421,15 @@ function montar(contexto: ContextoVista): void {
 
 function desmontar(): void {
   document.querySelectorAll('dialog.dialogo').forEach((el) => el.remove());
+}
+
+/**
+ * ⛔ El nucleo monta una vista con `crearVista()` (contrato-vista.ts →
+ *    `esModuloVista`). Sin esta exportacion la seccion aparece "en
+ *    construccion" aunque el codigo este entero: `export default` no alcanza.
+ */
+export function crearVista(): Vista {
+  return { montar, desmontar };
 }
 
 const vista: Vista = { montar, desmontar };
