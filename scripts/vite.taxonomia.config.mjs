@@ -1,4 +1,4 @@
-/** Empaquetado de la verificacion de fichas. Mismo criterio que el nucleo. */
+/** Empaquetado del exportador de taxonomia. Mismo criterio que el nucleo. */
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 const raiz = fileURLToPath(new URL('..', import.meta.url));

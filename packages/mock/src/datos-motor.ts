@@ -33,15 +33,7 @@
  */
 
 import type {
-  Actividad,
-  AjustePerfil,
-  Argumento,
-  Combo,
-  DolorInferido,
-  EjePlan,
   Encaje,
-  EntradaPlan,
-  EstrategiaEntrada,
   FiltroPlanes,
   FiltroProductos,
   Id,
@@ -50,12 +42,8 @@ import type {
   Necesidad,
   ObjetivoSugerido,
   Operacion,
-  PerfilOperativo,
   Plan,
   PlanDeRubro,
-  PlanRecalculado,
-  PosicionRanking,
-  PreguntaConfirmacion,
   Probabilidad,
   Producto,
   ProductoDetalle,

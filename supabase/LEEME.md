@@ -51,6 +51,11 @@ con acceso directo.
 12. `altas_atomicas_e_idempotentes` — `crear_cliente` y `guardar_seguimiento` en una transacción.
 13. `alta_de_usuario_crea_cuentas_que_entran` — corrección de un error que dejaba afuera a cada vendedor nuevo.
 14. `audio_de_seguimiento` — el audio existe antes que el seguimiento; subirlo, registrarlo y borrarlo.
+15. `necesidad_producto_con_motivo` — la columna que se me había escapado al exportar la taxonomía.
+16. `planes_y_objetivos` — el plan como foto del razonamiento, con sus reglas.
+17. `sugerencias_precios_y_escrituras_del_motor` — la sugerencia con la forma del contrato, vigencia de precios, y las altas del motor.
+18. `aceptar_objetivo_con_las_columnas_reales` — corrección: la agenda no tiene `programada_para`.
+19. `precios_de_lista_del_portafolio` — los 29 precios, que nunca se habían cargado.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
@@ -206,12 +211,73 @@ protección contra contraseñas filtradas está apagada**. Encendida, Supabase
 compara cada contraseña nueva contra HaveIBeenPwned y rechaza las que ya se
 filtraron. Se activa en el panel, en Authentication → Policies.
 
+## Tres cosas que faltaban y no se veían
+
+Aparecieron al escribir la capa del motor contra el servidor, no leyendo el
+código.
+
+**Los precios nunca se habían cargado.** `precio_lista` estaba vacía: el
+Escritorio contra el servidor no habría mostrado ni un precio. Ya están los
+29, exportados del mismo archivo que usa el Escritorio. ⛔ Smart Commerce y
+Exeq.IA quedan `no_documentado` con monto nulo, que es lo correcto: no tienen
+precio publicado y se cotizan personalizado. No se inventa un número para
+llenar la columna.
+
+**A `necesidad_producto` le faltaba el `motivo`** —el texto que explica por qué
+ese producto resuelve esa necesidad, que es lo que el vendedor lee para armar
+el argumento frente al cliente. Error mío al exportar la taxonomía: el motor
+alimentado desde la base habría armado planes con el motivo vacío donde los
+datos de ejemplo tienen una explicación.
+
+**`sugerencia_producto` no se parecía al contrato.** Tenía `descripcion` y
+`necesidad_id`; el contrato pide el problema en palabras del cliente, la
+actividad, con qué frecuencia se observó, qué productos se quedaron cortos y
+por qué. Esa forma no es decorativa: es lo que hace que una sugerencia sirva
+para decidir si un producto 14 tiene sentido.
+
+## El plan, guardado
+
+El razonamiento de un plan —perfil operativo, dolores, ranking, combos,
+estrategia, argumentos, preguntas— es una **foto** de lo que el motor pensó en
+un momento, que después el vendedor ajusta. Nada consulta adentro de esa foto,
+así que va como `jsonb`; normalizarla en siete tablas sería trabajo sin nadie
+que lo use. Lo que sí se consulta —eje, vendedor, estado, período, meta— son
+columnas de verdad, con sus reglas:
+
+| Regla | Dónde vive |
+|---|---|
+| El ranking son los 13, sin repetidos | `check (jsonb_array_length(razonamiento->'ranking') = 13)` |
+| Posiciones 1, 2 y 3: ni dos ni cuatro | `check (cardinality(productos_destacados) = 3)` |
+| Un plan de rubro necesita período y meta | `check` cruzado con el eje |
+| Cerrar exige motivo **y** comentario | `check (estado = 'abierto' or …)` |
+| Un plan cerrado es terminal | Disparador `cerrado_es_terminal` |
+| Aceptar un objetivo genera una **tarea**, nunca un cliente | `aceptar_objetivo`, en una transacción |
+
+## Investigación automática: por qué todavía no consulta nada
+
+⛔ MASTER_SPEC §1: la investigación externa y todo uso de modelo de lenguaje
+ocurren **en el servidor**, detrás de proveedores intercambiables. El navegador
+no lleva ninguna clave, así que esto no se resuelve del lado del cliente aunque
+se quisiera. Y todavía no hay proveedor elegido.
+
+El contrato ya dice qué hacer en ese caso, y es exactamente lo que se hace:
+caer a la taxonomía, marcar `usoRespaldoTaxonomia`, devolver estado
+`fuentes_caidas` y pedir **tres** campos mínimos —nunca un formulario largo
+vacío—. Todo lo que no se pudo averiguar sale como `no_encontrado` con el valor
+en nulo.
+
+⛔ Ningún dato se inventa, y el estado no dice `completa` cuando no se consultó
+ninguna fuente. Decir lo contrario sería mentirle al vendedor sobre de dónde
+salió lo que está viendo.
+
 ## Lo que falta del servidor
 
 - La capa de datos del navegador contra Supabase, en reemplazo del mock:
-  hechas la sesión y los clientes; faltan motor, agenda, fichas, propuestas,
+  hechas la sesión, los clientes y el motor; faltan agenda, fichas, propuestas,
   dinero, administración e inicio. Hasta que estén las nueve, el Escritorio
   sigue eligiendo entre mock y HTTP: una `CapaDatos` a medias no se puede
   enchufar.
+- Elegir proveedor de investigación y desplegar la función de servidor que lo
+  llame. Mientras tanto rige el respaldo por taxonomía de arriba.
 - Generación del PDF y transcripción de voz (funciones de servidor).
 - Notificaciones salientes.

@@ -10,6 +10,7 @@ import { writeFileSync } from 'node:fs';
 import {
   OPERACIONES_SEMILLA, NECESIDADES_SEMILLA, ACTIVIDADES_CURADAS,
   RELACIONES_OPERACION_NECESIDAD, RELACIONES_NECESIDAD_PRODUCTO,
+  PRODUCTOS_CATALOGO, PRECIOS_CATALOGO,
 } from '../packages/mock/src/datos-motor.ts';
 
 /** Literal SQL seguro: comillas simples duplicadas. */
@@ -43,9 +44,21 @@ ACTIVIDADES_CURADAS.flatMap((a) => a.operaciones.map((r) => `(${t(a.id)},${t(r.o
 RELACIONES_OPERACION_NECESIDAD.map((r) => `(${t(r.operacionId)},${t(r.necesidadId)},${t(r.probabilidad)},${t(r.motivo)})`).join(',\n') +
 `\n) as v(o,n,p,m)\njoin public.operacion o on o.clave=v.o join public.necesidad n on n.clave=v.n\non conflict (operacion_id,necesidad_id) do update set probabilidad=excluded.probabilidad,motivo=excluded.motivo;`,
 
-`insert into public.necesidad_producto (necesidad_id,producto_id,encaje,adaptacion_requerida,argumento)\nselect n.id,v.pr,v.e::encaje_producto,v.ad,v.ar from (values\n` +
-RELACIONES_NECESIDAD_PRODUCTO.map((r) => `(${t(r.necesidadId)},${t(r.productoId)},${t(r.encaje)},${t(r.adaptacionRequerida ?? null)},${t(r.argumento)})`).join(',\n') +
-`\n) as v(n,pr,e,ad,ar)\njoin public.necesidad n on n.clave=v.n\non conflict (necesidad_id,producto_id) do update set encaje=excluded.encaje,adaptacion_requerida=excluded.adaptacion_requerida,argumento=excluded.argumento;`,
+`insert into public.necesidad_producto (necesidad_id,producto_id,encaje,adaptacion_requerida,argumento,motivo)\nselect n.id,v.pr,v.e::encaje_producto,v.ad,v.ar,v.mo from (values\n` +
+RELACIONES_NECESIDAD_PRODUCTO.map((r) => `(${t(r.necesidadId)},${t(r.productoId)},${t(r.encaje)},${t(r.adaptacionRequerida ?? null)},${t(r.argumento)},${t(r.motivo)})`).join(',\n') +
+`\n) as v(n,pr,e,ad,ar,mo)\njoin public.necesidad n on n.clave=v.n\non conflict (necesidad_id,producto_id) do update set encaje=excluded.encaje,adaptacion_requerida=excluded.adaptacion_requerida,argumento=excluded.argumento,motivo=excluded.motivo;`,
+
+// ⛔ Los precios son transcripcion literal de COMMERCIAL_RULES §2. Se exportan
+//    igual que la taxonomia: leidos del mismo archivo que usa el Escritorio,
+//    nunca tipeados de nuevo. Un precio mal copiado es una cotizacion mal
+//    emitida.
+`insert into public.producto (id,nombre,familia,orden,clave_copy,alias_historicos,publicado) values\n` +
+PRODUCTOS_CATALOGO.map((p) => `(${t(p.id)},${t(p.nombre)},${t(p.familia)}::familia_producto,${p.orden},${t(p.claveCopy)},${arr(p.aliasHistoricos)},${p.publicado})`).join(',\n') +
+`\non conflict (id) do update set nombre=excluded.nombre,familia=excluded.familia,orden=excluded.orden,clave_copy=excluded.clave_copy,alias_historicos=excluded.alias_historicos,publicado=excluded.publicado;`,
+
+`delete from public.precio_lista;\ninsert into public.precio_lista (producto_id,modalidad,plan,estado,moneda,monto_desde,monto_hasta,iva_incluido,texto_documentado,condicion,version_catalogo) values\n` +
+PRECIOS_CATALOGO.map((p) => `(${t(p.productoId)},${t(p.modalidad)}::modalidad_precio,${t(p.plan)},${t(p.estado)}::estado_precio,${t(p.moneda)}::moneda,${p.montoDesde ?? 'null'},${p.montoHasta ?? 'null'},${p.ivaIncluido === null ? 'null' : p.ivaIncluido},${t(p.textoDocumentado)},${t(p.condicion)},${p.versionCatalogo})`).join(',\n') +
+`;`,
 ].join('\n\n') + '\n';
 
 writeFileSync('supabase/taxonomia.sql', sql, 'utf8');
@@ -57,4 +70,6 @@ console.log(`actividades ............ ${ACTIVIDADES_CURADAS.length}`);
 console.log(`actividad → operacion .. ${ACTIVIDADES_CURADAS.reduce((s, a) => s + a.operaciones.length, 0)}`);
 console.log(`operacion → necesidad .. ${RELACIONES_OPERACION_NECESIDAD.length}`);
 console.log(`necesidad → producto ... ${RELACIONES_NECESIDAD_PRODUCTO.length}`);
+console.log(`productos .............. ${PRODUCTOS_CATALOGO.length}`);
+console.log(`precios de lista ....... ${PRECIOS_CATALOGO.length}`);
 console.log(`\nsupabase/taxonomia.sql — ${(sql.length / 1024).toFixed(0)} KB`);

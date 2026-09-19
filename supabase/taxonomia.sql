@@ -181,32 +181,80 @@ select o.id,n.id,v.p::probabilidad,v.m from (values
 join public.operacion o on o.clave=v.o join public.necesidad n on n.clave=v.n
 on conflict (operacion_id,necesidad_id) do update set probabilidad=excluded.probabilidad,motivo=excluded.motivo;
 
-insert into public.necesidad_producto (necesidad_id,producto_id,encaje,adaptacion_requerida,argumento)
-select n.id,v.pr,v.e::encaje_producto,v.ad,v.ar from (values
-('nec-fuera-horario','vendedor-24-7','directo',null,'Responde la consulta en el momento en que hoy nadie está disponible.'),
-('nec-fuera-horario','agendar-ia','cercano','Configurarlo como canal de reserva y no de venta consultiva.','Convierte la consulta de fuera de horario directamente en un turno reservado.'),
-('nec-fuera-horario','cotiza-facil','adaptable','Cargar previamente precios, condiciones y descuentos permitidos.','Deja una cotización lista para revisar apenas se retoma el horario de atención.'),
-('nec-agenda-desordenada','agendar-ia','directo',null,'Ordena turnos, profesionales y horarios reales en un solo lugar.'),
-('nec-agenda-desordenada','vendedor-24-7','cercano','Conectarlo con el flujo de reservas para que derive, no sólo informe.','Puede derivar la conversación hacia un turno en lugar de dejarla suelta.'),
-('nec-no-sabe-reponer','radar-stock','directo',null,'Muestra qué se está por terminar y qué lleva meses sin salida antes de la próxima compra.'),
-('nec-no-sabe-reponer','precio-vivo','cercano',null,'Detecta qué está quedando parado antes de que valga la pena bajarle el precio.'),
-('nec-no-sabe-reponer','merma-ia','adaptable','Usar sus reportes de diferencias como insumo para la próxima compra, no como reemplazo de Radar Stock.','Cruza lo que falta con lo que efectivamente se perdió, no sólo con lo que se vendió.'),
-('nec-pierde-mercaderia','merma-ia','directo',null,'Compara compras, ventas y stock real para señalar dónde está la diferencia.'),
-('nec-pierde-mercaderia','radar-stock','cercano',null,'Al mostrar qué debería quedar en stock, expone las mismas diferencias desde otro ángulo.'),
-('nec-reparto-ineficiente','ruta-ia','directo',null,'Reordena las mismas entregas para recorrer menos kilómetros con el mismo repartidor.'),
-('nec-no-sabe-que-pasa-en-el-local','ojo-digital','directo',null,'Muestra horarios de mayor movimiento y zonas por donde casi nadie pasa.'),
-('nec-precios-desactualizados','precio-vivo','directo',null,'Sugiere subir, bajar o mantener cada precio según rotación, stock y costo de reposición.'),
-('nec-precios-desactualizados','faro-digital','cercano',null,'Muestra cómo se mueven los precios de la competencia antes de decidir el propio.'),
-('nec-sin-memoria-del-negocio','pulso-digital','directo',null,'Construye un historial propio del negocio día a día, comparable en el tiempo.'),
-('nec-sin-memoria-del-negocio','merma-ia','adaptable','Combinar sus reportes con un registro diario del negocio, no reemplazarlo.','Suma al historial diario el dato de qué se pierde y cuándo, no sólo qué se vende.'),
-('nec-no-cotiza-rapido','cotiza-facil','directo',null,'Hace primero las preguntas que cambian la recomendación y arma la cotización recién después.'),
-('nec-no-cotiza-rapido','vendedor-24-7','cercano',null,'Adelanta las preguntas del cliente antes de que un vendedor humano retome la conversación.'),
-('nec-no-vende-online','smart-commerce','directo',null,'Abre una tienda online que funciona incluso con el local cerrado.'),
-('nec-no-vende-online','vendedor-24-7','cercano',null,'Permite mostrar catálogo y precios por WhatsApp mientras no exista una tienda propia.'),
-('nec-no-ve-el-mercado','faro-digital','directo',null,'Sigue precios, promociones y productos nuevos de la competencia visible.'),
-('nec-no-ve-el-mercado','precio-vivo','cercano',null,'Usa precios de competencia, cuando están disponibles, como un dato más para su sugerencia.'),
-('nec-no-controla-espacios','park-ia','directo',null,'Muestra en tiempo real qué lugares están libres, cuáles ocupados, y calcula el cobro de cada uno.'),
-('nec-no-coordina-recursos-simultaneos','exeq-ia','directo',null,'Detecta qué sala está aumentando su ocupación para redistribuir personal e insumos hacia ahí.')
-) as v(n,pr,e,ad,ar)
+insert into public.necesidad_producto (necesidad_id,producto_id,encaje,adaptacion_requerida,argumento,motivo)
+select n.id,v.pr,v.e::encaje_producto,v.ad,v.ar,v.mo from (values
+('nec-fuera-horario','vendedor-24-7','directo',null,'Responde la consulta en el momento en que hoy nadie está disponible.','Es exactamente el problema que resuelve: atender cuando no hay nadie del equipo.'),
+('nec-fuera-horario','agendar-ia','cercano','Configurarlo como canal de reserva y no de venta consultiva.','Convierte la consulta de fuera de horario directamente en un turno reservado.','No responde consultas generales, pero puede tomar la reserva en el mismo momento.'),
+('nec-fuera-horario','cotiza-facil','adaptable','Cargar previamente precios, condiciones y descuentos permitidos.','Deja una cotización lista para revisar apenas se retoma el horario de atención.','Sirve si ya está cargado con precios y reglas de descuento; si no, no hay nada que mostrar fuera de horario.'),
+('nec-agenda-desordenada','agendar-ia','directo',null,'Ordena turnos, profesionales y horarios reales en un solo lugar.','Es su función central: coordinar la agenda de un equipo.'),
+('nec-agenda-desordenada','vendedor-24-7','cercano','Conectarlo con el flujo de reservas para que derive, no sólo informe.','Puede derivar la conversación hacia un turno en lugar de dejarla suelta.','Ordena la conversación de venta, no la agenda en sí misma.'),
+('nec-no-sabe-reponer','radar-stock','directo',null,'Muestra qué se está por terminar y qué lleva meses sin salida antes de la próxima compra.','Es su función central: decidir con datos qué reponer.'),
+('nec-no-sabe-reponer','precio-vivo','cercano',null,'Detecta qué está quedando parado antes de que valga la pena bajarle el precio.','Mira la rotación para decidir precio, no para decidir compra, pero el dato es el mismo.'),
+('nec-no-sabe-reponer','merma-ia','adaptable','Usar sus reportes de diferencias como insumo para la próxima compra, no como reemplazo de Radar Stock.','Cruza lo que falta con lo que efectivamente se perdió, no sólo con lo que se vendió.','Su foco es la pérdida, no la reposición; sirve como segunda lectura del mismo problema.'),
+('nec-pierde-mercaderia','merma-ia','directo',null,'Compara compras, ventas y stock real para señalar dónde está la diferencia.','Es su función central: encontrar mercadería que se pierde.'),
+('nec-pierde-mercaderia','radar-stock','cercano',null,'Al mostrar qué debería quedar en stock, expone las mismas diferencias desde otro ángulo.','Ordena reposición, no pérdidas; el cruce de datos es parecido pero el foco es distinto.'),
+('nec-reparto-ineficiente','ruta-ia','directo',null,'Reordena las mismas entregas para recorrer menos kilómetros con el mismo repartidor.','Es su función central: ordenar rutas de reparto.'),
+('nec-no-sabe-que-pasa-en-el-local','ojo-digital','directo',null,'Muestra horarios de mayor movimiento y zonas por donde casi nadie pasa.','Es su función central: leer la circulación real del local.'),
+('nec-precios-desactualizados','precio-vivo','directo',null,'Sugiere subir, bajar o mantener cada precio según rotación, stock y costo de reposición.','Es su función central: mantener el precio alineado con lo que realmente pasa con cada producto.'),
+('nec-precios-desactualizados','faro-digital','cercano',null,'Muestra cómo se mueven los precios de la competencia antes de decidir el propio.','Informa el contexto de mercado; la decisión de precio final la toma Precio Vivo o el dueño.'),
+('nec-sin-memoria-del-negocio','pulso-digital','directo',null,'Construye un historial propio del negocio día a día, comparable en el tiempo.','Es su función central: dar memoria al negocio a partir de unos pocos datos diarios.'),
+('nec-sin-memoria-del-negocio','merma-ia','adaptable','Combinar sus reportes con un registro diario del negocio, no reemplazarlo.','Suma al historial diario el dato de qué se pierde y cuándo, no sólo qué se vende.','Su historial es de compras, ventas y stock, no de la operación diaria completa.'),
+('nec-no-cotiza-rapido','cotiza-facil','directo',null,'Hace primero las preguntas que cambian la recomendación y arma la cotización recién después.','Es su función central: acelerar y ordenar la cotización consultiva.'),
+('nec-no-cotiza-rapido','vendedor-24-7','cercano',null,'Adelanta las preguntas del cliente antes de que un vendedor humano retome la conversación.','Prepara el terreno para cotizar, pero no arma la cotización en sí.'),
+('nec-no-vende-online','smart-commerce','directo',null,'Abre una tienda online que funciona incluso con el local cerrado.','Es su función central: dar un canal de venta digital propio.'),
+('nec-no-vende-online','vendedor-24-7','cercano',null,'Permite mostrar catálogo y precios por WhatsApp mientras no exista una tienda propia.','No es una tienda: es un canal de conversación que puede sostener ventas simples mientras tanto.'),
+('nec-no-ve-el-mercado','faro-digital','directo',null,'Sigue precios, promociones y productos nuevos de la competencia visible.','Es su función central: mirar el mercado para que la decisión no sea a ciegas.'),
+('nec-no-ve-el-mercado','precio-vivo','cercano',null,'Usa precios de competencia, cuando están disponibles, como un dato más para su sugerencia.','El mercado es un insumo de su cálculo, no su foco principal.'),
+('nec-no-controla-espacios','park-ia','directo',null,'Muestra en tiempo real qué lugares están libres, cuáles ocupados, y calcula el cobro de cada uno.','Es su función central: administrar espacios que se ocupan y se liberan.'),
+('nec-no-coordina-recursos-simultaneos','exeq-ia','directo',null,'Detecta qué sala está aumentando su ocupación para redistribuir personal e insumos hacia ahí.','Es su función central: coordinar recursos entre servicios simultáneos.')
+) as v(n,pr,e,ad,ar,mo)
 join public.necesidad n on n.clave=v.n
-on conflict (necesidad_id,producto_id) do update set encaje=excluded.encaje,adaptacion_requerida=excluded.adaptacion_requerida,argumento=excluded.argumento;
+on conflict (necesidad_id,producto_id) do update set encaje=excluded.encaje,adaptacion_requerida=excluded.adaptacion_requerida,argumento=excluded.argumento,motivo=excluded.motivo;
+
+insert into public.producto (id,nombre,familia,orden,clave_copy,alias_historicos,publicado) values
+('ojo-digital','Ojo Digital','especifica'::familia_producto,1,'ojo-digital',array[]::text[],true),
+('pulso-digital','Pulso Digital','especifica'::familia_producto,2,'pulso-digital',array[]::text[],true),
+('vendedor-24-7','Vendedor 24/7','especifica'::familia_producto,3,'vendedor-24-7',array[]::text[],true),
+('radar-stock','Radar Stock','especifica'::familia_producto,4,'radar-stock',array[]::text[],true),
+('faro-digital','Faro Digital','especifica'::familia_producto,5,'faro-digital',array['FARO Inteligente']::text[],true),
+('merma-ia','Merma IA','especifica'::familia_producto,6,'merma-ia',array[]::text[],true),
+('cotiza-facil','Cotiza Fácil','especifica'::familia_producto,7,'cotiza-facil',array[]::text[],true),
+('precio-vivo','Precio Vivo','especifica'::familia_producto,8,'precio-vivo',array[]::text[],true),
+('ruta-ia','Ruta IA','especifica'::familia_producto,9,'ruta-ia',array[]::text[],true),
+('park-ia','Park.IA','integral'::familia_producto,10,'park-ia',array[]::text[],true),
+('smart-commerce','Smart Commerce','integral'::familia_producto,11,'smart-commerce',array[]::text[],true),
+('agendar-ia','Agendar.IA','integral'::familia_producto,12,'agendar-ia',array[]::text[],true),
+('exeq-ia','Exeq.IA','integral'::familia_producto,13,'exeq-ia',array[]::text[],true)
+on conflict (id) do update set nombre=excluded.nombre,familia=excluded.familia,orden=excluded.orden,clave_copy=excluded.clave_copy,alias_historicos=excluded.alias_historicos,publicado=excluded.publicado;
+
+delete from public.precio_lista;
+insert into public.precio_lista (producto_id,modalidad,plan,estado,moneda,monto_desde,monto_hasta,iva_incluido,texto_documentado,condicion,version_catalogo) values
+('ojo-digital','setup'::modalidad_precio,null,'documentado_desde'::estado_precio,'PYG'::moneda,700000,null,null,'desde aproximadamente Gs. 700.000',null,1),
+('ojo-digital','mensualidad'::modalidad_precio,null,'documentado_rango'::estado_precio,'PYG'::moneda,350000,1100000,null,'aproximadamente Gs. 350.000 a Gs. 1.100.000',null,1),
+('pulso-digital','mensualidad'::modalidad_precio,null,'documentado_rango'::estado_precio,'PYG'::moneda,270000,960000,null,'Gs. 270.000 a Gs. 960.000 por mes, según plan',null,1),
+('vendedor-24-7','mensualidad'::modalidad_precio,null,'documentado_rango'::estado_precio,'PYG'::moneda,590000,1500000,null,'Aproximadamente Gs. 590.000 a Gs. 1.500.000 por mes, según cantidad de conversaciones y funciones',null,1),
+('radar-stock','mensualidad'::modalidad_precio,null,'documentado_rango'::estado_precio,'PYG'::moneda,270000,900000,null,'Aproximadamente Gs. 270.000 a Gs. 900.000 por mes, según cantidad de productos y plan',null,1),
+('faro-digital','mensualidad'::modalidad_precio,null,'documentado_rango'::estado_precio,'PYG'::moneda,108000,630000,null,'Gs. 108.000 a Gs. 630.000 por mes, según alcance',null,1),
+('faro-digital','setup'::modalidad_precio,null,'documentado_rango'::estado_precio,'PYG'::moneda,600000,2700000,null,'La implementación observada va desde aproximadamente Gs. 600.000 a Gs. 2.700.000',null,1),
+('merma-ia','mensualidad'::modalidad_precio,null,'documentado_desde'::estado_precio,'PYG'::moneda,80000,null,null,'Desde Gs. 80.000 por mes para un rubro. El valor sube si se analizan varios rubros o un alcance mayor',null,1),
+('cotiza-facil','prueba'::modalidad_precio,null,'documentado_exacto'::estado_precio,'PYG'::moneda,3900000,null,false,'Prueba de 30 días: Gs. 3.900.000 + IVA',null,1),
+('cotiza-facil','setup'::modalidad_precio,null,'documentado_desde'::estado_precio,'PYG'::moneda,4900000,null,false,'Implementación: desde Gs. 4.900.000 + IVA',null,1),
+('cotiza-facil','mensualidad'::modalidad_precio,null,'documentado_desde'::estado_precio,'PYG'::moneda,690000,null,false,'Mensual: desde Gs. 690.000 + IVA',null,1),
+('cotiza-facil','mensualidad'::modalidad_precio,null,'documentado_desde'::estado_precio,'PYG'::moneda,5900000,null,false,'Planes de mayor alcance llegan a Gs. 5.900.000/mes o más','Planes de mayor alcance',1),
+('precio-vivo','setup'::modalidad_precio,null,'documentado_rango'::estado_precio,'USD'::moneda,30000,80000,null,'Implementación: USD 300 a USD 800',null,1),
+('precio-vivo','mensualidad'::modalidad_precio,null,'documentado_rango'::estado_precio,'USD'::moneda,15000,40000,null,'Mensual: USD 150 a USD 400',null,1),
+('precio-vivo','mensualidad'::modalidad_precio,null,'documentado_desde'::estado_precio,'USD'::moneda,60000,null,null,'Alcances grandes: desde USD 600/mes','Alcances grandes',1),
+('ruta-ia','mensualidad'::modalidad_precio,null,'documentado_exacto'::estado_precio,'PYG'::moneda,90000,null,null,'1 repartidor: Gs. 90.000/mes','1 repartidor',1),
+('ruta-ia','mensualidad'::modalidad_precio,null,'documentado_exacto'::estado_precio,'PYG'::moneda,180000,null,null,'2 a 4 repartidores: Gs. 180.000/mes','2 a 4 repartidores',1),
+('ruta-ia','mensualidad'::modalidad_precio,null,'documentado_exacto'::estado_precio,'PYG'::moneda,320000,null,null,'5 o más: Gs. 320.000/mes','5 o más repartidores',1),
+('park-ia','unica_vez'::modalidad_precio,'Piloto Control','documentado_exacto'::estado_precio,'PYG'::moneda,1500000,null,null,'Piloto Control: Gs. 1.500.000 por única vez',null,1),
+('park-ia','setup'::modalidad_precio,'Base','documentado_exacto'::estado_precio,'PYG'::moneda,2900000,null,null,'Park.IA Base: instalación Gs. 2.900.000',null,1),
+('park-ia','mensualidad'::modalidad_precio,'Base','documentado_exacto'::estado_precio,'PYG'::moneda,490000,null,null,'mensualidad Gs. 490.000',null,1),
+('park-ia','setup'::modalidad_precio,'Control','documentado_exacto'::estado_precio,'PYG'::moneda,4900000,null,null,'Park.IA Control: instalación Gs. 4.900.000',null,1),
+('park-ia','mensualidad'::modalidad_precio,'Control','documentado_exacto'::estado_precio,'PYG'::moneda,790000,null,null,'mensualidad Gs. 790.000',null,1),
+('park-ia','setup'::modalidad_precio,'Control Plus','documentado_exacto'::estado_precio,'PYG'::moneda,7900000,null,null,'Park.IA Control Plus: instalación Gs. 7.900.000',null,1),
+('park-ia','mensualidad'::modalidad_precio,'Control Plus','documentado_exacto'::estado_precio,'PYG'::moneda,1290000,null,null,'mensualidad Gs. 1.290.000',null,1),
+('smart-commerce','setup'::modalidad_precio,null,'no_documentado'::estado_precio,'PYG'::moneda,null,null,null,'Precio oficial no encontrado. Se cotiza personalizado',null,1),
+('agendar-ia','setup'::modalidad_precio,null,'documentado_exacto'::estado_precio,'PYG'::moneda,3000000,null,null,'Implementación: Gs. 3.000.000',null,1),
+('agendar-ia','mensualidad'::modalidad_precio,null,'documentado_exacto'::estado_precio,'PYG'::moneda,790000,null,null,'Mensualidad: Gs. 790.000',null,1),
+('exeq-ia','setup'::modalidad_precio,null,'no_documentado'::estado_precio,'PYG'::moneda,null,null,null,'Precio oficial no encontrado. Se cotiza personalizado',null,1);

@@ -624,6 +624,7 @@ export function crearMotorDePlanificacion(datos: DatosTaxonomia) {
     listarOperaciones: (): ReadonlyArray<Operacion> => registroOperaciones,
     listarNecesidades: (): ReadonlyArray<Necesidad> => registroNecesidades,
     listarActividades: (): ReadonlyArray<Actividad> => registroActividades,
+    catalogo: (): ReadonlyArray<Producto> => PRODUCTOS_CATALOGO,
   };
 }
 
