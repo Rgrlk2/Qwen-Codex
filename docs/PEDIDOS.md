@@ -167,3 +167,31 @@ abierta sin que otra vista se la muestre. Pido un método aditivo, por ejemplo
 `CapaAdministracion` en `api.ts` y a `dinero.ts` si hace falta un `FiltroObservaciones`.
 Bloqueante: no — mientras tanto, la sección Comisiones de Administración resuelve
 una observación por el id de línea de participación, que sí está listado.
+
+## Integración · Especificación
+
+### [ESPEC] 2026-09-19 — Las mismas veinte líneas de DOM están escritas tres veces
+Archivos: `apps/escritorio/src/vistas/fichas/dom.ts` (dueña: especificación)
+· `apps/escritorio/src/vistas/propuestas/dom.ts` (dueña: S5)
+· `apps/escritorio/src/vistas/clientes/util.ts` (dueña: S4)
+· destino propuesto: `packages/ui/src/dom.ts` (dueña: S2)
+
+Necesito: `crear(etiqueta, {clase, texto, atributos})` y `vaciar(elemento)` existen
+en `fichas/dom.ts` y en `propuestas/dom.ts` con el mismo cuerpo —sólo cambian el
+nombre de dos variables locales del bucle y el salto de línea de la firma—; `propuestas/dom.ts` agrega
+además `agregar(padre, ...hijos)`, y `clientes/util.ts` resuelve el mismo problema
+por otro camino (`esc()` + plantillas de texto). Son tres implementaciones del
+mismo ayudante, y cada vista nueva agrega una cuarta.
+
+Propongo promoverlas a `packages/ui/src/dom.ts` con la unión de las tres firmas
+(`crear`, `vaciar`, `agregar`) y exponerlas como `"./dom": "./src/dom.ts"` en el
+`exports` de `packages/ui/package.json` — hoy ese paquete sólo publica las tres
+hojas de estilo y `iconos`. Las tres vistas pasan a importar de ahí y borran su
+copia local; `clientes/util.ts` conserva `esc()` mientras siga armando marcado
+por plantilla.
+
+No lo hice en el cambio de fichas porque toca dos carpetas de otras sesiones y un
+paquete compartido, y la deuda no rompe nada: las copias son idénticas, no
+divergentes. Es limpieza, no corrección.
+
+Bloqueante: no
