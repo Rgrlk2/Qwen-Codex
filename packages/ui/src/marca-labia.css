@@ -1,0 +1,74 @@
+/*
+ * Marca Lab.IA — COLORES OFICIALES.
+ *
+ * ⛔ DUEÑO: SESIÓN 2. Único archivo donde viven los hex de marca.
+ * ⛔ Estos ocho colores son los oficiales. No se cambian, no se "ajustan",
+ *    no se derivan variantes nuevas sin autorización.
+ *
+ * Tipografía oficial: Inter.
+ *
+ * Contraste medido contra los dos fondos (WCAG 2.1):
+ *
+ *   color                    vs #020711   vs #06162F   veredicto
+ *   --------------------------------------------------------------------
+ *   #0A55D9  azul                 3.18         2.85    ⛔ NO es color de texto
+ *   #098CFF  azul-claro           5.96         5.33    AA texto
+ *   #00D9FF  cian                11.88        10.63    AA texto
+ *   #12D9FF  cian-claro          11.91        10.65    AA texto
+ *   #F2F7FF  texto               18.75        16.78    AA texto
+ *   #AEB8C8  texto-2             10.08         9.02    AA texto
+ *
+ * ⛔ REGLA DURA: #0A55D9 es color de RELLENO y de SUPERFICIE.
+ *    No se usa para texto ni para bordes finos sobre fondo oscuro: no alcanza
+ *    AA para texto (3.18) y ni siquiera 3:1 sobre #06162F (2.85).
+ *    Para texto o borde de acento se usa #098CFF o #00D9FF.
+ *
+ * ---------------------------------------------------------------------------
+ * CAMPO AZUL RGrlk GROUP
+ *
+ * Lab.IA es una unidad de RGrlk Group, y el Escritorio se apoya en el campo
+ * azul oficial del grupo: el degradado que sale del logo maestro. Los ocho
+ * colores Lab.IA de arriba NO cambian —siguen siendo los de texto, acento y
+ * relleno—; el campo agrega los tonos de FONDO que antes no existían.
+ *
+ * ⛔ El ramp no se inventa ni se ajusta: sale del sistema de diseño RGrlk
+ *    Group (proyecto 8fbd17a3), tokens/colors.css, y se copia tal cual.
+ *
+ *   oscuros / viñeteado   #01021C → #030535
+ *   tonos medios          #001F6E → #0033A0
+ *   altas luces           #0075FF → #33A8FF
+ *
+ * Ver docs/DESIGN_SYSTEM.md §1 y docs/ASSET_SOURCES.md.
+ */
+
+:root {
+  /* Fondos */
+  --labia-negro-azulado: #020711;
+  --labia-navy:          #06162F;
+
+  /* Azules */
+  --labia-azul:          #0A55D9;   /* ⛔ relleno/superficie, NO texto */
+  --labia-azul-claro:    #098CFF;
+
+  /* Cyan */
+  --labia-cian:          #00D9FF;
+  --labia-cian-claro:    #12D9FF;
+
+  /* Texto */
+  --labia-texto:         #F2F7FF;
+  --labia-texto-2:       #AEB8C8;
+
+  /* Tipografía */
+  --labia-fuente: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* --- Campo azul RGrlk Group: sólo fondo. ⛔ Ninguno es color de texto. --- */
+  --rg-abismo:      #01021C;   /* viñeteado extremo */
+  --rg-campo-hondo: #030535;   /* borde y base */
+  --rg-navy-real:   #001F6E;   /* transición */
+  --rg-real:        #0033A0;   /* cuerpo central */
+  --rg-real-vivo:   #0075FF;   /* halo */
+  --rg-flor:        #33A8FF;   /* máxima luminancia */
+
+  /* 0 = marca completa. Los ocho colores oficiales están cargados. */
+  --marca-pendiente: 0;
+}

@@ -1,0 +1,91 @@
+/*
+ * Vista Agenda — estilos.
+ *
+ * ⛔ DUEÑA: Sesión 4.
+ * ⛔ Sólo tokens de packages/ui/src/tokens.css. Ningún color, fuente ni curva
+ *    literal (DESIGN_SYSTEM.md §2.2 CO1, QA_CHECKLIST.md §7.2.8).
+ *
+ * ⛔ Acá viven SÓLO las piezas propias de Agenda —calendario, cronograma y
+ *    entrada—. Los componentes compartidos los define
+ *    packages/ui/src/base.css y no se redeclaran.
+ *
+ *    Esta hoja los traía duplicados, sin prefijo, porque base.css todavía no
+ *    existía (docs/PEDIDOS.md [S4] 2026-09-15). Al cargarse después, pisaba
+ *    el sistema de diseño en toda la aplicación. Se quitaron al aplicar el
+ *    diseño de Claude Design.
+ */
+
+.vista-agenda {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem clamp(1rem, 4vw, 2rem);
+  max-width: var(--ancho-contenido, 1240px);
+  margin-inline: auto;
+  color: var(--texto);
+  font-family: var(--fuente);
+}
+.vista-agenda * { box-sizing: border-box; min-width: 0; }
+.vista-agenda h1 { font-size: clamp(28px, 3.5vw, 44px); font-weight: 600; margin: 0; }
+
+.calendario-dia:focus-visible {
+  outline: 2px solid var(--cian);
+  outline-offset: 2px;
+}
+
+.vista-agenda textarea, .vista-agenda select {
+  min-height: 48px; border-radius: 10px; border: 1px solid var(--linea-2);
+  background: var(--superficie); color: var(--texto); padding: 0.6em 0.8em; font: inherit;
+}
+.vista-agenda textarea { min-height: 88px; resize: vertical; }
+
+.entrada-agenda {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding: 0.9rem 1rem; border-radius: 12px; border: 1px solid var(--linea); background: var(--superficie);
+}
+.entrada-agenda--atrasada { border-color: var(--peligro-suave); }
+.entrada-agenda__cabecera { display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.entrada-agenda__titulo { font-weight: 600; }
+.entrada-agenda__meta { color: var(--texto-2); font-size: 14px; }
+.entrada-agenda__atraso { color: var(--peligro); font-weight: 600; font-size: 13px; }
+.entrada-agenda__acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.agenda-secciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 1rem; align-items: start; }
+
+@keyframes vista-agenda-brillo { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* --- Semana --- */
+.agenda-semana { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 0.75rem; }
+.agenda-semana__dia { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--linea); background: var(--superficie); }
+.agenda-semana__cabecera { display: flex; justify-content: space-between; font-size: 13px; color: var(--texto-2); }
+
+/* --- Calendario mensual --- */
+.calendario { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.4rem; }
+.calendario-encabezado { color: var(--texto-2); font-size: 12px; text-align: center; padding-bottom: 0.3rem; }
+.calendario-dia {
+  min-height: 64px; border-radius: 8px; border: 1px solid var(--linea);
+  background: var(--superficie); padding: 0.35rem; display: flex; flex-direction: column; gap: 0.25rem;
+  font-size: 12px; text-align: left; color: var(--texto);
+}
+.calendario-dia--fuera-de-mes { opacity: 0.4; }
+.calendario-dia--atrasados { border-color: var(--peligro-suave); }
+.calendario-dia__numero { font-weight: 600; }
+
+/* --- Cronograma --- */
+.cronograma-contenedor { overflow-x: auto; border-radius: 12px; border: 1px solid var(--linea); padding: 1rem; }
+.cronograma { display: flex; flex-direction: column; gap: 0.6rem; }
+.cronograma-fila { display: grid; grid-template-columns: 160px 1fr; align-items: center; gap: 0.75rem; }
+.cronograma-pista { position: relative; height: 22px; background: var(--superficie-2); border-radius: 999px; }
+.cronograma-barra { position: absolute; top: 0; height: 100%; border-radius: 999px; background: var(--azul); }
+.cronograma-hito { position: absolute; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--cian); transform: translateX(-50%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vista-agenda *, .vista-agenda *::before, .vista-agenda *::after {
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important; scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .entrada-agenda__cabecera { flex-direction: column; }
+}

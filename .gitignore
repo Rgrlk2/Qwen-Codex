@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.tsbuildinfo
+*.tsbuildinfo
+.DS_Store
+.env
+.env.local
+.vite/
+coverage/
+# Empaquetado temporal de la verificacion del nucleo (scripts/vite.verificacion.config.mjs).
+scripts/.salida/
+scripts/.salida-fichas/
+scripts/.salida-instantaneas/
+scripts/.salida-taxonomia/
+
+# Claves del servidor: nunca en el repositorio.
+.env
+.env.local
