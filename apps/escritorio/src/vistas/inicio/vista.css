@@ -12,17 +12,21 @@
   margin-bottom: 24px;
 }
 
+/* El diseño apila las secciones con aire parejo y un rótulo corto arriba. */
 .inicio-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   margin-bottom: 32px;
+  min-width: 0;
 }
 
 .inicio-seccion-etiqueta {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--etiqueta-tamano);
+  font-weight: var(--etiqueta-peso);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--etiqueta-track);
   color: var(--texto-2);
-  margin-bottom: 12px;
 }
 
 .inicio-agenda-acceso {
@@ -32,7 +36,7 @@
   justify-content: space-between;
   gap: 12px;
   margin-top: 16px;
-  padding-top: 16px;
+  padding-top: 18px;
   border-top: 1px solid var(--linea);
 }
 

@@ -217,17 +217,13 @@ function renderizarMensualidades(paginaMensualidades: readonly Mensualidad[], co
 }
 
 function montar(contexto: ContextoVista): void {
-  const { datos, raiz, senal, datosDeEjemplo } = contexto;
+  const { datos, raiz, senal } = contexto;
   vaciarNodo(raiz);
   let periodo: PeriodoMensual = periodoActual();
 
   const vista = crearElemento('div', 'vista dinero-vista');
-  const encabezado = crearElemento('header', 'encabezado dinero-encabezado');
-  const titulo = crearElemento('h1', undefined, 'Dinero');
-  titulo.tabIndex = -1;
-  encabezado.appendChild(titulo);
-  if (datosDeEjemplo) encabezado.appendChild(crearElemento('span', 'chip', 'Datos de ejemplo'));
-  vista.appendChild(encabezado);
+  /* ⛔ El título y el chip "Datos de ejemplo" los pone la cáscara, una sola
+     vez, en su encabezado fijo. Ver nucleo/disposicion.ts. */
 
   const selector = crearElemento('div', 'dinero-selector-periodo');
   selector.setAttribute('role', 'group');
@@ -262,7 +258,6 @@ function montar(contexto: ContextoVista): void {
   vista.appendChild(seccionMensualidades);
 
   raiz.appendChild(vista);
-  titulo.focus();
 
   const bloqueCifras = crearBloque(senal, {
     contenedor: contenedorCifras,

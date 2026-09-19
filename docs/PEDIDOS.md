@@ -234,3 +234,48 @@ Resuelto: las tres exportan ahora `crearVista()`. Se dejó el `export default`
 donde estaba, para no tocar lo que ya lo importe así.
 
 Bloqueante: era sí — tres de las siete secciones no abrían.
+
+### [ESPEC] 2026-09-19 — Clientes y Agenda pisaban el sistema de diseño en toda la app · **RESUELTO**
+Archivos: `apps/escritorio/src/vistas/clientes/estilos.css` (dueña: S4)
+· `apps/escritorio/src/vistas/agenda/estilos.css` (dueña: S4)
+
+Las dos hojas declaraban ~30 componentes compartidos **sin prefijo** —`.tarjeta`,
+`.btn`, `.chip`, `.pestana`, `.campo`, `.entrada`, `.tabla`, `.cargando`, `.hueso`,
+`.vacio`, `.error`, `.aviso`, `.dato`, `.saltar`—. Su propia cabecera explicaba por
+qué: *"packages/ui/src/base.css todavía no define los componentes compartidos del
+§5 de DESIGN_SYSTEM.md (docs/PEDIDOS.md [S4] 2026-09-15), así que esta hoja cubre
+acá los que la vista necesita, con los mismos nombres de clase para integrar sin
+retrabajo."*
+
+Como las hojas de vista se cargan DESPUÉS de `base.css`, esas copias ganaban en
+toda la aplicación, no sólo en su vista. Se vio al aplicar el diseño: el bloque de
+error de Clientes salía en columna y estirado a media pantalla, porque su
+`.vacio, .error` local forzaba `flex-direction: column` sobre el de la base.
+
+Resuelto: se quitaron los bloques que `base.css` ya define; quedan sólo las piezas
+propias (`.lista-item`, `.etapa`, `.calendario-*`, `.cronograma-*`, `.clientes-*`,
+`.agenda-*`, `.entrada-agenda*`). Es exactamente la integración que ese pedido
+dejaba anotada.
+
+Bloqueante: era sí para el diseño — sin esto, el aspecto aprobado no se aplicaba.
+
+### [ESPEC] 2026-09-19 — Cinco vistas escribían su propio título y su propio chip · **RESUELTO**
+Archivos: `apps/escritorio/src/nucleo/disposicion.ts` (dueña: S1)
+· `inicio/vista.ts` (S2) · `planificar/vista.ts` (S3) · `clientes/plantillas.ts` (S4)
+· `agenda/plantillas.ts` (S4) · `propuestas/vista.ts` (S5) · `dinero/vista.ts` (S6)
+· `administracion/vista.ts` (S6)
+
+El diseño trae un encabezado fijo con el rótulo "Escritorio vendedores", el título
+de la ruta y el chip "Datos de ejemplo". La cáscara no tenía ninguno: `.encabezado`
+existía en `base.css` pero nadie lo construía, así que cada vista escribía su propio
+`<h1>` y su propio chip, y Planificar hasta su propio `header.encabezado` pegajoso.
+
+Resuelto: `crearDisposicion` arma el encabezado y toma el título de `destinos`, que
+ya lo trae —la cáscara no necesita conocer el registro de rutas—. Las siete vistas
+dejaron de escribirlo. Ahora hay un `<h1>` y un chip por pantalla, verificado en las
+nueve instantáneas.
+
+El foco al cambiar de ruta lo lleva ese título (`tabIndex = -1`), que es donde antes
+lo ponía cada vista.
+
+Bloqueante: no

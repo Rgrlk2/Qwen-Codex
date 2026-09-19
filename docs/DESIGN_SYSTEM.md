@@ -23,10 +23,10 @@
 
 ⛔ **Son los oficiales. No se cambian, no se "ajustan", no se derivan variantes nuevas sin autorización.**
 
-| Hex | Token | Rol |
+| Hex | Token Lab.IA | Rol |
 |---|---|---|
-| `#020711` | `--bg` | Fondo de la aplicación |
-| `#06162F` | `--bg-2` | Navy: superficies y barras |
+| `#020711` | `--labia-negro-azulado` | Negro azulado |
+| `#06162F` | `--labia-navy` | Navy |
 | `#0A55D9` | `--azul` | **Relleno y superficie** |
 | `#098CFF` | `--azul-texto` | Texto y bordes de acento |
 | `#00D9FF` | `--cian` | Acento principal |
@@ -35,6 +35,42 @@
 | `#AEB8C8` | `--texto-2` | Texto de apoyo |
 
 **Tipografía: Inter.** ⛔ Sin serif, en ningún elemento.
+
+### 1.1b El campo azul RGrlk Group
+
+Lab.IA es una unidad de RGrlk Group. Desde el diseño **"Escritorio Lab.IA"**
+(Claude Design, 2026-09-19), el Escritorio se apoya en el **campo azul oficial
+del grupo**: el degradado que sale del logo maestro. Los ocho colores de arriba
+**no cambian** —siguen siendo los de texto, acento y relleno—; el campo agrega
+los tonos de **fondo**, que antes no existían.
+
+⛔ El ramp sale del sistema de diseño RGrlk Group (proyecto `8fbd17a3`,
+`tokens/colors.css`) y se copia tal cual. No se ajusta.
+
+| Hex | Token | Rol |
+|---|---|---|
+| `#01021C` | `--rg-abismo` | Viñeteado extremo · **`--bg`** |
+| `#030535` | `--rg-campo-hondo` | Borde y base · **`--bg-2`** |
+| `#001F6E` | `--rg-navy-real` | Transición |
+| `#0033A0` | `--rg-real` | Cuerpo central |
+| `#0075FF` | `--rg-real-vivo` | Halo |
+| `#33A8FF` | `--rg-flor` | Máxima luminancia |
+
+⛔ **Ninguno de los seis es color de texto.** Son fondo. El texto sigue siendo
+`--texto`, `--texto-2`, `--cian` y `--azul-texto`.
+
+`--bg` y `--bg-2` pasaron a apuntar al campo; `#020711` y `#06162F` siguen
+declarados en `marca-labia.css` como `--labia-negro-azulado` y `--labia-navy`.
+La tabla de contraste de §1.2 se midió contra ellos y **sigue valiendo**: el
+campo es más oscuro, así que todo contrasta igual o mejor.
+
+**El activo pendiente.** El sistema RGrlk sirve el campo como imagen
+(`brand-field.png`, sacada del logo maestro) con los degradados debajo, de
+respaldo. El repositorio tiene hoy **sólo los degradados**: la imagen no se
+pudo traer entera (el conector corta la lectura en 256 KB y el PNG es de
+1600×1600). Falta incorporarla y apuntar `--campo` a ella.
+⛔ Mientras tanto **no se genera un reemplazo**: el degradado sostiene el
+aspecto y es del mismo ramp.
 
 ### 1.2 Contraste medido
 

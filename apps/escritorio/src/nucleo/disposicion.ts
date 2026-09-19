@@ -186,13 +186,6 @@ function crearLateral(opciones: OpcionesDisposicion, alAlternar: () => void): La
 
   aside.appendChild(encabezado);
 
-  if (opciones.datosDeEjemplo) {
-    const chip = document.createElement('span');
-    chip.className = 'chip-datos-ejemplo';
-    chip.textContent = 'Datos de ejemplo';
-    aside.appendChild(chip);
-  }
-
   const nav = document.createElement('nav');
   nav.className = 'lateral-nav';
   nav.setAttribute('aria-label', 'Vistas');
@@ -320,6 +313,39 @@ export function crearDisposicion(opciones: OpcionesDisposicion): Disposicion {
   const principal = document.createElement('div');
   principal.className = 'principal';
 
+  /*
+   * Encabezado fijo (diseño "Escritorio Lab.IA", Claude Design 2026-09-19).
+   *
+   * El título sale de `destinos`, que ya trae el nombre de cada ruta: la
+   * cáscara no necesita conocer el registro de rutas para escribirlo.
+   * ⛔ Acá vive el ÚNICO h1 de la aplicación, y el único chip de datos de
+   *    ejemplo. Las vistas ya no escriben el suyo: eran dos de cada uno.
+   */
+  const encabezadoPrincipal = document.createElement('header');
+  encabezadoPrincipal.className = 'encabezado';
+
+  const grupoTitulo = document.createElement('div');
+  grupoTitulo.className = 'encabezado-grupo';
+
+  const rotulo = document.createElement('span');
+  rotulo.className = 'encabezado-rotulo';
+  rotulo.textContent = 'Escritorio vendedores';
+
+  const titulo = document.createElement('h1');
+  titulo.className = 'encabezado-titulo';
+  titulo.tabIndex = -1;
+  grupoTitulo.append(rotulo, titulo);
+  encabezadoPrincipal.appendChild(grupoTitulo);
+
+  if (opciones.datosDeEjemplo) {
+    const chip = document.createElement('span');
+    chip.className = 'chip-datos-ejemplo';
+    chip.textContent = 'Datos de ejemplo';
+    encabezadoPrincipal.appendChild(chip);
+  }
+
+  principal.appendChild(encabezadoPrincipal);
+
   const contenido = document.createElement('main');
   contenido.id = 'contenido';
   contenido.className = 'vista';
@@ -335,6 +361,11 @@ export function crearDisposicion(opciones: OpcionesDisposicion): Disposicion {
     contenido,
     marcarRuta(ruta: string): void {
       marcarActivo(envoltorio, ruta);
+      const destino = opciones.destinos.find((d) => d.ruta === ruta);
+      titulo.textContent = destino?.titulo ?? '';
+      /* El foco va al título al cambiar de ruta: quien usa lector de
+         pantalla escucha dónde quedó, en vez de volver al principio. */
+      titulo.focus();
     },
     destruir(): void {
       raiz.replaceChildren();

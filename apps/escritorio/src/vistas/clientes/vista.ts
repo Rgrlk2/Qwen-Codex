@@ -479,7 +479,7 @@ function crearVistaClientes(): Vista {
       filtro = { texto: '', tipo: '', etapa: '' };
       reiniciarCaptura();
 
-      contexto.raiz.innerHTML = plantillaShell(contexto.datosDeEjemplo);
+      contexto.raiz.innerHTML = plantillaShell();
       contexto.raiz.addEventListener('click', onClick);
       contexto.raiz.addEventListener('input', onInput);
       contexto.senal.addEventListener('abort', () => {

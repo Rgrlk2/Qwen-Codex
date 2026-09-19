@@ -455,7 +455,7 @@ function crearVistaAgenda(): Vista {
       indiceEntradas.clear();
       clientesCache = null;
 
-      contexto.raiz.innerHTML = plantillaShell(contexto.datosDeEjemplo);
+      contexto.raiz.innerHTML = plantillaShell();
       contexto.raiz.addEventListener('click', onClick);
       contexto.raiz.addEventListener('keydown', onKeydownCalendario);
 

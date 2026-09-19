@@ -1317,18 +1317,13 @@ const SECCIONES: ReadonlyArray<Seccion> = [
 ];
 
 function montar(contexto: ContextoVista): void {
-  const { raiz, datosDeEjemplo, rol } = contexto;
+  const { raiz, rol } = contexto;
   vaciarNodo(raiz);
 
   const vista = crearElemento('div', 'vista administracion-vista');
-  const encabezado = crearElemento('header', 'encabezado administracion-encabezado');
-  const titulo = crearElemento('h1', undefined, 'Administración');
-  titulo.tabIndex = -1;
-  encabezado.appendChild(titulo);
-  if (datosDeEjemplo) encabezado.appendChild(crearElemento('span', 'chip', 'Datos de ejemplo'));
-  vista.appendChild(encabezado);
+  /* ⛔ El título y el chip "Datos de ejemplo" los pone la cáscara, una sola
+     vez, en su encabezado fijo. Ver nucleo/disposicion.ts. */
   raiz.appendChild(vista);
-  titulo.focus();
 
   if (rol !== 'administrador') {
     vista.appendChild(crearError('Esta sección es sólo para administradores. Volvé a Inicio.', () => { window.location.hash = '#/inicio'; }));

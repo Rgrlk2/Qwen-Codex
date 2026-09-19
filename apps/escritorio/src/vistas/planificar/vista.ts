@@ -69,18 +69,10 @@ function montar(contexto: ContextoVista): void {
   const contenedor = document.createElement('div');
   contenedor.className = 'vista planificar';
 
-  const encabezado = document.createElement('header');
-  encabezado.className = 'encabezado';
-  const titulo = document.createElement('h1');
-  titulo.textContent = 'Planificar';
-  encabezado.appendChild(titulo);
-  if (contexto.datosDeEjemplo) {
-    const chip = document.createElement('span');
-    chip.className = 'chip';
-    chip.textContent = 'Datos de ejemplo';
-    encabezado.appendChild(chip);
-  }
-  contenedor.appendChild(encabezado);
+  /* ⛔ El título y el chip "Datos de ejemplo" los pone la cáscara, en su
+     encabezado fijo. Esta vista traía un `header.encabezado` propio: con el
+     de la cáscara quedaban dos, los dos pegajosos, uno encima del otro.
+     Ver nucleo/disposicion.ts. */
 
   const introduccion = document.createElement('p');
   introduccion.className = 'texto-2';

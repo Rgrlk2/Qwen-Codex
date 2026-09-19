@@ -23,6 +23,21 @@
  *    AA para texto (3.18) y ni siquiera 3:1 sobre #06162F (2.85).
  *    Para texto o borde de acento se usa #098CFF o #00D9FF.
  *
+ * ---------------------------------------------------------------------------
+ * CAMPO AZUL RGrlk GROUP
+ *
+ * Lab.IA es una unidad de RGrlk Group, y el Escritorio se apoya en el campo
+ * azul oficial del grupo: el degradado que sale del logo maestro. Los ocho
+ * colores Lab.IA de arriba NO cambian —siguen siendo los de texto, acento y
+ * relleno—; el campo agrega los tonos de FONDO que antes no existían.
+ *
+ * ⛔ El ramp no se inventa ni se ajusta: sale del sistema de diseño RGrlk
+ *    Group (proyecto 8fbd17a3), tokens/colors.css, y se copia tal cual.
+ *
+ *   oscuros / viñeteado   #01021C → #030535
+ *   tonos medios          #001F6E → #0033A0
+ *   altas luces           #0075FF → #33A8FF
+ *
  * Ver docs/DESIGN_SYSTEM.md §1 y docs/ASSET_SOURCES.md.
  */
 
@@ -45,6 +60,14 @@
 
   /* Tipografía */
   --labia-fuente: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* --- Campo azul RGrlk Group: sólo fondo. ⛔ Ninguno es color de texto. --- */
+  --rg-abismo:      #01021C;   /* viñeteado extremo */
+  --rg-campo-hondo: #030535;   /* borde y base */
+  --rg-navy-real:   #001F6E;   /* transición */
+  --rg-real:        #0033A0;   /* cuerpo central */
+  --rg-real-vivo:   #0075FF;   /* halo */
+  --rg-flor:        #33A8FF;   /* máxima luminancia */
 
   /* 0 = marca completa. Los ocho colores oficiales están cargados. */
   --marca-pendiente: 0;

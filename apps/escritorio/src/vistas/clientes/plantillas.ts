@@ -11,13 +11,12 @@ import type {
 } from '@labia/compartido';
 import { esc, etiquetaEtapa, etiquetaProducto, etiquetaTipoEvento, formatDinero, formatFecha, formatFechaHora } from './util';
 
-export function plantillaShell(datosDeEjemplo: boolean): string {
+/* Ya no recibe `datosDeEjemplo`: el chip lo pone la cáscara. */
+export function plantillaShell(): string {
   return `
     <a class="saltar" href="#clientes-contenido">Ir al contenido</a>
-    <header style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
-      <h1 tabindex="-1" id="clientes-titulo">Clientes</h1>
-      ${datosDeEjemplo ? '<span class="chip-ejemplo">Datos de ejemplo</span>' : ''}
-    </header>
+    <!-- ⛔ El título y el chip "Datos de ejemplo" los pone la cáscara, una sola
+         vez, en su encabezado fijo. Ver nucleo/disposicion.ts. -->
     <div id="clientes-aviso" role="status" aria-live="polite"></div>
     <div id="clientes-contenido"></div>
   `;

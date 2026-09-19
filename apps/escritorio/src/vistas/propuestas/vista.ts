@@ -60,11 +60,9 @@ function crearVistaPropuestas(): Vista {
 
     const contenedor = crear('div', { clase: 'propuestas-vista' });
 
-    if (contexto.datosDeEjemplo) {
-      contenedor.append(crear('p', { clase: 'propuestas-chip-ejemplo', texto: 'Datos de ejemplo' }));
-    }
+    /* ⛔ El título y el chip "Datos de ejemplo" los pone la cáscara, una sola
+       vez, en su encabezado fijo. Ver nucleo/disposicion.ts. */
 
-    contenedor.append(crear('h1', { texto: 'Propuestas' }));
     contenedor.append(crear('p', {
       clase: 'propuestas-explicacion',
       texto: 'Primero la presentación, para que el cliente conozca la solución. Después, si avanza, la cotización — que siempre pasa por aprobación antes de llegar al cliente.',

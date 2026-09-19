@@ -211,19 +211,9 @@ export function crearVista(): Vista {
     raiz = contexto.raiz;
     contexto.raiz.replaceChildren();
 
-    const h1 = document.createElement('h1');
-    h1.className = 'inicio-titulo encabezado-titulo';
-    h1.textContent = 'Inicio';
-    h1.tabIndex = -1;
-    contexto.raiz.appendChild(h1);
-    h1.focus();
-
-    if (contexto.datosDeEjemplo) {
-      const chip = document.createElement('span');
-      chip.className = 'chip-datos-ejemplo inicio-chip-datos-ejemplo';
-      chip.textContent = 'Datos de ejemplo';
-      contexto.raiz.appendChild(chip);
-    }
+    /* ⛔ El título y el chip "Datos de ejemplo" los pone la cáscara, una sola
+       vez, en el encabezado fijo. Antes los escribía también esta vista y se
+       veían duplicados. Ver nucleo/disposicion.ts. */
 
     contexto.raiz.appendChild(crearAcciones());
 

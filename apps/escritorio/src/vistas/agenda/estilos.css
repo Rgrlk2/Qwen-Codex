@@ -5,9 +5,14 @@
  * ⛔ Sólo tokens de packages/ui/src/tokens.css. Ningún color, fuente ni curva
  *    literal (DESIGN_SYSTEM.md §2.2 CO1, QA_CHECKLIST.md §7.2.8).
  *
- * packages/ui/src/base.css todavía no define los componentes compartidos del
- * §5 de DESIGN_SYSTEM.md (docs/PEDIDOS.md [S4] 2026-09-15); esta hoja cubre
- * acá los que la vista necesita, con los mismos nombres de clase.
+ * ⛔ Acá viven SÓLO las piezas propias de Agenda —calendario, cronograma y
+ *    entrada—. Los componentes compartidos los define
+ *    packages/ui/src/base.css y no se redeclaran.
+ *
+ *    Esta hoja los traía duplicados, sin prefijo, porque base.css todavía no
+ *    existía (docs/PEDIDOS.md [S4] 2026-09-15). Al cargarse después, pisaba
+ *    el sistema de diseño en toda la aplicación. Se quitaron al aplicar el
+ *    diseño de Claude Design.
  */
 
 .vista-agenda {
@@ -23,54 +28,16 @@
 .vista-agenda * { box-sizing: border-box; min-width: 0; }
 .vista-agenda h1 { font-size: clamp(28px, 3.5vw, 44px); font-weight: 600; margin: 0; }
 
-.chip-ejemplo {
-  display: inline-flex; align-items: center; gap: 0.4em;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--azul-texto); background: var(--azul-suave);
-  border: 1px solid var(--linea-acento); border-radius: 999px; padding: 0.35em 0.9em;
-  width: fit-content;
+.calendario-dia:focus-visible {
+  outline: 2px solid var(--cian);
+  outline-offset: 2px;
 }
 
-.saltar { position: absolute; left: -9999px; top: 0; }
-.saltar:focus {
-  left: 1rem; top: 1rem; z-index: 10; background: var(--bg-2); color: var(--texto);
-  padding: 0.6em 1em; border-radius: 8px; outline: 2px solid var(--cian); outline-offset: 3px;
-}
-
-.tarjeta { background: var(--glass); border: 1px solid var(--linea); border-radius: 16px; padding: 1.25rem; }
-
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
-  min-height: 48px; min-width: 44px; padding: 0.6em 1.2em; border-radius: 10px;
-  border: 1px solid transparent; background: var(--azul); color: var(--texto);
-  font: inherit; font-weight: 600; cursor: pointer;
-}
-.btn:hover { filter: brightness(1.08); }
-.btn-borde { background: transparent; border-color: var(--linea-2); color: var(--texto); }
-.btn-texto { background: transparent; color: var(--azul-texto); min-width: auto; padding: 0.4em 0.6em; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn:focus-visible, .btn-borde:focus-visible, .btn-texto:focus-visible,
-.pestana:focus-visible, .calendario-dia:focus-visible,
-a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
-  outline: 2px solid var(--cian); outline-offset: 3px;
-}
-
-.campo { display: flex; flex-direction: column; gap: 0.4em; }
-.campo label { font-size: 14px; color: var(--texto-2); }
-.entrada, .vista-agenda textarea, .vista-agenda select {
+.vista-agenda textarea, .vista-agenda select {
   min-height: 48px; border-radius: 10px; border: 1px solid var(--linea-2);
   background: var(--superficie); color: var(--texto); padding: 0.6em 0.8em; font: inherit;
 }
 .vista-agenda textarea { min-height: 88px; resize: vertical; }
-
-.pestanas { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--linea); flex-wrap: wrap; }
-.pestana {
-  min-height: 44px; padding: 0.6em 1em; background: transparent; border: none;
-  border-bottom: 2px solid transparent; color: var(--texto-2); font: inherit; font-weight: 600; cursor: pointer;
-}
-.pestana[aria-selected="true"] { color: var(--texto); border-bottom-color: var(--cian); }
-
-.lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
 
 .entrada-agenda {
   display: flex; flex-direction: column; gap: 0.5rem;
@@ -85,21 +52,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 .agenda-secciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 1rem; align-items: start; }
 
-.cargando { display: flex; flex-direction: column; gap: 0.75rem; }
-.hueso {
-  height: 64px; border-radius: 12px;
-  background: linear-gradient(90deg, var(--superficie) 25%, var(--superficie-2) 50%, var(--superficie) 75%);
-  background-size: 200% 100%; animation: vista-agenda-brillo 1.4s ease-in-out infinite;
-}
 @keyframes vista-agenda-brillo { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-
-.vacio, .error {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem;
-  padding: 1.5rem; border-radius: 16px; border: 1px dashed var(--linea-2); color: var(--texto-2);
-}
-.error { border-color: var(--peligro-suave); color: var(--texto); }
-.aviso { padding: 0.75em 1em; border-radius: 10px; background: var(--cian-suave); border: 1px solid var(--linea-acento); color: var(--texto); }
-.aviso--peligro { background: var(--peligro-suave); border-color: var(--peligro); }
 
 /* --- Semana --- */
 .agenda-semana { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 0.75rem; }
