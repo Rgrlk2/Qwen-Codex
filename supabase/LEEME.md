@@ -56,6 +56,8 @@ con acceso directo.
 17. `sugerencias_precios_y_escrituras_del_motor` — la sugerencia con la forma del contrato, vigencia de precios, y las altas del motor.
 18. `aceptar_objetivo_con_las_columnas_reales` — corrección: la agenda no tiene `programada_para`.
 19. `precios_de_lista_del_portafolio` — los 29 precios, que nunca se habían cargado.
+20. `reglas_de_la_agenda` — lo resuelto no se reabre; descartar y mover exigen motivo.
+21. `alta_manual_en_la_agenda` — la única entrada que se crea a mano.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
@@ -270,14 +272,50 @@ en nulo.
 ninguna fuente. Decir lo contrario sería mentirle al vendedor sobre de dónde
 salió lo que está viendo.
 
+## La agenda
+
+⛔ La agenda **se puebla sola** desde planes, objetivos aceptados, seguimientos,
+presentaciones, cotizaciones, vencimientos y aperturas de enlace. Por eso la
+única escritura de creación es la manual, y es la excepción: la restricción
+`agenda_manual_acotada` la limita a visita, llamada y próximo paso.
+
+⛔ **"Atrasada" no es una columna.** Se calcula contra la fecha de hoy cada vez
+que se lee. Guardarla obligaría a recorrer la tabla todas las noches para que
+no mienta.
+
+Probado contra la API real, con el token de un vendedor:
+
+| Intento | Resultado |
+|---|---|
+| Alta manual | creada |
+| La misma clave otra vez | **mismo id**, una sola entrada |
+| Crear a mano un `vencimiento` | **rechazado**, no es de las que se tipean |
+| Mover una fecha sin motivo | **rechazado**, con el texto que ve la persona |
+| Mover con motivo | queda `reprogramada`, con quién y por qué |
+| Completar | queda `completada`, con su fecha |
+| Mover algo **ya completado** | **rechazado**: lo resuelto no se reabre |
+| Descartar sin motivo | **rechazado** |
+| Descartar con motivo | queda `descartada`, con el motivo escrito |
+| **Borrar** una entrada | no borra nada: las dos filas siguen enteras |
+
+⛔ Sobre el borrado, con precisión: la API devuelve `204` —que parece éxito—
+pero **no borra**. Como la tabla no tiene política de `delete`, la fila ni
+siquiera es visible para borrarse y PostgREST informa éxito sobre cero filas.
+AG4 se cumple, pero en silencio. No es un problema para el Escritorio, que no
+tiene método para borrar de la agenda; queda dicho porque un `204` invita a
+creer lo contrario.
+
 ## Lo que falta del servidor
 
 - La capa de datos del navegador contra Supabase, en reemplazo del mock:
-  hechas la sesión, los clientes y el motor; faltan agenda, fichas, propuestas,
-  dinero, administración e inicio. Hasta que estén las nueve, el Escritorio
+  hechas la sesión, los clientes, el motor y la agenda; faltan fichas,
+  propuestas, dinero, administración e inicio. Hasta que estén las nueve, el Escritorio
   sigue eligiendo entre mock y HTTP: una `CapaDatos` a medias no se puede
   enchufar.
 - Elegir proveedor de investigación y desplegar la función de servidor que lo
   llame. Mientras tanto rige el respaldo por taxonomía de arriba.
 - Generación del PDF y transcripción de voz (funciones de servidor).
 - Notificaciones salientes.
+- El cronograma comercial: se arma sobre presentaciones y cotizaciones, que
+  son de la capa de propuestas. Hasta que esa capa exista contra el servidor
+  devuelve vacío. ⛔ Barras inventadas serían peores que ninguna.

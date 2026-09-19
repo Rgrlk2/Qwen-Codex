@@ -29,11 +29,14 @@
  */
 
 import type {
-  AgendaHoy, AgendaMes, AgendaSemana, AjusteEntrada, BarraCronograma,
-  CronogramaComercial, DiaDeMes, DiaDeSemana, EntradaAgenda, EstadoEntrada,
+  AjusteEntrada, BarraCronograma,
+  CronogramaComercial, EntradaAgenda, EstadoEntrada,
   FiltroAgenda, Id, ISODate, NuevaEntradaManual, OpcionesPagina, TipoEntradaAgenda,
 } from '@labia/compartido';
 import type { CapaAgenda } from '@labia/compartido';
+import {
+  armarAgendaHoy, armarAgendaMes, armarAgendaSemana, marcarAtraso,
+} from '@labia/compartido';
 import type { NucleoMock } from './nucleo';
 import { AHORA, CLIENTES_REFERENCIA } from './datos-clientes';
 import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
@@ -48,22 +51,6 @@ function sumarDias(fecha: ISODate, dias: number): ISODate {
   const base = new Date(fecha);
   base.setUTCDate(base.getUTCDate() + dias);
   return base.toISOString();
-}
-
-function inicioDelDia(fecha: ISODate): Date {
-  const base = new Date(fecha);
-  base.setUTCHours(0, 0, 0, 0);
-  return base;
-}
-
-function finDelDia(fecha: ISODate): Date {
-  const base = new Date(fecha);
-  base.setUTCHours(23, 59, 59, 999);
-  return base;
-}
-
-function mismoDia(a: ISODate, b: ISODate): boolean {
-  return inicioDelDia(a).getTime() === inicioDelDia(b).getTime();
 }
 
 function nombreDeCliente(clienteId: Id | null): string | null {
@@ -424,40 +411,13 @@ function idempotente<T>(clave: string, crear: () => T): T {
 }
 
 /** Recalcula `atrasada` y `diasDeAtraso` contra la fecha de referencia del mock (`AHORA`). */
+/** El de compartido, con el reloj congelado de los datos de ejemplo. */
 function conAtraso(e: EntradaInterna): EntradaAgenda {
-  const fechaRelevante = e.venceEn ?? e.inicioEn;
-  if (e.estado !== 'pendiente' || !fechaRelevante) {
-    return { ...e, atrasada: false, diasDeAtraso: null };
-  }
-  const limite = inicioDelDia(ahora());
-  const fecha = new Date(fechaRelevante);
-  if (fecha >= limite) {
-    return { ...e, atrasada: false, diasDeAtraso: null };
-  }
-  const dias = Math.max(1, Math.floor((limite.getTime() - fecha.getTime()) / 86_400_000));
-  return { ...e, atrasada: true, diasDeAtraso: dias };
+  return marcarAtraso(e, ahora());
 }
 
 function fechaRelevante(e: EntradaAgenda): ISODate | null {
   return e.venceEn ?? e.inicioEn;
-}
-
-function coincideConDia(e: EntradaAgenda, dia: ISODate): boolean {
-  const fecha = fechaRelevante(e);
-  return fecha !== null && mismoDia(fecha, dia);
-}
-
-function esHastaHoy(e: EntradaAgenda, hoy: ISODate): boolean {
-  const fecha = fechaRelevante(e);
-  return fecha !== null && new Date(fecha) <= finDelDia(hoy);
-}
-
-function inicioDeSemana(fecha: ISODate): Date {
-  const base = inicioDelDia(fecha);
-  const diaSemana = base.getUTCDay();
-  const desplazamiento = diaSemana === 0 ? 6 : diaSemana - 1;
-  base.setUTCDate(base.getUTCDate() - desplazamiento);
-  return base;
 }
 
 // ---------------------------------------------------------------------------
@@ -466,80 +426,20 @@ function inicioDeSemana(fecha: ISODate): Date {
 
 export function crearCapaAgendaMock(nucleo: NucleoMock): CapaAgenda {
   function todasVigentes(): ReadonlyArray<EntradaAgenda> {
-    return nucleo.listar(entradas.map(conAtraso));
+    return nucleo.listar(entradas.map((e) => marcarAtraso(e, ahora())));
   }
 
   return {
     async agendaHoy(fecha?: ISODate) {
-      const hoy = fecha ?? ahora();
-      const vigentes = todasVigentes();
-      const pendientes = vigentes.filter((e) => e.estado === 'pendiente');
-      const atrasados = pendientes.filter((e) => e.atrasada);
-      const noAtrasadosHastaHoy = pendientes.filter((e) => !e.atrasada && esHastaHoy(e, hoy));
-      const respuesta: AgendaHoy = {
-        fecha: hoy,
-        visitas: noAtrasadosHastaHoy.filter((e) => e.tipo === 'visita'),
-        llamadas: noAtrasadosHastaHoy.filter((e) => e.tipo === 'llamada'),
-        proximosPasos: noAtrasadosHastaHoy.filter((e) => e.tipo === 'proximo_paso' || e.tipo === 'objetivo_aceptado'),
-        vencimientos: noAtrasadosHastaHoy.filter((e) => e.tipo === 'vencimiento' || e.tipo === 'apertura_enlace' || e.tipo === 'cotizacion_en_revision' || e.tipo === 'presentacion_enviada'),
-        atrasados,
-        totalPendientes: pendientes.length,
-      };
-      return nucleo.responder(respuesta);
+      return nucleo.responder(armarAgendaHoy(todasVigentes(), fecha ?? ahora()));
     },
 
     async agendaSemana(desde?: ISODate) {
-      const vigentes = todasVigentes();
-      const inicio = desde ? inicioDelDia(desde) : inicioDeSemana(ahora());
-      const dias: DiaDeSemana[] = [];
-      for (let i = 0; i < 7; i += 1) {
-        const fechaDia = new Date(inicio);
-        fechaDia.setUTCDate(fechaDia.getUTCDate() + i);
-        const fechaISO = fechaDia.toISOString();
-        const delDia = vigentes.filter((e) => e.estado === 'pendiente' && coincideConDia(e, fechaISO));
-        dias.push({
-          fecha: fechaISO,
-          entradas: delDia,
-          totalPendientes: delDia.length,
-          totalAtrasados: delDia.filter((e) => e.atrasada).length,
-        });
-      }
-      const ultimo = new Date(inicio);
-      ultimo.setUTCDate(ultimo.getUTCDate() + 6);
-      const respuesta: AgendaSemana = { desde: inicio.toISOString(), hasta: ultimo.toISOString(), dias };
-      return nucleo.responder(respuesta);
+      return nucleo.responder(armarAgendaSemana(todasVigentes(), desde ?? ahora()));
     },
 
     async agendaMes(anio: number, mes: number) {
-      const vigentes = todasVigentes();
-      const primerDiaDelMes = new Date(Date.UTC(anio, mes - 1, 1));
-      const inicioGrilla = inicioDeSemana(primerDiaDelMes.toISOString());
-      const ultimoDiaDelMes = new Date(Date.UTC(anio, mes, 0));
-      const finGrilla = inicioDeSemana(ultimoDiaDelMes.toISOString());
-      finGrilla.setUTCDate(finGrilla.getUTCDate() + 6);
-
-      const dias: DiaDeMes[] = [];
-      const cursor = new Date(inicioGrilla);
-      while (cursor.getTime() <= finGrilla.getTime()) {
-        const fechaISO = cursor.toISOString();
-        const delDia = vigentes.filter((e) => e.estado === 'pendiente' && coincideConDia(e, fechaISO));
-        const cantidadPorTipo: Partial<Record<TipoEntradaAgenda, number>> = {};
-        for (const e of delDia) cantidadPorTipo[e.tipo] = (cantidadPorTipo[e.tipo] ?? 0) + 1;
-        dias.push({
-          fecha: fechaISO,
-          delMesActual: cursor.getUTCMonth() === mes - 1,
-          cantidadPorTipo,
-          tieneAtrasados: delDia.some((e) => e.atrasada),
-          total: delDia.length,
-        });
-        cursor.setUTCDate(cursor.getUTCDate() + 1);
-      }
-
-      const semanas: DiaDeMes[][] = [];
-      for (let i = 0; i < dias.length; i += 7) semanas.push(dias.slice(i, i + 7));
-
-      const respuesta: AgendaMes = { anio, mes, semanas };
-      return nucleo.responder(respuesta);
+      return nucleo.responder(armarAgendaMes(todasVigentes(), anio, mes));
     },
 
     async cronogramaComercial(desde: ISODate, hasta: ISODate) {
