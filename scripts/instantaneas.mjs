@@ -42,6 +42,12 @@ globalThis.Node = dom.window.Node;
 globalThis.CustomEvent = dom.window.CustomEvent;
 globalThis.requestAnimationFrame = (f) => dom.window.setTimeout(f, 0);
 globalThis.cancelAnimationFrame = (h) => dom.window.clearTimeout(h);
+// ⛔ `Element` lo usa la vista de Clientes para decidir en su manejador de
+//    clics; sin el, hacer clic no hace nada y la instantanea sale a medias.
+globalThis.Element = dom.window.Element;
+globalThis.HTMLTextAreaElement = dom.window.HTMLTextAreaElement;
+globalThis.HTMLButtonElement = dom.window.HTMLButtonElement;
+globalThis.HTMLDialogElement = dom.window.HTMLDialogElement;
 
 const leer = (ruta) => { try { return readFileSync(`${RAIZ}/${ruta}`, 'utf8'); } catch { return ''; } };
 
@@ -54,14 +60,28 @@ const leer = (ruta) => { try { return readFileSync(`${RAIZ}/${ruta}`, 'utf8'); }
  *    estilos propios durante varias corridas, y las instantaneas mostraban
  *    algo que no era la pantalla.
  */
+/**
+ * Hojas que una vista necesita ademas de la suya, porque monta un modulo de
+ * otra carpeta. En la aplicacion real no hace falta declararlo —el
+ * empaquetador junta todo el CSS importado en un solo archivo—; aca si,
+ * porque cada instantanea se arma sola.
+ */
+const CSS_PRESTADO = {
+  clientes: ['fichas'],   // la ficha del cliente monta el taller de fichas
+  planificar: ['fichas'], // y Planificar abre la ficha oficial
+};
+
 function cssDeVista(carpeta) {
   const dir = `${RAIZ}/apps/escritorio/src/vistas/${carpeta}`;
   let hojas = [];
   try {
     hojas = readdirSync(dir).filter((f) => f.endsWith('.css')).sort();
   } catch { return ''; }
-  if (hojas.length === 0) return '';
-  return hojas.map((h) => `/* ${carpeta}/${h} */\n${leer(`apps/escritorio/src/vistas/${carpeta}/${h}`)}`).join('\n');
+  const propias = hojas.map(
+    (h) => `/* ${carpeta}/${h} */\n${leer(`apps/escritorio/src/vistas/${carpeta}/${h}`)}`,
+  );
+  const prestadas = (CSS_PRESTADO[carpeta] ?? []).map((otra) => cssDeVista(otra));
+  return [...propias, ...prestadas].join('\n');
 }
 
 /** Hojas comunes: los ocho colores, la marca y los componentes base. */
@@ -203,6 +223,56 @@ async function instantaneaDeVista(entrada, rol) {
 }
 
 /**
+ * La ficha de un cliente, con el taller abierto.
+ *
+ * No es una ruta: se llega haciendo clic. Se saca aparte porque es el paso
+ * central del recorrido —el vendedor abre un prospecto y le arma la ficha— y
+ * sin esta instantanea esa pantalla no se ve en ningun lado.
+ */
+async function instantaneaDeClienteConFicha() {
+  const vista = await MODULOS.clientes();
+  const disposicionMod = await import('../apps/escritorio/src/nucleo/disposicion.ts');
+  const capa = crearCapaDatosMock({ configuracion: { latenciaMs: 0 } });
+  const raiz = document.createElement('div');
+  raiz.id = 'app';
+
+  const disposicion = disposicionMod.crearDisposicion({
+    raiz, rol: 'vendedor', datosDeEjemplo: true,
+    nombreUsuario: 'Juan Pablo Fernandez',
+    destinos: destinosDe('vendedor'),
+    cerrarSesion: () => {},
+  });
+  disposicion.marcarRuta('clientes');
+
+  const control = new dom.window.AbortController();
+  const v = vista.crearVista();
+  await v.montar({
+    datos: capa, raiz: disposicion.contenido, rol: 'vendedor',
+    senal: control.signal, datosDeEjemplo: true,
+  });
+  await asentar();
+
+  // Se abre un cliente que YA tiene productos propuestos: si no, la seccion
+  // de fichas sale con su mensaje de "todavia no hay ninguno", que es cierto
+  // pero no es lo que esta instantanea tiene que mostrar.
+  const candidatos = [...raiz.querySelectorAll('[data-accion="abrir-cliente"]')];
+  for (const boton of candidatos) {
+    boton.click();
+    await asentar();
+    const elegir = raiz.querySelector('[data-accion="preparar-ficha"]');
+    if (elegir) { elegir.click(); await asentar(); break; }
+    raiz.querySelector('[data-accion="volver-lista"]')?.click();
+    await asentar();
+  }
+
+  return {
+    titulo: 'Cliente — ficha', ruta: 'cliente-ficha', cuerpo: raiz.outerHTML,
+    css: cssDeVista('clientes'),
+    nota: 'La ficha de un prospecto, con el taller de la ficha de producto abierto abajo.',
+  };
+}
+
+/**
  * El taller de la ficha, que no es una ruta: vive dentro de Clientes.
  * Se saca aparte porque es la pantalla donde el vendedor arma lo que ve el
  * prospecto, y se redisenia por su cuenta.
@@ -257,6 +327,7 @@ for (const entrada of RUTAS) {
   const rol = entrada.roles.includes('vendedor') ? 'vendedor' : 'administrador';
   await guardar(() => instantaneaDeVista(entrada, rol), entrada.titulo);
 }
+await guardar(instantaneaDeClienteConFicha, 'Cliente — ficha');
 await guardar(instantaneaDelTaller, 'Ficha — taller');
 
 console.log(`\n${hechas.length} pantalla(s) en disenio/pantallas/`);

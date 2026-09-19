@@ -17,6 +17,8 @@ import {
 } from '../packages/mock/src/datos-fichas.ts';
 import { ORDEN_CANONICO, PRODUCTOS } from '../packages/compartido/src/index.ts';
 import { crearCapaDatosMock } from '../packages/mock/src/index.ts';
+import { JSDOM } from 'jsdom';
+import * as vistaClientes from '../apps/escritorio/src/vistas/clientes/vista.ts';
 
 let ok = 0;
 const fallos = [];
@@ -238,6 +240,90 @@ comprobar('⛔ y deja fuera lo adaptable y lo no recomendado',
   dolor.ok && dolor.datos.fichas.length === 2, dolor.ok ? `${dolor.datos.fichas.length}` : '');
 comprobar('⛔ lo directo va primero',
   dolor.ok && dolor.datos.fichas[0].productoId === 'merma-ia');
+
+// ===========================================================================
+seccion('El taller se abre desde la ficha del cliente');
+
+// La vista de Clientes arma marcado con innerHTML y carga en varios turnos;
+// se monta en un DOM de verdad y se la maneja como la manejaria una persona.
+const domC = new JSDOM('<!doctype html><html lang="es-PY"><body><div id="app"></div></body></html>', {
+  url: 'https://escritorio.ejemplo/', pretendToBeVisual: true,
+});
+globalThis.window = domC.window;
+globalThis.document = domC.window.document;
+globalThis.HTMLElement = domC.window.HTMLElement;
+globalThis.HTMLInputElement = domC.window.HTMLInputElement;
+globalThis.FormData = domC.window.FormData;
+globalThis.Blob = domC.window.Blob;
+globalThis.Node = domC.window.Node;
+globalThis.CustomEvent = domC.window.CustomEvent;
+// ⛔ `Element` hace falta: la vista decide con `evento.target instanceof Element`.
+//    Sin el, el manejador de clics tira y la vista parece no responder.
+globalThis.Element = domC.window.Element;
+globalThis.HTMLTextAreaElement = domC.window.HTMLTextAreaElement;
+globalThis.HTMLButtonElement = domC.window.HTMLButtonElement;
+globalThis.HTMLDialogElement = domC.window.HTMLDialogElement;
+globalThis.requestAnimationFrame = (f) => domC.window.setTimeout(f, 0);
+
+const asentar = async (vueltas = 40) => {
+  for (let i = 0; i < vueltas; i += 1) await new Promise((l) => domC.window.setTimeout(l, 0));
+};
+
+const datosC = crearCapaDatosMock({ configuracion: { latenciaMs: 0 } });
+const raizC = domC.window.document.getElementById('app');
+const controlC = new domC.window.AbortController();
+const vista = vistaClientes.crearVista();
+await vista.montar({
+  datos: datosC, raiz: raizC, rol: 'vendedor',
+  senal: controlC.signal, datosDeEjemplo: true,
+});
+await asentar();
+
+const primerCliente = raizC.querySelector('[data-accion="abrir-cliente"]');
+comprobar('la cartera lista clientes', primerCliente !== null);
+
+if (primerCliente) {
+  primerCliente.click();
+  await asentar();
+
+  const seccionFichas = raizC.querySelector('#clientes-ficha-taller');
+  comprobar('la ficha del cliente trae la seccion de fichas', seccionFichas !== null);
+
+  const elegir = raizC.querySelectorAll('[data-accion="preparar-ficha"]');
+  comprobar('ofrece al menos un producto para preparar', elegir.length > 0, `${elegir.length}`);
+
+  if (elegir.length > 0) {
+    comprobar('⛔ el taller arranca vacio, no ocupando la pantalla',
+      seccionFichas.children.length === 0);
+
+    elegir[0].click();
+    await asentar();
+
+    const preparar = raizC.querySelector('#clientes-ficha-taller .fichas-preparar');
+    comprobar('al elegir un producto se monta el taller', preparar !== null);
+
+    const previa = raizC.querySelector('#clientes-ficha-taller .ficha-publica');
+    comprobar('y con el la vista previa de lo que ve el cliente', previa !== null);
+
+    const texto = raizC.querySelector('#clientes-ficha-taller').textContent ?? '';
+    comprobar('el taller trae el copy oficial, no un marcador de posicion',
+      texto.length > 400 && !/lorem|placeholder|TODO/i.test(texto), `${texto.length} caracteres`);
+
+    comprobar('⛔ el chip elegido queda marcado',
+      elegir[0].getAttribute('aria-pressed') === 'true');
+
+    // ⛔ La regla del sistema: la ficha oficial no se edita desde ningun lado.
+    const editables = raizC.querySelectorAll(
+      '#clientes-ficha-taller .fichas-bloque-cuerpo [contenteditable], '
+      + '#clientes-ficha-taller .fichas-bloque-cuerpo input, '
+      + '#clientes-ficha-taller .fichas-bloque-cuerpo textarea',
+    );
+    comprobar('⛔ el copy oficial no es editable desde el taller', editables.length === 0,
+      `${editables.length} campos`);
+  }
+}
+
+vista.desmontar();
 
 // ===========================================================================
 console.log('\nResultado\n');

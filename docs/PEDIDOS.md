@@ -316,3 +316,43 @@ Se agregó un control bloqueante (`verificar-portafolio` 12i) que falla si vuelv
 quedar un método sin ensamblar, probado inyectando la violación real.
 
 Bloqueante: era sí — siete de las nueve pantallas mostraban "esto no cargó".
+
+### [ESPEC] 2026-09-19 — El taller de la ficha, cableado desde Clientes · **RESUELTO**
+Archivos: `apps/escritorio/src/vistas/clientes/{plantillas,vista,estilos}.*` (dueña: S4)
+· `scripts/verificar-fichas.mjs` · `scripts/instantaneas.mjs`
+
+La especificación pone la preparación de la ficha en Clientes, pero sólo estaba
+la entrada de sólo lectura desde Planificar. La ficha del cliente ahora trae una
+sección **"Fichas para este cliente"**: se elige el producto y debajo se monta el
+taller —el mismo módulo, no una segunda copia—.
+
+⛔ Los productos que se ofrecen son los **propuestos y vigentes de ese cliente**,
+no los trece: la ficha sale de una conversación que ya pasó, no de un catálogo.
+Sin ninguno, manda a Planificar.
+
+Nueve comprobaciones nuevas montan la vista en jsdom, abren un cliente, hacen clic
+en el producto y verifican que aparezcan el taller y la vista previa con el copy
+real — probadas rompiendo el cableado a propósito. Y una décima instantánea,
+`cliente-ficha.html`, muestra ese paso, que antes no se veía en ninguna.
+
+Bloqueante: no
+
+### [ESPEC] 2026-09-19 — Errata en el copy aprobado: un `**` sin cerrar
+Archivo: `content/copy/LabIA_4_Soluciones_Integrales_Copy_Maestro.md` línea 101
+(dueño: el CEO — copy congelado)
+
+**Smart Commerce**, bloque "¿Qué es?": *"te da una \*\*nueva sucursal digital
+potenciada…"*. El asterisco de apertura no cierra nunca. Es el único caso en los
+dos documentos; lo demás está balanceado.
+
+⛔ **No se corrigió el copy.** Es fuente maestra y está firmado por su SHA-256
+(`content/copy/copy.sha256`): cambiarlo desde acá rompería `verificar:copy` y la
+regla de que el texto sólo cambia en su documento.
+
+Lo que sí se hizo: `fichas/dom.ts` ahora barre los asteriscos sueltos al pintar.
+Antes el cliente recibía la ficha con `**nueva sucursal digital` a la vista.
+
+Necesito: que se arregle en el documento fuente y se regenere el SHA. Mientras
+tanto la ficha se ve bien, pero el copy sigue con la errata.
+
+Bloqueante: no

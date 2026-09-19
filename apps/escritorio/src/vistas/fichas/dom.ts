@@ -53,7 +53,18 @@ export function parrafosDeTexto(texto: string): ReadonlyArray<HTMLElement> {
   return salida;
 }
 
-/** El copy usa `**` para resaltar. Acá se limpia: el resalte lo da el CSS. */
+/**
+ * El copy usa `**` para resaltar. Acá se limpia: el resalte lo da el CSS.
+ *
+ * ⛔ La última pasada barre los asteriscos que quedaron SUELTOS. El copy
+ *    aprobado tiene uno sin cerrar —Smart Commerce, "¿Qué es?"— y sin esto el
+ *    cliente ve "**nueva sucursal digital" en la ficha que le mandan.
+ *    ⛔ No se corrige el copy desde acá: es fuente maestra y está firmado por
+ *    su SHA-256. La errata va reportada para que se arregle en el documento.
+ */
 function sinEnfasis(t: string): string {
-  return t.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+  return t
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/\*+/g, '');
 }

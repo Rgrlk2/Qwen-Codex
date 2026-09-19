@@ -26,7 +26,7 @@
 import './estilos.css';
 import type {
   Cliente, ClienteDetalle, EtapaCliente, FiltroClientes, Id, ISODate, NuevoCliente,
-  PropuestaDeSeguimiento, SeguimientoConfirmado, SoporteDictado,
+  ProductoId, PropuestaDeSeguimiento, SeguimientoConfirmado, SoporteDictado,
 } from '@labia/compartido';
 import type { ContextoVista, Vista } from '../../nucleo/contrato-vista';
 import {
@@ -37,6 +37,7 @@ import {
   plantillaVacio,
 } from './plantillas';
 import { esc, generarClave } from './util';
+import { montarTaller } from '../fichas/taller';
 import { iniciarGrabacion, verificarSoporteDictado, type ControladorGrabacion } from './voz';
 
 type ModoCaptura = 'texto' | 'voz';
@@ -200,6 +201,36 @@ function crearVistaClientes(): Vista {
     contenido().innerHTML = plantillaFicha(fichaActual);
     void cargarLineaDeTiempo(id);
     void cargarSeguimientos(id);
+  }
+
+  /**
+   * Abre el taller de la ficha dentro de la ficha del cliente.
+   *
+   * ⛔ El taller es el mismo modulo que usa Planificar: no hay una segunda
+   *    copia de la preparacion. Lo unico que cambia es de donde se entra.
+   */
+  async function abrirTallerDeFicha(productoId: ProductoId, boton: HTMLElement): Promise<void> {
+    const c = requerido();
+    const contenedor = c.raiz.querySelector<HTMLElement>('#clientes-ficha-taller');
+    if (!contenedor || !clienteActualId) return;
+
+    // El chip elegido queda marcado; los otros, sueltos.
+    for (const otro of c.raiz.querySelectorAll<HTMLElement>('[data-accion="preparar-ficha"]')) {
+      otro.setAttribute('aria-pressed', String(otro === boton));
+    }
+
+    const sesion = await c.datos.sesionActual();
+    if (c.senal.aborted) return;
+    const nombreVendedor = sesion.ok && sesion.datos ? sesion.datos.usuario.nombre : 'Tu vendedor';
+
+    await montarTaller({
+      datos: c.datos,
+      contenedor,
+      productoId,
+      clienteId: clienteActualId,
+      nombreVendedor,
+      senal: c.senal,
+    });
   }
 
   async function cargarLineaDeTiempo(id: Id): Promise<void> {
@@ -425,6 +456,9 @@ function crearVistaClientes(): Vista {
         return;
       case 'nuevo-seguimiento':
         void abrirCaptura();
+        return;
+      case 'preparar-ficha':
+        if (valor) void abrirTallerDeFicha(valor as ProductoId, objetivo);
         return;
       case 'modo-captura':
         if (valor === 'voz' || valor === 'texto') {

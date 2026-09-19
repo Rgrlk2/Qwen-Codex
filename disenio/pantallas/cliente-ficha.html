@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Planificar — Escritorio Vendedores Lab.IA</title>
+<title>Cliente — ficha — Escritorio Vendedores Lab.IA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1496,202 +1496,194 @@ textarea.entrada {
   min-width: 0;
 }
 
-/* planificar/estilos.css */
+/* clientes/estilos.css */
 /*
- * Estilos propios de Planificar.
+ * Vista Clientes — estilos.
  *
- * ⛔ DUEÑO: Sesión 3. Prefijo `.planificar-` en todo lo que no sea un
- *    componente compartido (docs/DESIGN_SYSTEM.md §5, packages/ui/base.css).
- * ⛔ Ningún color literal: sólo var(--token). Los ocho colores oficiales
- *    viven en packages/ui/src/marca-labia.css (Sesión 2); acá no se declara
- *    ni un hex ni un rgba() nuevo.
- * ⛔ Sin overflow-x: hidden. Todo desborde se corrige en su causa
- *    (min-width: 0, overflow-wrap, grillas que bajan de columnas).
+ * ⛔ DUEÑO: Sesión 4.
+ * ⛔ Sólo tokens de packages/ui/src/tokens.css. Ningún color, fuente ni curva
+ *    literal (DESIGN_SYSTEM.md §2.2 CO1, QA_CHECKLIST.md §7.2.8).
  *
- * Anchos validados sin scroll horizontal de página: 360, 390, 768, 1024, 1440.
+ * ⛔ Acá viven SÓLO las piezas propias de Clientes. Los componentes
+ *    compartidos —tarjeta, botón, chip, pestaña, campo, tabla y los cuatro
+ *    estados— los define packages/ui/src/base.css y no se redeclaran.
+ *
+ *    Esta hoja los traía duplicados, sin prefijo, porque base.css todavía no
+ *    existía (docs/PEDIDOS.md [S4] 2026-09-15). Como se carga después,
+ *    terminaba pisando el sistema de diseño en TODA la aplicación: el bloque
+ *    de error salía en columna y los chips ignoraban el diseño aprobado.
+ *    Se quitaron al aplicar el diseño de Claude Design, que es la integración
+ *    que ese mismo pedido dejaba anotada.
  */
 
-.planificar-entrada,
-.planificar-plan,
-.planificar-investigacion,
-.planificar-productos-cuerpo {
+.vista-clientes {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
+  padding: 1.5rem clamp(1rem, 4vw, 2rem);
+  max-width: var(--ancho-contenido, 1240px);
+  margin-inline: auto;
+  color: var(--texto);
+  font-family: var(--fuente);
+}
+
+.vista-clientes * {
+  box-sizing: border-box;
   min-width: 0;
 }
 
-.planificar-acciones-protagonistas {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-}
-
-@media (min-width: 768px) {
-  .planificar-acciones-protagonistas {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.planificar-acciones-protagonistas .accion-protagonista {
-  min-height: 120px;
-  min-width: 0;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-@media (min-width: 768px) {
-  .planificar-acciones-protagonistas .accion-protagonista {
-    min-height: 160px;
-  }
-}
-
-.planificar-formulario-activo,
-.planificar-form {
-  min-width: 0;
-}
-
-.planificar-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 42rem;
-}
-
-.planificar-form-inline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  max-width: none;
-}
-
-.planificar-form-inline .entrada {
-  flex: 1 1 12rem;
-  min-width: 0;
-}
-
-.planificar-seccion {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.planificar-dato {
-  border-block-start: 1px solid var(--linea);
-  padding-block-start: 0.75rem;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.planificar-dato:first-child {
-  border-block-start: none;
-  padding-block-start: 0;
-}
-
-.planificar-dato-encabezado {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: baseline;
-}
-
-.planificar-destacados .rejilla {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
-  gap: 1rem;
-}
-
-.planificar-destacados .rejilla > * {
-  min-width: 0;
-}
-
-.ranking.planificar-plan .ranking-fila,
-.planificar-plan .ranking-fila {
-  border-block-start: 1px solid var(--linea);
-  padding-block: 0.75rem;
-  min-width: 0;
-}
-
-.planificar-ranking-cabecera {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: baseline;
-  min-width: 0;
-}
-
-.ranking-fila--fuera-de-top10 {
-  opacity: 0.82;
-}
-
-.planificar-copy {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.planificar-copy > * {
-  max-width: 100%;
-}
-
-.planificar-precios {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.25rem 1rem;
-  min-width: 0;
-}
-
-@media (min-width: 480px) {
-  .planificar-precios {
-    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
-  }
-}
-
-.planificar-precios dt {
+.vista-clientes h1 {
+  font-size: clamp(28px, 3.5vw, 44px);
   font-weight: 600;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.planificar-precios dd {
   margin: 0;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-variant-numeric: tabular-nums;
 }
 
-.planificar-productos-lista {
+.vista-clientes .chip-ejemplo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--azul-texto);
+  background: var(--azul-suave);
+  border: 1px solid var(--linea-acento);
+  border-radius: 999px;
+  padding: 0.35em 0.9em;
+  width: fit-content;
+}
+
+.vista-clientes textarea, .vista-clientes select {
+  min-height: 48px;
+  border-radius: 10px;
+  border: 1px solid var(--linea-2);
+  background: var(--superficie);
+  color: var(--texto);
+  padding: 0.6em 0.8em;
+  font: inherit;
+}
+.vista-clientes textarea { min-height: 96px; resize: vertical; }
+
+.lista-item {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--linea);
+  background: var(--superficie);
 }
+.lista-item__cabecera { display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.lista-item__titulo { font-weight: 600; }
+.lista-item__meta { color: var(--texto-2); font-size: 14px; }
 
-.planificar-producto-boton {
-  min-height: 44px;
-  text-align: left;
-  width: 100%;
-}
-
-.planificar-ficha {
-  min-width: 0;
-}
-
-.planificar-acciones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+/* --- Estado (etapa) --- */
+.etapa {
+  display: inline-flex;
   align-items: center;
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--linea-2);
+  color: var(--texto-2);
+  width: fit-content;
+}
+.etapa--ganado, .etapa--cliente_activo { color: var(--cian); border-color: var(--linea-acento); }
+.etapa--perdido { color: var(--peligro); border-color: var(--peligro-suave); }
+
+@keyframes vista-clientes-brillo {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }
 
-.planificar-acciones .btn,
-.planificar-acciones .btn-borde {
-  min-height: 48px;
+/* --- Rejilla de cartera --- */
+.clientes-rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 1rem;
 }
 
-.planificar-campos-faltantes {
-  border-inline-start: 3px solid var(--cian);
-  padding-inline-start: 1rem;
+.clientes-fila {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+/* --- Ficha --- */
+.clientes-ficha { display: flex; flex-direction: column; gap: 1.5rem; }
+.clientes-ficha__cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.clientes-ficha__grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.clientes-ficha__dl { display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 1rem; margin: 0; }
+.clientes-ficha__dl dt { color: var(--texto-2); }
+.clientes-ficha__dl dd { margin: 0; overflow-wrap: anywhere; }
+
+/* Texto de apoyo dentro de la ficha del cliente. */
+.clientes-ficha__ayuda {
+  margin: 0 0 0.75rem;
+  font-size: 14px;
+  line-height: 1.62;
+  color: var(--texto-2);
+  text-wrap: pretty;
+}
+
+/* El taller arranca vacío y aparece al elegir un producto. */
+#clientes-ficha-taller:not(:empty) {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--linea);
+}
+
+/* --- Captura de seguimiento --- */
+.clientes-captura { display: flex; flex-direction: column; gap: 1rem; }
+.clientes-captura__grabando {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-weight: 600;
+  color: var(--peligro);
+}
+.clientes-captura__punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--peligro);
+  flex: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .clientes-captura__punto { animation: vista-clientes-pulso 1.2s ease-in-out infinite; }
+}
+@keyframes vista-clientes-pulso {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.clientes-propuesta { display: flex; flex-direction: column; gap: 1rem; }
+.clientes-propuesta__paso { display: flex; align-items: flex-start; gap: 0.6rem; }
+.clientes-propuesta__paso input[type="checkbox"] { width: 20px; height: 20px; flex: none; margin-top: 0.2em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vista-clientes *, .vista-clientes *::before, .vista-clientes *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .clientes-ficha__cabecera { flex-direction: column; }
+  .lista-item__cabecera { flex-direction: column; }
 }
 
 /* fichas/estilos.css */
@@ -2207,15 +2199,108 @@ textarea.entrada {
 </head>
 <body>
 <!--
-  Instantanea de la pantalla "Planificar" (ruta #/planificar) del Escritorio
+  Instantanea de la pantalla "Cliente — ficha" (ruta #/cliente-ficha) del Escritorio
   Vendedores Lab.IA, generada por scripts/instantaneas.mjs.
 
   Es una FOTO: el marcado y el CSS son los reales, pero nada funciona.
-  Se monto con rol vendedor, con los datos de ejemplo del mock.
+  La ficha de un prospecto, con el taller de la ficha de producto abierto abajo.
 
   Para rediseniar: cambiá el CSS y el marcado que quieras. Lo que importa es
   que cada pieza conserve su clase, porque esa clase es la que el codigo pone.
 -->
-<div id="app"><div class="app-cascara"><aside class="lateral" aria-label="Navegación principal"><div class="lateral-encabezado"><div class="lateral-marca"><img src="../../apps/escritorio/public/assets/marca/logo-labia.webp" alt="Lab.IA" width="96" height="96"><span class="lateral-marca-texto">Lab.IA</span></div><button type="button" class="lateral-alternar" aria-expanded="true" aria-label="Contraer menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5 7 12l7.5 7.5"></path></svg></button></div><nav class="lateral-nav" aria-label="Vistas"><a class="lateral-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="lateral-enlace-texto">Inicio</span></a><a class="lateral-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="lateral-enlace-texto">Planificar</span></a><a class="lateral-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="lateral-enlace-texto">Clientes</span></a><a class="lateral-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="lateral-enlace-texto">Agenda</span></a><a class="lateral-enlace" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lateral-enlace-texto">Propuestas</span></a><a class="lateral-enlace" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lateral-enlace-texto">Dinero</span></a></nav><div class="lateral-pie"><div class="lateral-usuario"><div class="avatar avatar--md" aria-hidden="true"><span class="avatar-iniciales">JF</span></div><div class="lateral-usuario-info"><p class="lateral-usuario-nombre">Juan Pablo Fernandez</p><p class="lateral-usuario-rol">vendedor</p></div></div><button type="button" class="btn-texto" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 4.6H6.4a1.5 1.5 0 0 0-1.5 1.5v11.8a1.5 1.5 0 0 0 1.5 1.5h2.8"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9.2"></path></svg><span class="lateral-cerrar-texto">Cerrar sesión</span></button></div></aside><div class="principal"><header class="encabezado"><div class="encabezado-grupo"><span class="encabezado-rotulo">Escritorio vendedores</span><h1 class="encabezado-titulo" tabindex="-1">Planificar</h1></div><span class="chip-datos-ejemplo">Datos de ejemplo</span></header><main id="contenido" class="vista" tabindex="-1"><div class="vista planificar"><p class="texto-2">El motor comercial: qué le vendo a este negocio y por qué.</p><div class="pestanas" role="tablist" aria-label="Secciones de Planificar"><button type="button" class="pestana" role="tab" aria-selected="true">El motor comercial</button><button type="button" class="pestana" role="tab" aria-selected="false">Los 13 productos</button></div><div role="tabpanel" class="planificar-entrada"><div class="rejilla planificar-acciones-protagonistas"><button type="button" class="tarjeta accion-protagonista"><span aria-hidden="true">🔍</span><h3>Investigar una empresa o un profesional que conozco</h3><p>"Mi amigo tiene una repuestera", "mi odontóloga", "el hotel de la esquina".</p></button><button type="button" class="tarjeta accion-protagonista"><span aria-hidden="true">🧭</span><h3>Explorar oportunidades por rubro</h3><p>"Quiero ver qué le puedo vender a las peluquerías", "gomerías", "moteles".</p></button></div><div class="planificar-formulario-activo"></div><div aria-live="polite"></div></div></div></main></div><nav class="inferior" aria-label="Navegación principal"><a class="inferior-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="inferior-enlace-texto">Inicio</span></a><a class="inferior-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="inferior-enlace-texto">Planificar</span></a><a class="inferior-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="inferior-enlace-texto">Clientes</span></a><a class="inferior-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="inferior-enlace-texto">Agenda</span></a><button type="button" class="inferior-enlace" aria-haspopup="dialog" aria-label="Más destinos"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.2" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="18.8" cy="12" r="1.5"></circle></svg></span><span class="inferior-enlace-texto">Más</span></button><dialog class="dialogo" aria-label="Más destinos"><div class="lista"><a class="lista-fila" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lista-fila-titulo">Propuestas</span></a><a class="lista-fila" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lista-fila-titulo">Dinero</span></a></div><button type="button" class="btn-borde btn">Cerrar</button></dialog></nav></div></div>
+<div id="app"><div class="app-cascara"><aside class="lateral" aria-label="Navegación principal"><div class="lateral-encabezado"><div class="lateral-marca"><img src="../../apps/escritorio/public/assets/marca/logo-labia.webp" alt="Lab.IA" width="96" height="96"><span class="lateral-marca-texto">Lab.IA</span></div><button type="button" class="lateral-alternar" aria-expanded="true" aria-label="Contraer menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5 7 12l7.5 7.5"></path></svg></button></div><nav class="lateral-nav" aria-label="Vistas"><a class="lateral-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="lateral-enlace-texto">Inicio</span></a><a class="lateral-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="lateral-enlace-texto">Planificar</span></a><a class="lateral-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="lateral-enlace-texto">Clientes</span></a><a class="lateral-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="lateral-enlace-texto">Agenda</span></a><a class="lateral-enlace" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lateral-enlace-texto">Propuestas</span></a><a class="lateral-enlace" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lateral-enlace-texto">Dinero</span></a></nav><div class="lateral-pie"><div class="lateral-usuario"><div class="avatar avatar--md" aria-hidden="true"><span class="avatar-iniciales">JF</span></div><div class="lateral-usuario-info"><p class="lateral-usuario-nombre">Juan Pablo Fernandez</p><p class="lateral-usuario-rol">vendedor</p></div></div><button type="button" class="btn-texto" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 4.6H6.4a1.5 1.5 0 0 0-1.5 1.5v11.8a1.5 1.5 0 0 0 1.5 1.5h2.8"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9.2"></path></svg><span class="lateral-cerrar-texto">Cerrar sesión</span></button></div></aside><div class="principal"><header class="encabezado"><div class="encabezado-grupo"><span class="encabezado-rotulo">Escritorio vendedores</span><h1 class="encabezado-titulo" tabindex="-1">Clientes</h1></div><span class="chip-datos-ejemplo">Datos de ejemplo</span></header><main id="contenido" class="vista" tabindex="-1">
+    <a class="saltar" href="#clientes-contenido">Ir al contenido</a>
+    <!-- ⛔ El título y el chip "Datos de ejemplo" los pone la cáscara, una sola
+         vez, en su encabezado fijo. Ver nucleo/disposicion.ts. -->
+    <div id="clientes-aviso" role="status" aria-live="polite"></div>
+    <div id="clientes-contenido">
+    <div class="clientes-ficha">
+      <div class="clientes-ficha__cabecera">
+        <div>
+          <button type="button" class="btn-texto" data-accion="volver-lista">← Volver a la cartera</button>
+          <h2 style="margin:0.4rem 0 0; font-size:clamp(22px,2.4vw,30px);">Pame Garelik Bags</h2>
+          <span class="etapa etapa--cliente_activo">Cliente activo</span>
+        </div>
+        <button type="button" class="btn" data-accion="nuevo-seguimiento">Nuevo seguimiento</button>
+      </div>
+
+      <div class="clientes-ficha__grilla">
+        <section class="tarjeta" aria-labelledby="clientes-ficha-datos">
+          <h3 id="clientes-ficha-datos" style="margin-top:0;">Datos</h3>
+          <dl class="clientes-ficha__dl">
+            <dt>Tipo</dt><dd>Empresa</dd>
+            <dt>Ciudad</dt><dd>Asunción</dd>
+            <dt>Actividad</dt><dd>boutique-carteras-accesorios</dd>
+            <dt>Plan asociado</dt><dd>Sin plan asociado todavía</dd>
+            <dt>Potencial</dt><dd>Gs.&nbsp;0</dd>
+            
+          </dl>
+        </section>
+
+        <section class="tarjeta" aria-labelledby="clientes-ficha-contactos">
+          <h3 id="clientes-ficha-contactos" style="margin-top:0;">Contactos</h3>
+          <ul class="lista">
+                  
+                    <li class="lista-item">
+                      <span class="lista-item__titulo">Pamela Garelik · decide</span>
+                      <span class="lista-item__meta">Dueña · +595 981 000 000</span>
+                    </li>
+                </ul>
+        </section>
+
+        <section class="tarjeta" aria-labelledby="clientes-ficha-productos">
+          <h3 id="clientes-ficha-productos" style="margin-top:0;">Productos</h3>
+          <p style="margin:0 0 0.4rem; color:var(--texto-2); font-size:14px;">Vigentes</p>
+          <div class="chips"><span class="chip" aria-pressed="true">Smart Commerce</span></div>
+          <p style="margin:0.8rem 0 0.4rem; color:var(--texto-2); font-size:14px;">Propuestos</p>
+          <p style="color:var(--texto-2); margin:0;">Ninguno todavía.</p>
+        </section>
+      </div>
+
+      <section class="tarjeta" aria-labelledby="clientes-ficha-fichas">
+        <h3 id="clientes-ficha-fichas" style="margin-top:0;">Fichas para este cliente</h3>
+        <p class="clientes-ficha__ayuda">
+          Armá la ficha del producto para Pame Garelik Bags: elegís qué bloques ve,
+          en qué orden, y le agregás lo que hablaron. El texto es el oficial y no se edita.
+        </p>
+        
+    <div class="chips" role="group" aria-label="Producto de la ficha">
+      <button type="button" class="chip" data-accion="preparar-ficha" data-valor="smart-commerce" aria-pressed="true">
+            Smart Commerce
+          </button>
+    </div>
+        <div id="clientes-ficha-taller"><div class="fichas-taller"><div class="fichas-columna"><div class="fichas-preparar"><h3 class="fichas-titulo-seccion">Qué le mostrás</h3><p class="fichas-ayuda">Podés ocultar lo que no aplique, cambiar el orden y destacar hasta dos bloques. El texto es el oficial y no se edita.</p><ol class="fichas-bloques" aria-label="Bloques de la ficha"><li class="fichas-bloque"><div class="fichas-bloque-cabecera"><span class="fichas-bloque-titulo">Slogan</span><div class="fichas-bloque-acciones"><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Subir Slogan" disabled="">↑</button><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Bajar Slogan">↓</button><button class="fichas-btn" type="button" aria-pressed="false">Ocultar</button><button class="fichas-btn" type="button" aria-pressed="false">Destacar</button></div></div><div class="fichas-bloque-cuerpo"><p>Vende on line. Decide con datos</p></div></li><li class="fichas-bloque"><div class="fichas-bloque-cabecera"><span class="fichas-bloque-titulo">Qué es</span><div class="fichas-bloque-acciones"><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Subir Qué es">↑</button><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Bajar Qué es">↓</button><button class="fichas-btn" type="button" aria-pressed="false">Ocultar</button><button class="fichas-btn" type="button" aria-pressed="false">Destacar</button></div></div><div class="fichas-bloque-cuerpo"><p>Smart Commerce eleva tu negocio al siguiente nivel, te da una nueva sucursal digital potenciada con un panel como si tuvieras un gerente corporativo trabajando para vos.</p><p>Incluye una tienda online completa para vender directamente desde tus anuncios, y un Dashboard Gerencial diseñado alrededor del principal problema que te da más dolor.</p></div></li><li class="fichas-bloque"><div class="fichas-bloque-cabecera"><span class="fichas-bloque-titulo">¿Qué hace?</span><div class="fichas-bloque-acciones"><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Subir ¿Qué hace?">↑</button><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Bajar ¿Qué hace?">↓</button><button class="fichas-btn" type="button" aria-pressed="false">Ocultar</button><button class="fichas-btn" type="button" aria-pressed="false">Destacar</button></div></div><div class="fichas-bloque-cuerpo"><ul class="fichas-lista"><li>Permite mostrar productos, recibir pedidos, vender, reservar o derivar la compra al canal elegido.</li><li>Funciona las 24 horas y puede llegar a clientes que nunca visitan el local físico.</li><li>Registra qué buscan, miran, consultan y compran los clientes.</li><li>Reúne ventas, stock y comportamiento del comprador en un solo lugar.</li><li>Incluye un Dashboard Gerencial completamente personalizado.</li><li>Puede incorporar funciones especiales según el negocio: recomendaciones, venta cruzada, experiencias con IA, compras a proveedores o seguimiento de clientes.</li></ul></div></li><li class="fichas-bloque"><div class="fichas-bloque-cabecera"><span class="fichas-bloque-titulo">Ejemplo</span><div class="fichas-bloque-acciones"><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Subir Ejemplo">↑</button><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Bajar Ejemplo">↓</button><button class="fichas-btn" type="button" aria-pressed="false">Ocultar</button><button class="fichas-btn" type="button" aria-pressed="false">Destacar</button></div></div><div class="fichas-bloque-cuerpo"><p>María Laura tiene uno o dos locales y viaja varias veces al año a São Paulo para comprar mercadería.</p><p>Smart Commerce le abre una nueva sucursal online.</p><p>Mientras los clientes recorren y compran, su dashboard muestra:</p><ul class="fichas-lista"><li>qué productos despiertan interés;</li><li>cuáles se venden;</li><li>cuáles se agotan;</li><li>qué buscan los clientes y no encuentran;</li><li>qué conviene traer en el próximo viaje.</li></ul><p>En Pame Garelik Bags, el problema es diferente.</p><p>La cliente puede probar visualmente productos, descubrir combinaciones y avanzar hacia la compra. Su dashboard se concentra en los artículos elegidos, las pruebas realizadas, las combinaciones que funcionan y las oportunidades de venta adicional.</p><p>El e-commerce vende. El dashboard ayuda a entender cómo vender mejor.</p></div></li><li class="fichas-bloque"><div class="fichas-bloque-cabecera"><span class="fichas-bloque-titulo">Beneficios</span><div class="fichas-bloque-acciones"><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Subir Beneficios">↑</button><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Bajar Beneficios">↓</button><button class="fichas-btn" type="button" aria-pressed="false">Ocultar</button><button class="fichas-btn" type="button" aria-pressed="false">Destacar</button></div></div><div class="fichas-bloque-cuerpo"><ul class="fichas-lista"><li>Abre una nueva sucursal sin alquilar otro local: el negocio puede vender a cualquier hora y llegar a otras ciudades.</li></ul><ul class="fichas-lista"><li>No entrega solamente ventas: muestra qué productos generan interés, cuáles no convencen y dónde se pierden oportunidades.</li></ul><ul class="fichas-lista"><li>El dashboard se diseña para el negocio: una boutique, una distribuidora y una ferretería no reciben los mismos indicadores.</li></ul><ul class="fichas-lista"><li>Ayuda a comprar mejor: el historial muestra qué conviene reponer, qué debería frenarse y qué están pidiendo los clientes.</li></ul><ul class="fichas-lista"><li>Le da herramientas al vendedor: puede ver qué miró el cliente, responder mejor y recomendar productos relacionados.</li></ul><ul class="fichas-lista"><li>Facilita el trabajo administrativo: pedidos, ventas, stock y clientes dejan de estar separados entre mensajes, planillas y anotaciones.</li></ul><ul class="fichas-lista"><li>Mejora la experiencia del cliente: encuentra productos, compara, consulta y compra sin depender del horario del local.</li></ul></div></li><li class="fichas-bloque"><div class="fichas-bloque-cabecera"><span class="fichas-bloque-titulo">Casos de uso</span><div class="fichas-bloque-acciones"><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Subir Casos de uso">↑</button><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Bajar Casos de uso">↓</button><button class="fichas-btn" type="button" aria-pressed="false">Ocultar</button><button class="fichas-btn" type="button" aria-pressed="false">Destacar</button></div></div><div class="fichas-bloque-cuerpo"><ul class="fichas-lista"><li>Boutique de moda: vende online y utiliza el dashboard para decidir qué estilos, colores y talles comprar en el próximo viaje.</li><li>Tienda de carteras y accesorios: permite probar combinaciones y muestra qué productos generan más interés y venta cruzada.</li><li>Ferretería: ayuda al cliente a encontrar el producto correcto y avisa qué artículos reciben consultas, pero no tienen stock.</li><li>Distribuidora de bebidas: recibe pedidos de comercios y muestra qué clientes dejaron de comprar o redujeron su pedido habitual.</li><li>Casa de muebles y electrodomésticos: permite comparar productos y detecta en qué parte de la compra los clientes abandonan.</li></ul></div></li><li class="fichas-bloque"><div class="fichas-bloque-cabecera"><span class="fichas-bloque-titulo">Dónde tiene más sentido</span><div class="fichas-bloque-acciones"><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Subir Dónde tiene más sentido">↑</button><button class="fichas-btn fichas-btn--icono" type="button" aria-label="Bajar Dónde tiene más sentido" disabled="">↓</button><button class="fichas-btn" type="button" aria-pressed="false">Ocultar</button><button class="fichas-btn" type="button" aria-pressed="false">Destacar</button></div></div><div class="fichas-bloque-cuerpo"><p>Boutiques · Tiendas de calzado y accesorios · Ferreterías · Distribuidoras · Casas de muebles · Electrodomésticos · Farmacias · Pet shops · Librerías · Repuestos · Negocios mayoristas · Marcas con uno o varios locales</p></div></li></ol><p class="fichas-aviso" role="status" hidden=""></p><h3 class="fichas-titulo-seccion">Lo tuyo</h3><p class="fichas-ayuda">Esto se muestra separado del texto oficial, para que el cliente distinga qué dice Lab.IA y qué decís vos.</p><div class="fichas-campo"><label for="ficha-lo-que-conversamos">Lo que conversamos</label><span class="fichas-ayuda">Lo que te dijo en la reunión, con tus palabras.</span><textarea class="fichas-textarea" id="ficha-lo-que-conversamos" rows="3"></textarea></div><div class="fichas-campo"><label for="ficha-nota-del-vendedor">Nota del vendedor</label><span class="fichas-ayuda">Un cierre corto: en qué quedaron.</span><textarea class="fichas-textarea" id="ficha-nota-del-vendedor" rows="3"></textarea></div></div></div><div class="fichas-columna"><article class="ficha-publica"><p class="ficha-publica-ensayo" role="status">Así la va a ver tu cliente</p><header class="ficha-publica-cabecera"><img class="ficha-publica-logo" src="../../apps/escritorio/public/assets/productos/smart-commerce/logo-smart-commerce.webp" alt="Smart Commerce"><h1>Smart Commerce</h1></header><p class="ficha-publica-slogan">Vende on line. Decide con datos</p><section class="ficha-publica-bloque"><h2>Qué es</h2><p>Smart Commerce eleva tu negocio al siguiente nivel, te da una nueva sucursal digital potenciada con un panel como si tuvieras un gerente corporativo trabajando para vos.</p><p>Incluye una tienda online completa para vender directamente desde tus anuncios, y un Dashboard Gerencial diseñado alrededor del principal problema que te da más dolor.</p></section><section class="ficha-publica-bloque"><h2>¿Qué hace?</h2><ul class="fichas-lista"><li>Permite mostrar productos, recibir pedidos, vender, reservar o derivar la compra al canal elegido.</li><li>Funciona las 24 horas y puede llegar a clientes que nunca visitan el local físico.</li><li>Registra qué buscan, miran, consultan y compran los clientes.</li><li>Reúne ventas, stock y comportamiento del comprador en un solo lugar.</li><li>Incluye un Dashboard Gerencial completamente personalizado.</li><li>Puede incorporar funciones especiales según el negocio: recomendaciones, venta cruzada, experiencias con IA, compras a proveedores o seguimiento de clientes.</li></ul></section><section class="ficha-publica-bloque"><h2>Ejemplo</h2><p>María Laura tiene uno o dos locales y viaja varias veces al año a São Paulo para comprar mercadería.</p><p>Smart Commerce le abre una nueva sucursal online.</p><p>Mientras los clientes recorren y compran, su dashboard muestra:</p><ul class="fichas-lista"><li>qué productos despiertan interés;</li><li>cuáles se venden;</li><li>cuáles se agotan;</li><li>qué buscan los clientes y no encuentran;</li><li>qué conviene traer en el próximo viaje.</li></ul><p>En Pame Garelik Bags, el problema es diferente.</p><p>La cliente puede probar visualmente productos, descubrir combinaciones y avanzar hacia la compra. Su dashboard se concentra en los artículos elegidos, las pruebas realizadas, las combinaciones que funcionan y las oportunidades de venta adicional.</p><p>El e-commerce vende. El dashboard ayuda a entender cómo vender mejor.</p></section><section class="ficha-publica-bloque"><h2>Beneficios</h2><ul class="fichas-lista"><li>Abre una nueva sucursal sin alquilar otro local: el negocio puede vender a cualquier hora y llegar a otras ciudades.</li></ul><ul class="fichas-lista"><li>No entrega solamente ventas: muestra qué productos generan interés, cuáles no convencen y dónde se pierden oportunidades.</li></ul><ul class="fichas-lista"><li>El dashboard se diseña para el negocio: una boutique, una distribuidora y una ferretería no reciben los mismos indicadores.</li></ul><ul class="fichas-lista"><li>Ayuda a comprar mejor: el historial muestra qué conviene reponer, qué debería frenarse y qué están pidiendo los clientes.</li></ul><ul class="fichas-lista"><li>Le da herramientas al vendedor: puede ver qué miró el cliente, responder mejor y recomendar productos relacionados.</li></ul><ul class="fichas-lista"><li>Facilita el trabajo administrativo: pedidos, ventas, stock y clientes dejan de estar separados entre mensajes, planillas y anotaciones.</li></ul><ul class="fichas-lista"><li>Mejora la experiencia del cliente: encuentra productos, compara, consulta y compra sin depender del horario del local.</li></ul></section><section class="ficha-publica-bloque"><h2>Casos de uso</h2><ul class="fichas-lista"><li>Boutique de moda: vende online y utiliza el dashboard para decidir qué estilos, colores y talles comprar en el próximo viaje.</li><li>Tienda de carteras y accesorios: permite probar combinaciones y muestra qué productos generan más interés y venta cruzada.</li><li>Ferretería: ayuda al cliente a encontrar el producto correcto y avisa qué artículos reciben consultas, pero no tienen stock.</li><li>Distribuidora de bebidas: recibe pedidos de comercios y muestra qué clientes dejaron de comprar o redujeron su pedido habitual.</li><li>Casa de muebles y electrodomésticos: permite comparar productos y detecta en qué parte de la compra los clientes abandonan.</li></ul></section><section class="ficha-publica-bloque"><h2>Dónde tiene más sentido</h2><p>Boutiques · Tiendas de calzado y accesorios · Ferreterías · Distribuidoras · Casas de muebles · Electrodomésticos · Farmacias · Pet shops · Librerías · Repuestos · Negocios mayoristas · Marcas con uno o varios locales</p></section><div class="ficha-publica-cierre"><button class="ficha-publica-cta" type="button" disabled="" title="En el enlace real abre la conversación con el vendedor.">Hablemos</button></div></article></div></div></div>
+      </section>
+
+      <section class="tarjeta" aria-labelledby="clientes-ficha-linea">
+        <h3 id="clientes-ficha-linea" style="margin-top:0;">Línea de tiempo</h3>
+        <div id="clientes-linea-tiempo">
+    <ul class="lista">
+      
+        <li class="lista-item">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Mensualidad · Mensualidad de Smart Commerce vigente</span>
+            <span class="lista-item__meta">09/09/2026, 08:00</span>
+          </div>
+          
+        </li>
+        <li class="lista-item">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Presentación · Presentación de Smart Commerce</span>
+            <span class="lista-item__meta">26/08/2026, 08:00</span>
+          </div>
+          <p style="margin:0; color:var(--texto-2);">Se mostró el dashboard gerencial con foco en artículos, pruebas y combinaciones.</p>
+        </li>
+    </ul>
+  </div>
+      </section>
+
+      <div id="clientes-seguimientos-lista"></div><section class="tarjeta" id="clientes-captura-seccion" hidden="">
+        <h3 style="margin-top:0;">Nuevo seguimiento</h3>
+        <div id="clientes-captura"></div>
+      </section>
+    </div>
+  </div>
+  </main></div><nav class="inferior" aria-label="Navegación principal"><a class="inferior-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="inferior-enlace-texto">Inicio</span></a><a class="inferior-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="inferior-enlace-texto">Planificar</span></a><a class="inferior-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="inferior-enlace-texto">Clientes</span></a><a class="inferior-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="inferior-enlace-texto">Agenda</span></a><button type="button" class="inferior-enlace" aria-haspopup="dialog" aria-label="Más destinos"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.2" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="18.8" cy="12" r="1.5"></circle></svg></span><span class="inferior-enlace-texto">Más</span></button><dialog class="dialogo" aria-label="Más destinos"><div class="lista"><a class="lista-fila" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lista-fila-titulo">Propuestas</span></a><a class="lista-fila" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lista-fila-titulo">Dinero</span></a></div><button type="button" class="btn-borde btn">Cerrar</button></dialog></nav></div></div>
 </body>
 </html>

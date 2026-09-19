@@ -170,6 +170,16 @@ export function plantillaFicha(detalle: ClienteDetalle): string {
         </section>
       </div>
 
+      <section class="tarjeta" aria-labelledby="clientes-ficha-fichas">
+        <h3 id="clientes-ficha-fichas" style="margin-top:0;">Fichas para este cliente</h3>
+        <p class="clientes-ficha__ayuda">
+          Armá la ficha del producto para ${esc(detalle.nombre)}: elegís qué bloques ve,
+          en qué orden, y le agregás lo que hablaron. El texto es el oficial y no se edita.
+        </p>
+        ${plantillaElegirFicha(detalle)}
+        <div id="clientes-ficha-taller"></div>
+      </section>
+
       <section class="tarjeta" aria-labelledby="clientes-ficha-linea">
         <h3 id="clientes-ficha-linea" style="margin-top:0;">Línea de tiempo</h3>
         <div id="clientes-linea-tiempo">${plantillaCargando(3)}</div>
@@ -181,6 +191,34 @@ export function plantillaFicha(detalle: ClienteDetalle): string {
       </section>
     </div>
   `;
+}
+
+/**
+ * Elige para qué producto se prepara la ficha.
+ *
+ * ⛔ Se ofrecen los productos PROPUESTOS y los VIGENTES de este cliente, no
+ *    los trece: la ficha sale de una conversación que ya pasó, no de un
+ *    catálogo. Si no hay ninguno todavía, se dice y se manda a Planificar.
+ */
+function plantillaElegirFicha(detalle: ClienteDetalle): string {
+  const candidatos = [...new Set([...detalle.productosPropuestos, ...detalle.productosVigentes])];
+  if (candidatos.length === 0) {
+    return `
+      <p class="clientes-ficha__ayuda">
+        Todavía no hay ningún producto propuesto para este cliente.
+        Pasá por <a href="#/planificar">Planificar</a> para ver qué le encaja.
+      </p>`;
+  }
+  return `
+    <div class="chips" role="group" aria-label="Producto de la ficha">
+      ${candidatos
+        .map(
+          (id) => `<button type="button" class="chip" data-accion="preparar-ficha" data-valor="${esc(id)}">
+            ${esc(etiquetaProducto(id))}
+          </button>`,
+        )
+        .join('')}
+    </div>`;
 }
 
 function plantillaChipsProducto(ids: ReadonlyArray<ProductoId>): string {
