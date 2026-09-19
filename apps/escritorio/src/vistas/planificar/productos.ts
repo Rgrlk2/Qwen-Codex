@@ -22,6 +22,7 @@ import type {
   Resultado,
 } from '@labia/compartido';
 import type { ContextoVista } from '../../nucleo/contrato-vista';
+import { montarFichaOficial } from '../fichas/vista-oficial';
 import { crearBloqueCargando, crearBloqueError, crearBloqueVacio, vaciarNodo } from './estados';
 import { extraerSeccionProducto, renderizarMarkdown } from './markdown';
 
@@ -211,6 +212,25 @@ export function montarProductos({ contexto, contenedor }: OpcionesProductos): vo
         return;
       }
       renderizarFicha(detalle.datos, panelFicha);
+
+      /**
+       * La ficha OFICIAL es otra cosa que el detalle de catalogo: es la pieza
+       * comercial, armada del copy aprobado, que el vendedor le muestra al
+       * cliente. Ver MASTER_SPEC §2.3.
+       */
+      const verFicha = document.createElement('button');
+      verFicha.type = 'button';
+      verFicha.className = 'btn-texto planificar-ver-ficha';
+      verFicha.textContent = 'Ver la ficha oficial';
+      verFicha.addEventListener('click', () => {
+        void montarFichaOficial({
+          datos: contexto.datos,
+          contenedor: panelFicha,
+          productoId: id,
+          senal: contexto.senal,
+        });
+      });
+      panelFicha.appendChild(verFicha);
     }
   }
 

@@ -1,0 +1,265 @@
+/**
+ * Fichas de producto — preparación y vista previa.
+ *
+ * ⛔ Sólo los ocho colores oficiales, por sus tokens. Sin overflow-x: hidden:
+ *    lo que podría desbordar —una línea larga del copy— se resuelve con
+ *    `min-width: 0` y `overflow-wrap`, que es la causa, no el síntoma.
+ */
+
+/* ===== Preparación: el panel del vendedor ================================ */
+
+.fichas-preparar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.fichas-titulo-seccion {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--texto);
+}
+
+.fichas-ayuda {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--texto-3);
+  text-wrap: pretty;
+}
+
+.fichas-bloques {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  counter-reset: bloque;
+}
+
+.fichas-bloque {
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  background: var(--superficie);
+  padding: 0.875rem 1rem;
+  min-width: 0;
+}
+
+.fichas-bloque--oculto {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.fichas-bloque--destacado {
+  border-color: var(--linea-acento);
+  box-shadow: inset 3px 0 0 var(--cian);
+}
+
+.fichas-bloque-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.fichas-bloque-titulo {
+  font-weight: 600;
+  color: var(--texto);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fichas-etiqueta {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--azul-suave);
+  color: var(--azul-texto);
+}
+
+.fichas-bloque-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-inline-start: auto;
+}
+
+.fichas-bloque-cuerpo {
+  font-size: 0.875rem;
+  color: var(--texto-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fichas-bloque--oculto .fichas-bloque-cuerpo { display: none; }
+
+.fichas-bloque-cuerpo p { margin: 0 0 0.5rem; }
+.fichas-lista { margin: 0 0 0.5rem; padding-inline-start: 1.25rem; }
+
+/* Área táctil mínima de 44 px, como el resto del Escritorio. */
+.fichas-btn {
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--linea-2);
+  border-radius: 8px;
+  background: var(--superficie-2);
+  color: var(--texto-2);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.fichas-btn:hover:not(:disabled) { border-color: var(--linea-acento); color: var(--texto); }
+.fichas-btn:disabled { opacity: 0.4; cursor: default; }
+.fichas-btn--activo { background: var(--azul); color: #fff; border-color: transparent; }
+.fichas-btn--icono { min-width: 44px; padding: 0; }
+
+.fichas-btn:focus-visible,
+.fichas-textarea:focus-visible,
+.ficha-publica-cta:focus-visible {
+  outline: 2px solid var(--cian);
+  outline-offset: 2px;
+}
+
+.fichas-aviso {
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  border-radius: 8px;
+  background: var(--peligro-suave);
+  color: var(--texto);
+  font-size: 0.875rem;
+}
+
+.fichas-campo { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.fichas-campo label { font-weight: 600; font-size: 0.875rem; color: var(--texto); }
+
+.fichas-textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--linea-2);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.875rem;
+  resize: vertical;
+}
+
+/* ===== Vista previa: lo que ve el cliente ================================ */
+
+.ficha-publica {
+  max-width: 44rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.ficha-publica-ensayo {
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border-radius: 8px;
+  border: 1px dashed var(--linea-acento);
+  background: var(--cian-suave);
+  color: var(--texto-2);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.ficha-publica-cabecera {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+/* ⛔ contain y proporción original: el logo no se deforma ni se recorta. */
+.ficha-publica-logo {
+  width: clamp(88px, 20vw, 132px);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  max-width: 100%;
+}
+
+.ficha-publica-cabecera h1 { margin: 0; font-size: 1.5rem; color: var(--texto); }
+
+.ficha-publica-slogan {
+  margin: 0;
+  text-align: center;
+  font-size: 1.125rem;
+  color: var(--cian);
+  text-wrap: balance;
+}
+
+.ficha-publica-bloque {
+  border-radius: 12px;
+  padding: 1rem 1.125rem;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  min-width: 0;
+}
+
+.ficha-publica-bloque--destacado {
+  border-color: var(--linea-acento);
+  background: var(--superficie-2);
+}
+
+.ficha-publica-bloque h2 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--texto); }
+.ficha-publica-bloque p { margin: 0 0 0.5rem; color: var(--texto-2); overflow-wrap: anywhere; }
+
+/* Lo del vendedor se distingue del copy oficial. Esa es la regla. */
+.ficha-publica-vendedor {
+  border-inline-start: 3px solid var(--cian);
+  padding: 0.875rem 1.125rem;
+  background: var(--glass);
+  border-radius: 0 12px 12px 0;
+  min-width: 0;
+}
+
+.ficha-publica-vendedor h2 { margin: 0 0 0.5rem; font-size: 0.9375rem; color: var(--cian); }
+.ficha-publica-vendedor p { margin: 0 0 0.5rem; color: var(--texto-2); overflow-wrap: anywhere; }
+
+.ficha-publica-firma {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--texto-3);
+  font-style: italic;
+}
+
+.ficha-publica-cierre { display: flex; justify-content: center; padding-block: 0.5rem 1.5rem; }
+
+.ficha-publica-cta {
+  min-height: 48px;
+  padding: 0 2rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--azul);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ficha-publica-cta:disabled { opacity: 0.6; cursor: default; }
+
+/* ===== Dos columnas en pantalla ancha ==================================== */
+
+.fichas-taller {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  min-width: 0;
+}
+
+@media (min-width: 60rem) {
+  .fichas-taller { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .fichas-taller > * { min-width: 0; }
+}

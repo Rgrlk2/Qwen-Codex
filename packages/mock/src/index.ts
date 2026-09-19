@@ -45,6 +45,7 @@ import { crearCapaSesionMock, type CapaSesionMock } from './datos-sesion';
 
 export * from './nucleo';
 export * from './datos-sesion';
+export * from './datos-fichas';
 
 /**
  * Una respuesta pendiente respeta la latencia del mock y devuelve un error
