@@ -891,10 +891,10 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
 }
 
 .cifra-etiqueta {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--etiqueta-tamano);
+  font-weight: var(--etiqueta-peso);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--etiqueta-track);
   color: var(--texto-2);
 }
 
@@ -902,19 +902,26 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: clamp(22px, 3.2vw, 36px);
-  font-weight: 600;
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
   color: var(--texto);
 }
 
-/* ⛔ Un importe nunca se trunca con ellipsis: es dinero, no un titular. Si no
-   entra en una línea, baja de tamaño o pasa a la línea siguiente, pero se lee
-   completo. */
+/*
+ * ⛔ Un importe nunca se trunca con ellipsis: es dinero, no un titular.
+ *
+ * ⛔ Y tampoco se PARTE. `overflow-wrap: anywhere` cortaba "Gs. 48.500.000"
+ *    después del "Gs.", dejando la moneda en una línea y el número en otra:
+ *    se lee completo, sí, pero mal. El importe es una unidad; si no entra,
+ *    baja de tamaño (el clamp) o el importe entero pasa a la línea siguiente.
+ */
 .cifra-valor > * {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
+
 
 .cifra-valor--vacia {
   color: var(--mudo);
@@ -1489,6 +1496,7 @@ textarea.entrada {
   min-width: 0;
 }
 
+/* planificar/estilos.css */
 /*
  * Estilos propios de Planificar.
  *

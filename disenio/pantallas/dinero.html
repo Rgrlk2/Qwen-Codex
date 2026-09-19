@@ -891,10 +891,10 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
 }
 
 .cifra-etiqueta {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--etiqueta-tamano);
+  font-weight: var(--etiqueta-peso);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--etiqueta-track);
   color: var(--texto-2);
 }
 
@@ -902,19 +902,26 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: clamp(22px, 3.2vw, 36px);
-  font-weight: 600;
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
   color: var(--texto);
 }
 
-/* ⛔ Un importe nunca se trunca con ellipsis: es dinero, no un titular. Si no
-   entra en una línea, baja de tamaño o pasa a la línea siguiente, pero se lee
-   completo. */
+/*
+ * ⛔ Un importe nunca se trunca con ellipsis: es dinero, no un titular.
+ *
+ * ⛔ Y tampoco se PARTE. `overflow-wrap: anywhere` cortaba "Gs. 48.500.000"
+ *    después del "Gs.", dejando la moneda en una línea y el número en otra:
+ *    se lee completo, sí, pero mal. El importe es una unidad; si no entra,
+ *    baja de tamaño (el clamp) o el importe entero pasa a la línea siguiente.
+ */
 .cifra-valor > * {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
+
 
 .cifra-valor--vacia {
   color: var(--mudo);
@@ -1489,6 +1496,99 @@ textarea.entrada {
   min-width: 0;
 }
 
+/* dinero/vista.css */
+/*
+ * Estilos propios de la vista Dinero.
+ *
+ * ⛔ DUEÑO: Sesión 6. Sólo variantes con prefijo `.dinero-…`
+ * (DESIGN_SYSTEM.md §12 S4). Los componentes compartidos (.tarjeta, .cifra,
+ * .rejilla, .tabla, .btn, .cargando, .vacio, .error, .dialogo…) los define
+ * `packages/ui/src/base.css`, de Sesión 2; acá no se redeclaran.
+ *
+ * ⛔ Ningún color, fuente ni curva literal: sólo layout y espaciado propios,
+ * que no dependen de ningún token (DESIGN_SYSTEM.md §2.2 CO1).
+ * ⛔ Nada de overflow-x: hidden. El único overflow-x es el de .tabla-contenedor,
+ * y es overflow-x: auto (DESIGN_SYSTEM.md §7).
+ */
+
+.dinero-vista {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.dinero-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dinero-selector-periodo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.dinero-periodo-actual {
+  min-width: 0;
+  text-transform: capitalize;
+}
+
+.dinero-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.dinero-moneda {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.dinero-moneda-titulo {
+  margin: 0;
+}
+
+.dinero-cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.dinero-cifras > * {
+  min-width: 0;
+}
+
+.dinero-numero {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dinero-dialogo-ayuda {
+  max-width: 48ch;
+  overflow-wrap: anywhere;
+}
+
+.dinero-dialogo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 389px) {
+  .dinero-cifras {
+    grid-template-columns: 1fr;
+  }
+}
 
 </style>
 </head>
@@ -1503,6 +1603,6 @@ textarea.entrada {
   Para rediseniar: cambiá el CSS y el marcado que quieras. Lo que importa es
   que cada pieza conserve su clase, porque esa clase es la que el codigo pone.
 -->
-<div id="app"><div class="app-cascara"><aside class="lateral" aria-label="Navegación principal"><div class="lateral-encabezado"><div class="lateral-marca"><img src="../../apps/escritorio/public/assets/marca/logo-labia.webp" alt="Lab.IA" width="96" height="96"><span class="lateral-marca-texto">Lab.IA</span></div><button type="button" class="lateral-alternar" aria-expanded="true" aria-label="Contraer menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5 7 12l7.5 7.5"></path></svg></button></div><nav class="lateral-nav" aria-label="Vistas"><a class="lateral-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="lateral-enlace-texto">Inicio</span></a><a class="lateral-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="lateral-enlace-texto">Planificar</span></a><a class="lateral-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="lateral-enlace-texto">Clientes</span></a><a class="lateral-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="lateral-enlace-texto">Agenda</span></a><a class="lateral-enlace" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lateral-enlace-texto">Propuestas</span></a><a class="lateral-enlace" href="#/dinero" data-ruta="dinero" aria-label="Dinero" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lateral-enlace-texto">Dinero</span></a></nav><div class="lateral-pie"><div class="lateral-usuario"><div class="avatar avatar--md" aria-hidden="true"><span class="avatar-iniciales">JF</span></div><div class="lateral-usuario-info"><p class="lateral-usuario-nombre">Juan Pablo Fernandez</p><p class="lateral-usuario-rol">vendedor</p></div></div><button type="button" class="btn-texto" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 4.6H6.4a1.5 1.5 0 0 0-1.5 1.5v11.8a1.5 1.5 0 0 0 1.5 1.5h2.8"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9.2"></path></svg><span class="lateral-cerrar-texto">Cerrar sesión</span></button></div></aside><div class="principal"><header class="encabezado"><div class="encabezado-grupo"><span class="encabezado-rotulo">Escritorio vendedores</span><h1 class="encabezado-titulo" tabindex="-1">Dinero</h1></div><span class="chip-datos-ejemplo">Datos de ejemplo</span></header><main id="contenido" class="vista" tabindex="-1"><div class="vista dinero-vista"><div class="dinero-selector-periodo" role="group" aria-label="Período"><button class="btn-texto" type="button">Período anterior</button><span class="dinero-periodo-actual" aria-live="polite">septiembre de 2026</span><button class="btn-texto" type="button">Período siguiente</button></div><section class="dinero-seccion"><h2>Las ocho cifras</h2><div><div class="error" role="alert"><p>Esta parte del Escritorio todavía no está disponible.</p><button type="button" class="btn-borde">Volver a intentar</button></div></div></section><section class="dinero-seccion"><h2>Detalle por operación</h2><div><div class="error" role="alert"><p>Esta parte del Escritorio todavía no está disponible.</p><button type="button" class="btn-borde">Volver a intentar</button></div></div></section><section class="dinero-seccion"><h2>Mensualidades vigentes</h2><div><div class="error" role="alert"><p>Esta parte del Escritorio todavía no está disponible.</p><button type="button" class="btn-borde">Volver a intentar</button></div></div></section></div></main></div><nav class="inferior" aria-label="Navegación principal"><a class="inferior-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="inferior-enlace-texto">Inicio</span></a><a class="inferior-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="inferior-enlace-texto">Planificar</span></a><a class="inferior-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="inferior-enlace-texto">Clientes</span></a><a class="inferior-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="inferior-enlace-texto">Agenda</span></a><button type="button" class="inferior-enlace" aria-haspopup="dialog" aria-label="Más destinos"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.2" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="18.8" cy="12" r="1.5"></circle></svg></span><span class="inferior-enlace-texto">Más</span></button><dialog class="dialogo" aria-label="Más destinos"><div class="lista"><a class="lista-fila" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lista-fila-titulo">Propuestas</span></a><a class="lista-fila" href="#/dinero" data-ruta="dinero" aria-label="Dinero" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lista-fila-titulo">Dinero</span></a></div><button type="button" class="btn-borde btn">Cerrar</button></dialog></nav></div></div>
+<div id="app"><div class="app-cascara"><aside class="lateral" aria-label="Navegación principal"><div class="lateral-encabezado"><div class="lateral-marca"><img src="../../apps/escritorio/public/assets/marca/logo-labia.webp" alt="Lab.IA" width="96" height="96"><span class="lateral-marca-texto">Lab.IA</span></div><button type="button" class="lateral-alternar" aria-expanded="true" aria-label="Contraer menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5 7 12l7.5 7.5"></path></svg></button></div><nav class="lateral-nav" aria-label="Vistas"><a class="lateral-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="lateral-enlace-texto">Inicio</span></a><a class="lateral-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="lateral-enlace-texto">Planificar</span></a><a class="lateral-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="lateral-enlace-texto">Clientes</span></a><a class="lateral-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="lateral-enlace-texto">Agenda</span></a><a class="lateral-enlace" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lateral-enlace-texto">Propuestas</span></a><a class="lateral-enlace" href="#/dinero" data-ruta="dinero" aria-label="Dinero" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lateral-enlace-texto">Dinero</span></a></nav><div class="lateral-pie"><div class="lateral-usuario"><div class="avatar avatar--md" aria-hidden="true"><span class="avatar-iniciales">JF</span></div><div class="lateral-usuario-info"><p class="lateral-usuario-nombre">Juan Pablo Fernandez</p><p class="lateral-usuario-rol">vendedor</p></div></div><button type="button" class="btn-texto" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 4.6H6.4a1.5 1.5 0 0 0-1.5 1.5v11.8a1.5 1.5 0 0 0 1.5 1.5h2.8"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9.2"></path></svg><span class="lateral-cerrar-texto">Cerrar sesión</span></button></div></aside><div class="principal"><header class="encabezado"><div class="encabezado-grupo"><span class="encabezado-rotulo">Escritorio vendedores</span><h1 class="encabezado-titulo" tabindex="-1">Dinero</h1></div><span class="chip-datos-ejemplo">Datos de ejemplo</span></header><main id="contenido" class="vista" tabindex="-1"><div class="vista dinero-vista"><div class="dinero-selector-periodo" role="group" aria-label="Período"><button class="btn-texto" type="button">Período anterior</button><span class="dinero-periodo-actual" aria-live="polite">septiembre de 2026</span><button class="btn-texto" type="button">Período siguiente</button></div><section class="dinero-seccion"><h2>Las ocho cifras</h2><div><section class="dinero-moneda"><h2 class="dinero-moneda-titulo">Guaraníes</h2><div class="rejilla dinero-cifras"><div class="tarjeta cifra"><p class="cifra-etiqueta">Vendido</p><p class="cifra-valor">Gs. 11.210.000</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Cobrado</p><p class="cifra-valor">Gs. 11.210.000</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Por cobrar</p><p class="cifra-valor">Gs. 0</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Parte de Lab.IA</p><p class="cifra-valor">Gs. 5.612.500</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Parte del vendedor</p><p class="cifra-valor">Gs. 5.597.500</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Comisión pendiente</p><p class="cifra-valor">Gs. 790.000</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Comisión pagada</p><p class="cifra-valor">Gs. 4.807.500</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Mensualidades vigentes</p><p class="cifra-valor">Gs. 1.580.000 · 2 clientes</p></div></div></section></div></section><section class="dinero-seccion"><h2>Detalle por operación</h2><div><div class="vacio"><p>No hay operaciones con comisión en este período.</p></div></div></section><section class="dinero-seccion"><h2>Mensualidades vigentes</h2><div><div class="tabla-contenedor"><table class="tabla"><thead><tr><th>Cliente</th><th>Producto</th><th>Importe</th><th>Alta</th><th>Meses acumulados</th><th>Meses de participación restantes</th><th>Estado</th></tr></thead><tbody><tr><td>Repuestos Don Aníbal</td><td>agendar-ia</td><td class="dinero-numero">Gs. 790.000</td><td>2 ago. 2026</td><td class="dinero-numero">2</td><td class="dinero-numero">Sin límite</td><td>Activa</td></tr><tr><td>Clínica Odontológica San Roque</td><td>park-ia — Control</td><td class="dinero-numero">Gs. 790.000</td><td>9 jul. 2026</td><td class="dinero-numero">3</td><td class="dinero-numero">Sin límite</td><td>Activa</td></tr></tbody></table></div></div></section></div></main></div><nav class="inferior" aria-label="Navegación principal"><a class="inferior-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="inferior-enlace-texto">Inicio</span></a><a class="inferior-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="inferior-enlace-texto">Planificar</span></a><a class="inferior-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="inferior-enlace-texto">Clientes</span></a><a class="inferior-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="inferior-enlace-texto">Agenda</span></a><button type="button" class="inferior-enlace" aria-haspopup="dialog" aria-label="Más destinos"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.2" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="18.8" cy="12" r="1.5"></circle></svg></span><span class="inferior-enlace-texto">Más</span></button><dialog class="dialogo" aria-label="Más destinos"><div class="lista"><a class="lista-fila" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lista-fila-titulo">Propuestas</span></a><a class="lista-fila" href="#/dinero" data-ruta="dinero" aria-label="Dinero" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lista-fila-titulo">Dinero</span></a></div><button type="button" class="btn-borde btn">Cerrar</button></dialog></nav></div></div>
 </body>
 </html>

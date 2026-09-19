@@ -891,10 +891,10 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
 }
 
 .cifra-etiqueta {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--etiqueta-tamano);
+  font-weight: var(--etiqueta-peso);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--etiqueta-track);
   color: var(--texto-2);
 }
 
@@ -902,19 +902,26 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: clamp(22px, 3.2vw, 36px);
-  font-weight: 600;
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
   color: var(--texto);
 }
 
-/* ⛔ Un importe nunca se trunca con ellipsis: es dinero, no un titular. Si no
-   entra en una línea, baja de tamaño o pasa a la línea siguiente, pero se lee
-   completo. */
+/*
+ * ⛔ Un importe nunca se trunca con ellipsis: es dinero, no un titular.
+ *
+ * ⛔ Y tampoco se PARTE. `overflow-wrap: anywhere` cortaba "Gs. 48.500.000"
+ *    después del "Gs.", dejando la moneda en una línea y el número en otra:
+ *    se lee completo, sí, pero mal. El importe es una unidad; si no entra,
+ *    baja de tamaño (el clamp) o el importe entero pasa a la línea siguiente.
+ */
 .cifra-valor > * {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
+
 
 .cifra-valor--vacia {
   color: var(--mudo);
@@ -1489,6 +1496,7 @@ textarea.entrada {
   min-width: 0;
 }
 
+/* clientes/estilos.css */
 /*
  * Vista Clientes — estilos.
  *
@@ -1737,10 +1745,107 @@ textarea.entrada {
       </div>
     </div>
   <div id="clientes-lista-cuerpo">
-    <div class="error" role="alert">
-      <p>Esta parte del Escritorio todavía no está disponible.</p>
-      <p>Los datos de ejemplo de la Sesión 4 se incorporan al integrar.</p>
-      <button type="button" class="btn" data-accion="reintentar-lista">Volver a intentar</button>
+    <div class="clientes-rejilla" role="list">
+      
+        <button type="button" class="tarjeta clientes-fila" role="listitem" data-accion="abrir-cliente" data-id="cliente-pame-garelik-bags">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Pame Garelik Bags</span>
+            <span class="etapa etapa--cliente_activo">Cliente activo</span>
+          </div>
+          <span class="lista-item__meta">Empresa · Asunción</span>
+          <span class="lista-item__meta">
+            Última interacción: 09/09/2026
+             · Próximo paso: 25/09/2026
+          </span>
+        </button>
+        <button type="button" class="tarjeta clientes-fila" role="listitem" data-accion="abrir-cliente" data-id="cliente-repuestos-san-roque">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Repuestos San Roque</span>
+            <span class="etapa etapa--negociacion">Negociación</span>
+          </div>
+          <span class="lista-item__meta">Empresa · Luque</span>
+          <span class="lista-item__meta">
+            Última interacción: 13/09/2026
+             · Próximo paso: 16/09/2026
+          </span>
+        </button>
+        <button type="button" class="tarjeta clientes-fila" role="listitem" data-accion="abrir-cliente" data-id="cliente-parrillada-nandutii">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Parrillada Ñandutí</span>
+            <span class="etapa etapa--presentacion">Presentación</span>
+          </div>
+          <span class="lista-item__meta">Empresa · Fernando de la Mora</span>
+          <span class="lista-item__meta">
+            Última interacción: 11/09/2026
+             · Próximo paso: 18/09/2026
+          </span>
+        </button>
+        <button type="button" class="tarjeta clientes-fila" role="listitem" data-accion="abrir-cliente" data-id="cliente-dra-liz-acosta">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Dra. Liz Acosta — Odontología</span>
+            <span class="etapa etapa--diagnostico">Diagnóstico</span>
+          </div>
+          <span class="lista-item__meta">Profesional · Asunción</span>
+          <span class="lista-item__meta">
+            Última interacción: 14/09/2026
+             · Próximo paso: 17/09/2026
+          </span>
+        </button>
+        <button type="button" class="tarjeta clientes-fila" role="listitem" data-accion="abrir-cliente" data-id="cliente-peluqueria-bella-imagen">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Peluquería Bella Imagen</span>
+            <span class="etapa etapa--contactado">Contactado</span>
+          </div>
+          <span class="lista-item__meta">Empresa · San Lorenzo</span>
+          <span class="lista-item__meta">
+            Última interacción: 07/09/2026
+             · Próximo paso: 19/09/2026
+          </span>
+        </button>
+        <button type="button" class="tarjeta clientes-fila" role="listitem" data-accion="abrir-cliente" data-id="cliente-hotel-las-mercedes">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Hotel Las Mercedes</span>
+            <span class="etapa etapa--cotizacion">Cotización</span>
+          </div>
+          <span class="lista-item__meta">Empresa · Encarnación</span>
+          <span class="lista-item__meta">
+            Última interacción: 12/09/2026
+             · Próximo paso: 21/09/2026
+          </span>
+        </button>
+        <button type="button" class="tarjeta clientes-fila" role="listitem" data-accion="abrir-cliente" data-id="cliente-motel-luna">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Motel Luna</span>
+            <span class="etapa etapa--sin_contactar">Sin contactar</span>
+          </div>
+          <span class="lista-item__meta">Empresa · Ñemby</span>
+          <span class="lista-item__meta">
+            Última interacción: sin registrar
+            
+          </span>
+        </button>
+        <button type="button" class="tarjeta clientes-fila" role="listitem" data-accion="abrir-cliente" data-id="cliente-veterinaria-san-francisco">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Veterinaria San Francisco</span>
+            <span class="etapa etapa--ganado">Ganado</span>
+          </div>
+          <span class="lista-item__meta">Empresa · Lambaré</span>
+          <span class="lista-item__meta">
+            Última interacción: 31/08/2026
+             · Próximo paso: 05/10/2026
+          </span>
+        </button>
+        <button type="button" class="tarjeta clientes-fila" role="listitem" data-accion="abrir-cliente" data-id="cliente-gomeria-el-rayo">
+          <div class="lista-item__cabecera">
+            <span class="lista-item__titulo">Gomería El Rayo</span>
+            <span class="etapa etapa--perdido">Perdido</span>
+          </div>
+          <span class="lista-item__meta">Empresa · Capiatá</span>
+          <span class="lista-item__meta">
+            Última interacción: 16/08/2026
+            
+          </span>
+        </button>
     </div>
   </div></div>
   </main></div><nav class="inferior" aria-label="Navegación principal"><a class="inferior-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="inferior-enlace-texto">Inicio</span></a><a class="inferior-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="inferior-enlace-texto">Planificar</span></a><a class="inferior-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="inferior-enlace-texto">Clientes</span></a><a class="inferior-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="inferior-enlace-texto">Agenda</span></a><button type="button" class="inferior-enlace" aria-haspopup="dialog" aria-label="Más destinos"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.2" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="18.8" cy="12" r="1.5"></circle></svg></span><span class="inferior-enlace-texto">Más</span></button><dialog class="dialogo" aria-label="Más destinos"><div class="lista"><a class="lista-fila" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lista-fila-titulo">Propuestas</span></a><a class="lista-fila" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lista-fila-titulo">Dinero</span></a></div><button type="button" class="btn-borde btn">Cerrar</button></dialog></nav></div></div>

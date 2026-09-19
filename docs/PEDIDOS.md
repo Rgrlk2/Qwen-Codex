@@ -279,3 +279,40 @@ El foco al cambiar de ruta lo lleva ese título (`tabIndex = -1`), que es donde 
 lo ponía cada vista.
 
 Bloqueante: no
+
+### [ESPEC] 2026-09-19 — La capa de datos, ensamblada entera · **RESUELTO**
+Archivos: `packages/mock/src/index.ts` · `packages/mock/src/capa-motor.ts` (nuevo)
+· `scripts/verificar-portafolio.mjs` · `scripts/verificar-nucleo.mjs`
+
+De los 136 métodos del contrato, 119 devolvían `pendiente(...)` —"esta parte del
+Escritorio todavía no está disponible"—. Pero los datos de ejemplo **ya estaban
+escritos**: unas 7.000 líneas repartidas en siete módulos que las seis sesiones
+dejaron terminados y que `index.ts` nunca importó.
+
+Se conectaron los siete. Cinco tenían fábrica lista (`crearCapaInicioMock`,
+`crearCapaClientesMock`, `crearCapaAgendaMock`, `crearDatosPropuestas`,
+`crearCapaFinanzas`); el motor de Sesión 3 exportaba funciones sueltas, así que
+se le escribió el adaptador `capa-motor.ts` —sólo latencia, paginación,
+idempotencia y errores en castellano; ninguna regla de dominio.
+
+**Dos trampas encontradas al conectar:**
+
+1. `crearCapaFinanzas` y `crearDatosPropuestas` reciben la configuración UNA VEZ
+   y la guardan en su cierre, pero `nucleo.configurar()` y `nucleo.fijarRol()`
+   **reemplazan** el objeto. Una copia directa se quedaba con el rol viejo — y
+   estas capas filtran datos por rol: un vendedor vería las liquidaciones de
+   todos. Se les pasa una vista con `rol` y `forzarVacio` como *getters*.
+2. Los 42 métodos de `CapaAdministracion` estaban envueltos en un guardián que
+   devolvía "pendiente". Al delegarlos había que conservar el guardián **vivo**
+   —el que consulta `nucleo.exigirAdministrador()` en cada llamada—, no el que
+   la capa de finanzas trae adentro con su copia de la configuración.
+   `verificar-nucleo` lo comprueba: los 42 responden `sin_permiso` a un vendedor,
+   y dejan de hacerlo al cambiar el rol en caliente.
+
+`CapaPublica` no entró en `CapaDatos`: es la cara del cliente, servida por enlace
+con token, y el Escritorio no la consume. Se expone aparte, como `sesion`.
+
+Se agregó un control bloqueante (`verificar-portafolio` 12i) que falla si vuelve a
+quedar un método sin ensamblar, probado inyectando la violación real.
+
+Bloqueante: era sí — siete de las nueve pantallas mostraban "esto no cargó".

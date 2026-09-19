@@ -891,10 +891,10 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
 }
 
 .cifra-etiqueta {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--etiqueta-tamano);
+  font-weight: var(--etiqueta-peso);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--etiqueta-track);
   color: var(--texto-2);
 }
 
@@ -902,19 +902,26 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: clamp(22px, 3.2vw, 36px);
-  font-weight: 600;
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
   color: var(--texto);
 }
 
-/* ⛔ Un importe nunca se trunca con ellipsis: es dinero, no un titular. Si no
-   entra en una línea, baja de tamaño o pasa a la línea siguiente, pero se lee
-   completo. */
+/*
+ * ⛔ Un importe nunca se trunca con ellipsis: es dinero, no un titular.
+ *
+ * ⛔ Y tampoco se PARTE. `overflow-wrap: anywhere` cortaba "Gs. 48.500.000"
+ *    después del "Gs.", dejando la moneda en una línea y el número en otra:
+ *    se lee completo, sí, pero mal. El importe es una unidad; si no entra,
+ *    baja de tamaño (el clamp) o el importe entero pasa a la línea siguiente.
+ */
 .cifra-valor > * {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
+
 
 .cifra-valor--vacia {
   color: var(--mudo);
@@ -1489,6 +1496,164 @@ textarea.entrada {
   min-width: 0;
 }
 
+/* administracion/vista.css */
+/*
+ * Estilos propios de la vista Administración.
+ *
+ * ⛔ DUEÑO: Sesión 6. Sólo variantes con prefijo `.administracion-…`
+ * (DESIGN_SYSTEM.md §12 S4). Los componentes compartidos (.tarjeta, .cifra,
+ * .rejilla, .tabla, .btn, .pestanas/.pestana, .cargando, .vacio, .error,
+ * .dialogo…) los define `packages/ui/src/base.css`, de Sesión 2; acá no se
+ * redeclaran. `.dinero-selector-periodo` y `.dinero-periodo-actual` los
+ * define `../dinero/vista.css`, reutilizados tal cual.
+ *
+ * ⛔ Ningún color, fuente ni curva literal: sólo layout y espaciado propios.
+ * ⛔ Nada de overflow-x: hidden. El único overflow-x es el de .tabla-contenedor,
+ * y es overflow-x: auto (DESIGN_SYSTEM.md §7).
+ */
+
+.administracion-vista {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.administracion-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.administracion-selector-periodo {
+  min-width: 0;
+}
+
+.administracion-paneles {
+  min-width: 0;
+}
+
+.administracion-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.admin-subseccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.admin-moneda {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.admin-moneda-titulo {
+  margin: 0;
+}
+
+.admin-cifras,
+.admin-contadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.admin-cifras > *,
+.admin-contadores > * {
+  min-width: 0;
+}
+
+.admin-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 32rem;
+  min-width: 0;
+}
+
+.admin-ayuda {
+  max-width: 60ch;
+  overflow-wrap: anywhere;
+}
+
+.admin-lista-bloqueos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-dialogo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.admin-cotizacion,
+.admin-sugerencia,
+.admin-actividad {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.admin-precios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-recalculo {
+  min-width: 0;
+}
+
+.admin-alternativas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-casilla {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+}
+
+.admin-cotizacion-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-linea-tiempo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-linea-tiempo-fecha {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 389px) {
+  .admin-cifras,
+  .admin-contadores {
+    grid-template-columns: 1fr;
+  }
+}
 
 </style>
 </head>
@@ -1503,6 +1668,6 @@ textarea.entrada {
   Para rediseniar: cambiá el CSS y el marcado que quieras. Lo que importa es
   que cada pieza conserve su clase, porque esa clase es la que el codigo pone.
 -->
-<div id="app"><div class="app-cascara"><aside class="lateral" aria-label="Navegación principal"><div class="lateral-encabezado"><div class="lateral-marca"><img src="../../apps/escritorio/public/assets/marca/logo-labia.webp" alt="Lab.IA" width="96" height="96"><span class="lateral-marca-texto">Lab.IA</span></div><button type="button" class="lateral-alternar" aria-expanded="true" aria-label="Contraer menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5 7 12l7.5 7.5"></path></svg></button></div><nav class="lateral-nav" aria-label="Vistas"><a class="lateral-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="lateral-enlace-texto">Inicio</span></a><a class="lateral-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="lateral-enlace-texto">Planificar</span></a><a class="lateral-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="lateral-enlace-texto">Clientes</span></a><a class="lateral-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="lateral-enlace-texto">Agenda</span></a><a class="lateral-enlace" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lateral-enlace-texto">Propuestas</span></a><a class="lateral-enlace" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lateral-enlace-texto">Dinero</span></a><a class="lateral-enlace" href="#/administracion" data-ruta="administracion" aria-label="Administración" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 18.8 6.4v5c0 4.4-2.9 7.4-6.8 8.6-3.9-1.2-6.8-4.2-6.8-8.6v-5L12 3.6Z"></path><path d="M9.3 12.1 11 13.8l3.7-4.1"></path></svg></span><span class="lateral-enlace-texto">Administración</span></a></nav><div class="lateral-pie"><div class="lateral-usuario"><div class="avatar avatar--md" aria-hidden="true"><span class="avatar-iniciales">RG</span></div><div class="lateral-usuario-info"><p class="lateral-usuario-nombre">Rodrigo Garelik</p><p class="lateral-usuario-rol">administrador</p></div></div><button type="button" class="btn-texto" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 4.6H6.4a1.5 1.5 0 0 0-1.5 1.5v11.8a1.5 1.5 0 0 0 1.5 1.5h2.8"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9.2"></path></svg><span class="lateral-cerrar-texto">Cerrar sesión</span></button></div></aside><div class="principal"><header class="encabezado"><div class="encabezado-grupo"><span class="encabezado-rotulo">Escritorio vendedores</span><h1 class="encabezado-titulo" tabindex="-1">Administración</h1></div><span class="chip-datos-ejemplo">Datos de ejemplo</span></header><main id="contenido" class="vista" tabindex="-1"><div class="vista administracion-vista"><div class="dinero-selector-periodo administracion-selector-periodo" role="group" aria-label="Período"><button class="btn-texto" type="button">Período anterior</button><span class="dinero-periodo-actual" aria-live="polite">septiembre de 2026</span><button class="btn-texto" type="button">Período siguiente</button></div><div class="pestanas" role="tablist" aria-label="Secciones de Administración"><button class="pestana" type="button" id="pestana-control_financiero" role="tab" aria-controls="panel-control_financiero" data-id="control_financiero" aria-selected="true" tabindex="0">Control financiero</button><button class="pestana" type="button" id="pestana-presupuesto_de_ventas" role="tab" aria-controls="panel-presupuesto_de_ventas" data-id="presupuesto_de_ventas" aria-selected="false" tabindex="-1">Presupuesto</button><button class="pestana" type="button" id="pestana-vendido_cobrado_por_cobrar" role="tab" aria-controls="panel-vendido_cobrado_por_cobrar" data-id="vendido_cobrado_por_cobrar" aria-selected="false" tabindex="-1">Vendido, cobrado y por cobrar</button><button class="pestana" type="button" id="pestana-comisiones" role="tab" aria-controls="panel-comisiones" data-id="comisiones" aria-selected="false" tabindex="-1">Comisiones</button><button class="pestana" type="button" id="pestana-ranking" role="tab" aria-controls="panel-ranking" data-id="ranking" aria-selected="false" tabindex="-1">Ranking</button><button class="pestana" type="button" id="pestana-accesos_y_uso" role="tab" aria-controls="panel-accesos_y_uso" data-id="accesos_y_uso" aria-selected="false" tabindex="-1">Accesos y uso</button><button class="pestana" type="button" id="pestana-todos_los_clientes" role="tab" aria-controls="panel-todos_los_clientes" data-id="todos_los_clientes" aria-selected="false" tabindex="-1">Todos los clientes</button><button class="pestana" type="button" id="pestana-aprobacion_de_cotizaciones" role="tab" aria-controls="panel-aprobacion_de_cotizaciones" data-id="aprobacion_de_cotizaciones" aria-selected="false" tabindex="-1">Aprobación de cotizaciones</button><button class="pestana" type="button" id="pestana-configuracion_comercial" role="tab" aria-controls="panel-configuracion_comercial" data-id="configuracion_comercial" aria-selected="false" tabindex="-1">Configuración comercial</button><button class="pestana" type="button" id="pestana-sugerencias" role="tab" aria-controls="panel-sugerencias" data-id="sugerencias" aria-selected="false" tabindex="-1">Sugerencias</button></div><div class="administracion-paneles"><div class="administracion-panel" id="panel-control_financiero" role="tabpanel" aria-labelledby="pestana-control_financiero"><div class="error" role="alert"><p>Esta parte del Escritorio todavía no está disponible.</p><button type="button" class="btn-borde">Volver a intentar</button></div></div><div class="administracion-panel" id="panel-presupuesto_de_ventas" role="tabpanel" aria-labelledby="pestana-presupuesto_de_ventas" hidden=""></div><div class="administracion-panel" id="panel-vendido_cobrado_por_cobrar" role="tabpanel" aria-labelledby="pestana-vendido_cobrado_por_cobrar" hidden=""></div><div class="administracion-panel" id="panel-comisiones" role="tabpanel" aria-labelledby="pestana-comisiones" hidden=""></div><div class="administracion-panel" id="panel-ranking" role="tabpanel" aria-labelledby="pestana-ranking" hidden=""></div><div class="administracion-panel" id="panel-accesos_y_uso" role="tabpanel" aria-labelledby="pestana-accesos_y_uso" hidden=""></div><div class="administracion-panel" id="panel-todos_los_clientes" role="tabpanel" aria-labelledby="pestana-todos_los_clientes" hidden=""></div><div class="administracion-panel" id="panel-aprobacion_de_cotizaciones" role="tabpanel" aria-labelledby="pestana-aprobacion_de_cotizaciones" hidden=""></div><div class="administracion-panel" id="panel-configuracion_comercial" role="tabpanel" aria-labelledby="pestana-configuracion_comercial" hidden=""></div><div class="administracion-panel" id="panel-sugerencias" role="tabpanel" aria-labelledby="pestana-sugerencias" hidden=""></div></div></div></main></div><nav class="inferior" aria-label="Navegación principal"><a class="inferior-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="inferior-enlace-texto">Inicio</span></a><a class="inferior-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="inferior-enlace-texto">Planificar</span></a><a class="inferior-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="inferior-enlace-texto">Clientes</span></a><a class="inferior-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="inferior-enlace-texto">Agenda</span></a><button type="button" class="inferior-enlace" aria-haspopup="dialog" aria-label="Más destinos"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.2" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="18.8" cy="12" r="1.5"></circle></svg></span><span class="inferior-enlace-texto">Más</span></button><dialog class="dialogo" aria-label="Más destinos"><div class="lista"><a class="lista-fila" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lista-fila-titulo">Propuestas</span></a><a class="lista-fila" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lista-fila-titulo">Dinero</span></a><a class="lista-fila" href="#/administracion" data-ruta="administracion" aria-label="Administración" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 18.8 6.4v5c0 4.4-2.9 7.4-6.8 8.6-3.9-1.2-6.8-4.2-6.8-8.6v-5L12 3.6Z"></path><path d="M9.3 12.1 11 13.8l3.7-4.1"></path></svg></span><span class="lista-fila-titulo">Administración</span></a></div><button type="button" class="btn-borde btn">Cerrar</button></dialog></nav></div></div>
+<div id="app"><div class="app-cascara"><aside class="lateral" aria-label="Navegación principal"><div class="lateral-encabezado"><div class="lateral-marca"><img src="../../apps/escritorio/public/assets/marca/logo-labia.webp" alt="Lab.IA" width="96" height="96"><span class="lateral-marca-texto">Lab.IA</span></div><button type="button" class="lateral-alternar" aria-expanded="true" aria-label="Contraer menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5 7 12l7.5 7.5"></path></svg></button></div><nav class="lateral-nav" aria-label="Vistas"><a class="lateral-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="lateral-enlace-texto">Inicio</span></a><a class="lateral-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="lateral-enlace-texto">Planificar</span></a><a class="lateral-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="lateral-enlace-texto">Clientes</span></a><a class="lateral-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="lateral-enlace-texto">Agenda</span></a><a class="lateral-enlace" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lateral-enlace-texto">Propuestas</span></a><a class="lateral-enlace" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lateral-enlace-texto">Dinero</span></a><a class="lateral-enlace" href="#/administracion" data-ruta="administracion" aria-label="Administración" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 18.8 6.4v5c0 4.4-2.9 7.4-6.8 8.6-3.9-1.2-6.8-4.2-6.8-8.6v-5L12 3.6Z"></path><path d="M9.3 12.1 11 13.8l3.7-4.1"></path></svg></span><span class="lateral-enlace-texto">Administración</span></a></nav><div class="lateral-pie"><div class="lateral-usuario"><div class="avatar avatar--md" aria-hidden="true"><span class="avatar-iniciales">RG</span></div><div class="lateral-usuario-info"><p class="lateral-usuario-nombre">Rodrigo Garelik</p><p class="lateral-usuario-rol">administrador</p></div></div><button type="button" class="btn-texto" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 4.6H6.4a1.5 1.5 0 0 0-1.5 1.5v11.8a1.5 1.5 0 0 0 1.5 1.5h2.8"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9.2"></path></svg><span class="lateral-cerrar-texto">Cerrar sesión</span></button></div></aside><div class="principal"><header class="encabezado"><div class="encabezado-grupo"><span class="encabezado-rotulo">Escritorio vendedores</span><h1 class="encabezado-titulo" tabindex="-1">Administración</h1></div><span class="chip-datos-ejemplo">Datos de ejemplo</span></header><main id="contenido" class="vista" tabindex="-1"><div class="vista administracion-vista"><div class="dinero-selector-periodo administracion-selector-periodo" role="group" aria-label="Período"><button class="btn-texto" type="button">Período anterior</button><span class="dinero-periodo-actual" aria-live="polite">septiembre de 2026</span><button class="btn-texto" type="button">Período siguiente</button></div><div class="pestanas" role="tablist" aria-label="Secciones de Administración"><button class="pestana" type="button" id="pestana-control_financiero" role="tab" aria-controls="panel-control_financiero" data-id="control_financiero" aria-selected="true" tabindex="0">Control financiero</button><button class="pestana" type="button" id="pestana-presupuesto_de_ventas" role="tab" aria-controls="panel-presupuesto_de_ventas" data-id="presupuesto_de_ventas" aria-selected="false" tabindex="-1">Presupuesto</button><button class="pestana" type="button" id="pestana-vendido_cobrado_por_cobrar" role="tab" aria-controls="panel-vendido_cobrado_por_cobrar" data-id="vendido_cobrado_por_cobrar" aria-selected="false" tabindex="-1">Vendido, cobrado y por cobrar</button><button class="pestana" type="button" id="pestana-comisiones" role="tab" aria-controls="panel-comisiones" data-id="comisiones" aria-selected="false" tabindex="-1">Comisiones</button><button class="pestana" type="button" id="pestana-ranking" role="tab" aria-controls="panel-ranking" data-id="ranking" aria-selected="false" tabindex="-1">Ranking</button><button class="pestana" type="button" id="pestana-accesos_y_uso" role="tab" aria-controls="panel-accesos_y_uso" data-id="accesos_y_uso" aria-selected="false" tabindex="-1">Accesos y uso</button><button class="pestana" type="button" id="pestana-todos_los_clientes" role="tab" aria-controls="panel-todos_los_clientes" data-id="todos_los_clientes" aria-selected="false" tabindex="-1">Todos los clientes</button><button class="pestana" type="button" id="pestana-aprobacion_de_cotizaciones" role="tab" aria-controls="panel-aprobacion_de_cotizaciones" data-id="aprobacion_de_cotizaciones" aria-selected="false" tabindex="-1">Aprobación de cotizaciones</button><button class="pestana" type="button" id="pestana-configuracion_comercial" role="tab" aria-controls="panel-configuracion_comercial" data-id="configuracion_comercial" aria-selected="false" tabindex="-1">Configuración comercial</button><button class="pestana" type="button" id="pestana-sugerencias" role="tab" aria-controls="panel-sugerencias" data-id="sugerencias" aria-selected="false" tabindex="-1">Sugerencias</button></div><div class="administracion-paneles"><div class="administracion-panel" id="panel-control_financiero" role="tabpanel" aria-labelledby="pestana-control_financiero"><section class="admin-moneda"><h3 class="admin-moneda-titulo">Guaraníes</h3><div class="rejilla admin-cifras"><div class="tarjeta cifra"><p class="cifra-etiqueta">Vendido</p><p class="cifra-valor">Gs. 13.100.000</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Cobrado</p><p class="cifra-valor">Gs. 13.100.000</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Por cobrar</p><p class="cifra-valor">Gs. 4.900.000</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Parte de Lab.IA</p><p class="cifra-valor">Gs. 6.557.500</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Parte de los vendedores</p><p class="cifra-valor">Gs. 6.542.500</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Comisión pendiente</p><p class="cifra-valor">Gs. 1.435.000</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Comisión pagada</p><p class="cifra-valor">Gs. 5.107.500</p></div></div></section><section class="admin-moneda"><h3 class="admin-moneda-titulo">Dólares</h3><div class="rejilla admin-cifras"><div class="tarjeta cifra"><p class="cifra-etiqueta">Vendido</p><p class="cifra-valor">USD 700,00</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Cobrado</p><p class="cifra-valor">USD 700,00</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Por cobrar</p><p class="cifra-valor">USD 0,00</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Parte de Lab.IA</p><p class="cifra-valor">USD 350,00</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Parte de los vendedores</p><p class="cifra-valor">USD 350,00</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Comisión pendiente</p><p class="cifra-valor">USD 100,00</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Comisión pagada</p><p class="cifra-valor">USD 250,00</p></div></div></section><div class="rejilla admin-contadores"><div class="tarjeta cifra"><p class="cifra-etiqueta">Mensualidades activas</p><p class="cifra-valor">5</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Bajas del período</p><p class="cifra-valor">0</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Cotizaciones en revisión</p><p class="cifra-valor">2</p></div><div class="tarjeta cifra"><p class="cifra-etiqueta">Sugerencias sin responder</p><p class="cifra-valor">2</p></div></div></div><div class="administracion-panel" id="panel-presupuesto_de_ventas" role="tabpanel" aria-labelledby="pestana-presupuesto_de_ventas" hidden=""></div><div class="administracion-panel" id="panel-vendido_cobrado_por_cobrar" role="tabpanel" aria-labelledby="pestana-vendido_cobrado_por_cobrar" hidden=""></div><div class="administracion-panel" id="panel-comisiones" role="tabpanel" aria-labelledby="pestana-comisiones" hidden=""></div><div class="administracion-panel" id="panel-ranking" role="tabpanel" aria-labelledby="pestana-ranking" hidden=""></div><div class="administracion-panel" id="panel-accesos_y_uso" role="tabpanel" aria-labelledby="pestana-accesos_y_uso" hidden=""></div><div class="administracion-panel" id="panel-todos_los_clientes" role="tabpanel" aria-labelledby="pestana-todos_los_clientes" hidden=""></div><div class="administracion-panel" id="panel-aprobacion_de_cotizaciones" role="tabpanel" aria-labelledby="pestana-aprobacion_de_cotizaciones" hidden=""></div><div class="administracion-panel" id="panel-configuracion_comercial" role="tabpanel" aria-labelledby="pestana-configuracion_comercial" hidden=""></div><div class="administracion-panel" id="panel-sugerencias" role="tabpanel" aria-labelledby="pestana-sugerencias" hidden=""></div></div></div></main></div><nav class="inferior" aria-label="Navegación principal"><a class="inferior-enlace" href="#/inicio" data-ruta="inicio" aria-label="Inicio"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"></path><path d="M5.5 10v8.5a1 1 0 0 0 1 1h3.5v-6h4v6H17.5a1 1 0 0 0 1-1V10"></path></svg></span><span class="inferior-enlace-texto">Inicio</span></a><a class="inferior-enlace" href="#/planificar" data-ruta="planificar" aria-label="Planificar"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M14.6 9.4 12.9 13.1 9.4 14.6 11.1 10.9 14.6 9.4Z"></path></svg></span><span class="inferior-enlace-texto">Planificar</span></a><a class="inferior-enlace" href="#/clientes" data-ruta="clientes" aria-label="Clientes"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.3" r="3"></circle><path d="M3.8 19c0-3 2.4-5.2 5.2-5.2S14.2 16 14.2 19"></path><circle cx="17" cy="9.2" r="2.4"></circle><path d="M15.6 13.4c2.3.4 3.8 2.2 3.8 4.9"></path></svg></span><span class="inferior-enlace-texto">Clientes</span></a><a class="inferior-enlace" href="#/agenda" data-ruta="agenda" aria-label="Agenda"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="5.2" width="16.4" height="14.6" rx="2"></rect><path d="M3.8 9.6h16.4M8.2 3.4v4M15.8 3.4v4"></path></svg></span><span class="inferior-enlace-texto">Agenda</span></a><button type="button" class="inferior-enlace" aria-haspopup="dialog" aria-label="Más destinos"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.2" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="18.8" cy="12" r="1.5"></circle></svg></span><span class="inferior-enlace-texto">Más</span></button><dialog class="dialogo" aria-label="Más destinos"><div class="lista"><a class="lista-fila" href="#/propuestas" data-ruta="propuestas" aria-label="Propuestas"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 3.6h6.7l4 4v12.3a1 1 0 0 1-1 1H7.2a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z"></path><path d="M13.9 3.6v4.2h4"></path><path d="M9 12.6h6M9 15.5h6M9 18h3.6"></path></svg></span><span class="lista-fila-titulo">Propuestas</span></a><a class="lista-fila" href="#/dinero" data-ruta="dinero" aria-label="Dinero"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="6.2" width="18.4" height="12.6" rx="2.2"></rect><path d="M2.8 10.2h18.4"></path><path d="M6.2 14.8h3.6"></path></svg></span><span class="lista-fila-titulo">Dinero</span></a><a class="lista-fila" href="#/administracion" data-ruta="administracion" aria-label="Administración" aria-current="page"><span class="icono-envoltorio icono-envoltorio--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 18.8 6.4v5c0 4.4-2.9 7.4-6.8 8.6-3.9-1.2-6.8-4.2-6.8-8.6v-5L12 3.6Z"></path><path d="M9.3 12.1 11 13.8l3.7-4.1"></path></svg></span><span class="lista-fila-titulo">Administración</span></a></div><button type="button" class="btn-borde btn">Cerrar</button></dialog></nav></div></div>
 </body>
 </html>

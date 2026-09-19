@@ -56,9 +56,18 @@ function aUnidadDePresentacion(importe: Dinero): number {
 /**
  * Formatea un importe. ⛔ Siempre con su moneda adelante: "Gs. 1.250.000".
  * Es la única forma admitida de mostrar dinero (QA_CHECKLIST §5.1).
+ *
+ * ⛔ Entre la moneda y el número va un espacio DURO (U+00A0), no uno normal.
+ *    Con espacio normal el navegador parte "Gs. 11.210.000" y deja "Gs." solo
+ *    en una línea y el número en la siguiente. Un importe es una unidad: o
+ *    entra entero, o baja de tamaño, pero no se corta al medio.
+ *
+ *    Se resuelve acá y no con `white-space: nowrap` en la hoja de estilos,
+ *    porque una cadena como "Gs. 1.580.000 · 2 clientes" SÍ tiene que poder
+ *    cortarse en sus otros espacios.
  */
 export function formatearDinero(importe: Dinero): string {
-  return `${ETIQUETA_MONEDA[importe.moneda]} ${numerador(importe.moneda).format(aUnidadDePresentacion(importe))}`;
+  return `${ETIQUETA_MONEDA[importe.moneda]}\u00A0${numerador(importe.moneda).format(aUnidadDePresentacion(importe))}`;
 }
 
 /**

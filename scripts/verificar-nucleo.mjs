@@ -245,11 +245,41 @@ igual('el mock es reproducible con la misma semilla', semilla1.aleatorio(), semi
 const pagina = mockMod.crearNucleoMock({ latenciaMs: 0 }).paginar([1, 2, 3, 4, 5], undefined, 2);
 comprobar('paginacion explicita: primera pagina', pagina.items.length === 2 && pagina.cursor === '2' && pagina.total === 5);
 
-const pendiente = await palancas.resumenInicio();
+// ===========================================================================
+// El mecanismo de "pendiente" sigue existiendo, aunque ya no lo use nadie.
+//
+// Este control apuntaba a un metodo sin ensamblar para probar que devolvia un
+// error y no un exito vacio. Al conectarse los datos de ejemplo de las seis
+// sesiones se quedo sin sujeto: no queda ningun metodo pendiente.
+//
+// ⛔ No se borro. Se prueba el mecanismo directo, para que el dia que alguien
+//    agregue un metodo al contrato y lo deje sin ensamblar, falle ruidoso en
+//    vez de devolver un exito vacio. Que NO quede ninguno pendiente lo
+//    comprueba verificar-portafolio.mjs, que mira el codigo.
+// ===========================================================================
+const nucleoSuelto = mockMod.crearNucleoMock({ latenciaMs: 0 });
+const pendiente = await nucleoSuelto.responderError(
+  mockMod.errorPendiente('una sesion', 'metodoInventado'),
+);
 comprobar(
-  '⛔ un metodo aun no ensamblado devuelve error, no un exito vacio',
+  '⛔ un metodo sin ensamblar devuelve error, no un exito vacio',
   !pendiente.ok && pendiente.error.codigo === 'servicio_no_disponible',
 );
+comprobar(
+  'y el error dice de quien es el dato que falta',
+  !pendiente.ok && /una sesion/.test(pendiente.error.pista ?? ''),
+);
+
+// Y lo que de verdad importa ahora: los metodos responden con datos.
+for (const [nombre, llamar] of [
+  ['resumenInicio', () => palancas.resumenInicio()],
+  ['listarNecesidades', () => palancas.listarNecesidades()],
+  ['listarOperaciones', () => palancas.listarOperaciones()],
+  ['listarProductos', () => palancas.listarProductos()],
+]) {
+  const r = await llamar();
+  comprobar(`${nombre} responde con datos`, r.ok, r.ok ? '' : r.error?.codigo);
+}
 
 // ===========================================================================
 // 5. Capa HTTP — la tabla de API_CONTRACTS §1, sin jerga en pantalla
@@ -322,11 +352,21 @@ comprobar('⛔ nunca a un proveedor externo', !/^https?:\/\//i.test(urlLlamada))
 // ===========================================================================
 seccion('Formato es-PY — moneda siempre explicita');
 
-igual('guaranies', formato.formatearDinero({ monto: 1250000, moneda: 'PYG' }), 'Gs. 1.250.000');
-igual('dolares (centavos)', formato.formatearDinero({ monto: 129900, moneda: 'USD' }), 'USD 1.299,00');
+// ⛔ El espacio entre moneda y numero es DURO (U+00A0), no uno normal: un
+//    importe no se parte al final de linea. Se escribe como escape para que la
+//    diferencia se vea en el codigo — si no, este archivo compara dos cadenas
+//    que parecen iguales y nadie entiende por que falla.
+const NBSP = '\u00A0';
+
+igual('guaranies', formato.formatearDinero({ monto: 1250000, moneda: 'PYG' }), `Gs.${NBSP}1.250.000`);
+igual('dolares (centavos)', formato.formatearDinero({ monto: 129900, moneda: 'USD' }), `USD${NBSP}1.299,00`);
 comprobar(
   '⛔ ningun importe queda sin moneda',
-  ['PYG', 'USD'].every((m) => /^(Gs\.|USD) /.test(formato.formatearDinero({ monto: 1, moneda: m }))),
+  ['PYG', 'USD'].every((m) => /^(Gs\.|USD)\u00A0/.test(formato.formatearDinero({ monto: 1, moneda: m }))),
+);
+comprobar(
+  '⛔ el importe no se parte: moneda y numero van con espacio duro',
+  ['PYG', 'USD'].every((m) => !/^(Gs\.|USD) /.test(formato.formatearDinero({ monto: 1, moneda: m }))),
 );
 const porMoneda = formato.formatearTotales([{ monto: 1000, moneda: 'PYG' }, { monto: 500, moneda: 'USD' }]);
 comprobar('totales: una linea por moneda, sin consolidar', porMoneda.length === 2 && porMoneda[0].startsWith('Gs.') && porMoneda[1].startsWith('USD'));
@@ -334,7 +374,7 @@ comprobar(
   '⛔ no se exporta ninguna funcion que consolide monedas',
   !Object.keys(formato).some((n) => /^(formatearTotal|sumarTotales|consolidar|totalGeneral)$/.test(n)),
 );
-igual('rango como rango, sin promediar', formato.formatearRango({ monto: 100, moneda: 'PYG' }, { monto: 300, moneda: 'PYG' }), 'Gs. 100 a Gs. 300');
+igual('rango como rango, sin promediar', formato.formatearRango({ monto: 100, moneda: 'PYG' }, { monto: 300, moneda: 'PYG' }), `Gs.${NBSP}100 a Gs.${NBSP}300`);
 let mezclo = false;
 try { formato.formatearRango({ monto: 1, moneda: 'PYG' }, { monto: 1, moneda: 'USD' }); } catch { mezclo = true; }
 comprobar('⛔ un rango no puede mezclar monedas', mezclo);

@@ -545,6 +545,29 @@ for (const m of ['editarBloqueFicha', 'reescribirFicha', 'guardarCopyDeFicha']) 
   }
 }
 
+// --- 12i. La capa de datos esta ensamblada entera -------------------------
+//
+// El mock arranco con casi todos los metodos devolviendo `pendiente(...)`:
+// un error explicito mientras cada sesion escribia sus datos de ejemplo. Ya
+// estan todos conectados, y esta comprobacion impide que vuelva a quedar uno
+// colgado sin que nadie se entere.
+//
+// ⛔ No prohibe el mecanismo —`errorPendiente` sigue existiendo, y sirve—:
+//    prohibe que la capa del Escritorio lo use.
+const indiceMock = join(RAIZ, 'packages/mock/src/index.ts');
+if (!existsSync(indiceMock)) {
+  fallos.push('Falta packages/mock/src/index.ts.');
+} else {
+  const codigo = codigoEfectivo(readFileSync(indiceMock, 'utf8'), '.ts');
+  const colgados = [...codigo.matchAll(/(\w+): pendiente\(/g)].map((m) => m[1]);
+  if (colgados.length > 0) {
+    fallos.push(
+      `mock/index.ts: ${colgados.length} metodo(s) sin ensamblar: ${colgados.join(', ')}. `
+      + 'La capa de datos tiene que responder con datos de ejemplo, no con "todavia no esta disponible".',
+    );
+  }
+}
+
 // --- 13. Referencias cruzadas entre documentos ---------------------------
 /**
  * Con cinco rondas de renumeracion, una referencia "MASTER_SPEC §12" que ya no

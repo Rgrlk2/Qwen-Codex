@@ -331,33 +331,60 @@
   align-items: center;
 }
 
+/*
+ * Los botones de esta vista son los del sistema, con otro nombre: esta hoja
+ * se escribio cuando base.css todavia no los traia. Se alinean por herencia
+ * en vez de copiarlos, para que el diseno aprobado valga tambien aca.
+ *
+ * ⛔ Los valores no se repiten: salen de los mismos tokens.
+ */
 .propuestas-btn,
 .propuestas-btn-borde,
 .propuestas-btn-texto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 44px;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 0 20px;
+  border-radius: var(--r-pilula);
   font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
   cursor: pointer;
+  transition: transform var(--normal) var(--suave), box-shadow var(--normal) var(--suave),
+              color var(--normal) var(--suave), border-color var(--normal) var(--suave);
 }
 
 .propuestas-btn {
-  background: var(--azul, #0A55D9);
-  color: var(--texto, #F2F7FF);
-  border: none;
+  background: var(--grad-cta);
+  box-shadow: var(--sombra-cta);
+  color: var(--texto);
+  border: 1px solid var(--linea);
+  padding: 0 26px;
+  min-height: 48px;
+  font-size: 13px;
 }
+.propuestas-btn:hover:not(:disabled) { transform: var(--alzar); box-shadow: var(--sombra-cta-alta); }
+.propuestas-btn:active:not(:disabled) { transform: var(--apretar); }
 
 .propuestas-btn-borde {
-  background: transparent;
-  color: var(--azul-texto, #098CFF);
-  border: 1px solid var(--linea-acento, rgba(0, 217, 255, .32));
+  background: var(--grad-suave);
+  color: var(--cian);
+  border: 1px solid var(--linea-acento);
+  backdrop-filter: var(--difuminado);
 }
+.propuestas-btn-borde:hover:not(:disabled) { transform: var(--alzar); box-shadow: var(--halo); }
 
 .propuestas-btn-texto {
-  background: none;
-  border: none;
-  color: var(--azul-texto, #098CFF);
+  background: transparent;
+  border: 1px solid var(--linea);
+  color: var(--texto-2);
+  font-size: 11px;
 }
+.propuestas-btn-texto:hover:not(:disabled) { color: var(--cian); border-color: var(--linea-acento); }
 
 .propuestas-btn:disabled,
 .propuestas-btn-borde:disabled,

@@ -33,27 +33,27 @@
  */
 
 import type {
-  CapaDatos, FiltroRegistroAcceso, FiltroUsuarios, OpcionesPagina, Pagina,
+  CapaDatos,
+  CapaPublica, FiltroRegistroAcceso, FiltroUsuarios, OpcionesPagina, Pagina,
   RegistroAcceso, Resultado, Rol, Usuario,
 } from '@labia/compartido';
 
 import {
-  crearNucleoMock, errorPendiente, ERROR_SIN_PERMISO,
+  crearNucleoMock, ERROR_SIN_PERMISO,
   type ConfiguracionMock, type NucleoMock,
 } from './nucleo';
 import { crearCapaSesionMock, type CapaSesionMock } from './datos-sesion';
 import { crearCapaFichasMock } from './capa-fichas';
+import { crearCapaMotorMock } from './capa-motor';
+import { crearCapaInicioMock } from './datos-inicio';
+import { crearCapaClientesMock } from './datos-clientes';
+import { crearCapaAgendaMock } from './datos-agenda';
+import { crearDatosPropuestas } from './datos-propuestas';
+import { crearCapaFinanzas } from './datos-finanzas';
 
 export * from './nucleo';
 export * from './datos-sesion';
 export * from './datos-fichas';
-
-/**
- * Una respuesta pendiente respeta la latencia del mock y devuelve un error
- * tipado. `Resultado<never>` encaja en cualquier `Resultado<T>`: el compilador
- * comprueba que ningún método del contrato quede sin implementar.
- */
-type Pendiente = () => Promise<Resultado<never>>;
 
 export interface OpcionesCapaDatosMock {
   readonly configuracion?: Partial<ConfiguracionMock>;
@@ -63,26 +63,58 @@ export interface CapaDatosMock extends CapaDatos {
   /** Palancas del mock: latencia, falla forzada, modo vacío y rol. */
   readonly mock: NucleoMock;
   readonly sesion: CapaSesionMock;
+  /**
+   * La cara del CLIENTE, servida por enlace con token.
+   * ⛔ No es parte de `CapaDatos` a propósito: el Escritorio no la consume.
+   *    Quien abre un enlace no tiene sesión, y esta capa no expone ni un dato
+   *    operativo del vendedor.
+   */
+  readonly publica: CapaPublica;
 }
 
 export function crearCapaDatosMock(opciones: OpcionesCapaDatosMock = {}): CapaDatosMock {
   const nucleo = crearNucleoMock(opciones.configuracion ?? {});
   const sesion = crearCapaSesionMock(nucleo);
   const fichas = crearCapaFichasMock(nucleo);
-
-  /** Método todavía no ensamblado: error explícito, con su sesión dueña. */
-  const pendiente = (duena: string, metodo: string): Pendiente =>
-    () => nucleo.responderError<never>(errorPendiente(duena, metodo));
+  const motor = crearCapaMotorMock(nucleo);
+  const inicio = crearCapaInicioMock(nucleo);
+  const clientes = crearCapaClientesMock(nucleo);
+  const agenda = crearCapaAgendaMock(nucleo);
+  /*
+   * ⛔ Estas dos fábricas reciben la configuración UNA VEZ y la guardan en su
+   *    cierre. Pero `nucleo.configurar()` y `nucleo.fijarRol()` REEMPLAZAN el
+   *    objeto (`configuracion = { ...configuracion, ...cambios }`), así que
+   *    una copia directa se queda con el rol viejo — y estas capas filtran
+   *    datos por rol: un vendedor vería las liquidaciones de todos.
+   *
+   *    Por eso se les pasa una vista con `rol` y `forzarVacio` como getters:
+   *    leen el valor vigente en cada llamada, no el del momento de crearse.
+   */
+  const configuracionViva: ConfiguracionMock = {
+    get latenciaMs() { return nucleo.configuracion.latenciaMs; },
+    get fallaForzada() { return nucleo.configuracion.fallaForzada; },
+    get forzarVacio() { return nucleo.configuracion.forzarVacio; },
+    get rol() { return nucleo.rol(); },
+    get semilla() { return nucleo.configuracion.semilla; },
+  };
+  const { propuestas, publica } = crearDatosPropuestas(configuracionViva);
+  const finanzas = crearCapaFinanzas(configuracionViva);
 
   /**
-   * ⛔ LA GUARDIA. Todo método de `CapaAdministracion` se envuelve acá:
-   *    con rol `vendedor` devuelve `sin_permiso` ANTES de mirar ningún dato,
-   *    exactamente como el servidor (API_CONTRACTS §0 A9).
+   * ⛔ LA GUARDIA. Envuelve todo método de `CapaAdministracion`: con rol
+   *    `vendedor` devuelve `sin_permiso` ANTES de mirar ningún dato, igual
+   *    que el servidor (API_CONTRACTS §0 A9).
+   *
+   * ⛔ Consulta `nucleo.exigirAdministrador()` EN CADA LLAMADA, no al
+   *    construirse: es la guardia viva, y es la que prueba verificar-nucleo.
+   *    La capa de finanzas trae la suya propia; ésta va por delante.
    */
-  const soloAdministrador = (metodo: string): Pendiente => async () => {
+  const soloAdministrador = <A extends unknown[], T>(
+    metodo: (...args: A) => Promise<Resultado<T>>,
+  ) => async (...args: A): Promise<Resultado<T>> => {
     const permiso = nucleo.exigirAdministrador();
-    if (!permiso.ok) return nucleo.responderError<never>(ERROR_SIN_PERMISO);
-    return nucleo.responderError<never>(errorPendiente('la Sesión 6', metodo));
+    if (!permiso.ok) return nucleo.responderError<T>(ERROR_SIN_PERMISO);
+    return metodo(...args);
   };
 
   const capa: CapaDatos = {
@@ -98,66 +130,66 @@ export function crearCapaDatosMock(opciones: OpcionesCapaDatosMock = {}): CapaDa
     // =======================================================================
     // S2 · Inicio — pendiente de ensamblado
     // =======================================================================
-    resumenInicio: pendiente('la Sesión 2', 'resumenInicio'),
-    proximosSeguimientos: pendiente('la Sesión 2', 'proximosSeguimientos'),
-    resumenAgenda: pendiente('la Sesión 2', 'resumenAgenda'),
+    resumenInicio: () => inicio.resumenInicio(),
+    proximosSeguimientos: (limite) => inicio.proximosSeguimientos(limite),
+    resumenAgenda: () => inicio.resumenAgenda(),
 
     // =======================================================================
     // S3 · Motor de planificación e investigación — pendiente de ensamblado
     // =======================================================================
-    investigarObjetivo: pendiente('la Sesión 3', 'investigarObjetivo'),
-    estadoInvestigacion: pendiente('la Sesión 3', 'estadoInvestigacion'),
-    corregirInvestigacion: pendiente('la Sesión 3', 'corregirInvestigacion'),
-    planDesdeInvestigacion: pendiente('la Sesión 3', 'planDesdeInvestigacion'),
-    buscarActividad: pendiente('la Sesión 3', 'buscarActividad'),
-    resolverActividad: pendiente('la Sesión 3', 'resolverActividad'),
-    listarOperaciones: pendiente('la Sesión 3', 'listarOperaciones'),
-    listarNecesidades: pendiente('la Sesión 3', 'listarNecesidades'),
-    generarPlan: pendiente('la Sesión 3', 'generarPlan'),
-    recalcularPlan: pendiente('la Sesión 3', 'recalcularPlan'),
-    guardarPlan: pendiente('la Sesión 3', 'guardarPlan'),
-    obtenerPlan: pendiente('la Sesión 3', 'obtenerPlan'),
-    listarPlanes: pendiente('la Sesión 3', 'listarPlanes'),
-    crearPlanDeRubro: pendiente('la Sesión 3', 'crearPlanDeRubro'),
-    cerrarPlan: pendiente('la Sesión 3', 'cerrarPlan'),
-    objetivosSugeridos: pendiente('la Sesión 3', 'objetivosSugeridos'),
-    aceptarObjetivo: pendiente('la Sesión 3', 'aceptarObjetivo'),
-    listarProductos: pendiente('la Sesión 3', 'listarProductos'),
-    obtenerProducto: pendiente('la Sesión 3', 'obtenerProducto'),
-    preciosDeProducto: pendiente('la Sesión 3', 'preciosDeProducto'),
-    crearSugerencia: pendiente('la Sesión 3', 'crearSugerencia'),
-    listarMisSugerencias: pendiente('la Sesión 3', 'listarMisSugerencias'),
+    investigarObjetivo: (entrada) => motor.investigarObjetivo(entrada),
+    estadoInvestigacion: (id) => motor.estadoInvestigacion(id),
+    corregirInvestigacion: (investigacion, correcciones) => motor.corregirInvestigacion(investigacion, correcciones),
+    planDesdeInvestigacion: (investigacion) => motor.planDesdeInvestigacion(investigacion),
+    buscarActividad: (texto) => motor.buscarActividad(texto),
+    resolverActividad: (texto, clave) => motor.resolverActividad(texto, clave),
+    listarOperaciones: () => motor.listarOperaciones(),
+    listarNecesidades: () => motor.listarNecesidades(),
+    generarPlan: (entrada, eje) => motor.generarPlan(entrada, eje),
+    recalcularPlan: (plan, ajustes) => motor.recalcularPlan(plan, ajustes),
+    guardarPlan: (plan, clave) => motor.guardarPlan(plan, clave),
+    obtenerPlan: (id) => motor.obtenerPlan(id),
+    listarPlanes: (filtro, pagina) => motor.listarPlanes(filtro, pagina),
+    crearPlanDeRubro: (plan, periodoDesde, periodoHasta, metaGuaranies, clave) => motor.crearPlanDeRubro(plan, periodoDesde, periodoHasta, metaGuaranies, clave),
+    cerrarPlan: (id, motivo, comentario) => motor.cerrarPlan(id, motivo, comentario),
+    objetivosSugeridos: (planId) => motor.objetivosSugeridos(planId),
+    aceptarObjetivo: (objetivoId, clave) => motor.aceptarObjetivo(objetivoId, clave),
+    listarProductos: (filtro) => motor.listarProductos(filtro),
+    obtenerProducto: (id) => motor.obtenerProducto(id),
+    preciosDeProducto: (id) => motor.preciosDeProducto(id),
+    crearSugerencia: (datos, clave) => motor.crearSugerencia(datos, clave),
+    listarMisSugerencias: (pagina) => motor.listarMisSugerencias(pagina),
 
     // =======================================================================
     // S4 · Clientes, voz y seguimiento — pendiente de ensamblado
     // =======================================================================
-    listarClientes: pendiente('la Sesión 4', 'listarClientes'),
-    obtenerCliente: pendiente('la Sesión 4', 'obtenerCliente'),
-    crearCliente: pendiente('la Sesión 4', 'crearCliente'),
-    actualizarCliente: pendiente('la Sesión 4', 'actualizarCliente'),
-    listarContactos: pendiente('la Sesión 4', 'listarContactos'),
-    lineaDeTiempo: pendiente('la Sesión 4', 'lineaDeTiempo'),
-    soporteDictado: pendiente('la Sesión 4', 'soporteDictado'),
-    subirAudio: pendiente('la Sesión 4', 'subirAudio'),
-    procesarCaptura: pendiente('la Sesión 4', 'procesarCaptura'),
-    guardarSeguimiento: pendiente('la Sesión 4', 'guardarSeguimiento'),
-    listarSeguimientos: pendiente('la Sesión 4', 'listarSeguimientos'),
-    borrarAudio: pendiente('la Sesión 4', 'borrarAudio'),
-    actualizarPaso: pendiente('la Sesión 4', 'actualizarPaso'),
+    listarClientes: (filtro, pagina) => clientes.listarClientes(filtro, pagina),
+    obtenerCliente: (id) => clientes.obtenerCliente(id),
+    crearCliente: (datos, clave) => clientes.crearCliente(datos, clave),
+    actualizarCliente: (id, cambios, version) => clientes.actualizarCliente(id, cambios, version),
+    listarContactos: (clienteId) => clientes.listarContactos(clienteId),
+    lineaDeTiempo: (clienteId, pagina) => clientes.lineaDeTiempo(clienteId, pagina),
+    soporteDictado: () => clientes.soporteDictado(),
+    subirAudio: (archivo, clave) => clientes.subirAudio(archivo, clave),
+    procesarCaptura: (entrada) => clientes.procesarCaptura(entrada),
+    guardarSeguimiento: (datos, clave) => clientes.guardarSeguimiento(datos, clave),
+    listarSeguimientos: (filtro, pagina) => clientes.listarSeguimientos(filtro, pagina),
+    borrarAudio: (audioId, motivo) => clientes.borrarAudio(audioId, motivo),
+    actualizarPaso: (pasoId, estado) => clientes.actualizarPaso(pasoId, estado),
 
     // =======================================================================
     // S4 · Agenda operativa — pendiente de ensamblado
     // =======================================================================
-    agendaHoy: pendiente('la Sesión 4', 'agendaHoy'),
-    agendaSemana: pendiente('la Sesión 4', 'agendaSemana'),
-    agendaMes: pendiente('la Sesión 4', 'agendaMes'),
-    cronogramaComercial: pendiente('la Sesión 4', 'cronogramaComercial'),
-    listarEntradas: pendiente('la Sesión 4', 'listarEntradas'),
-    entradasAtrasadas: pendiente('la Sesión 4', 'entradasAtrasadas'),
-    crearEntradaManual: pendiente('la Sesión 4', 'crearEntradaManual'),
-    ajustarEntrada: pendiente('la Sesión 4', 'ajustarEntrada'),
-    completarEntrada: pendiente('la Sesión 4', 'completarEntrada'),
-    descartarEntrada: pendiente('la Sesión 4', 'descartarEntrada'),
+    agendaHoy: (fecha) => agenda.agendaHoy(fecha),
+    agendaSemana: (desde) => agenda.agendaSemana(desde),
+    agendaMes: (anio, mes) => agenda.agendaMes(anio, mes),
+    cronogramaComercial: (desde, hasta) => agenda.cronogramaComercial(desde, hasta),
+    listarEntradas: (filtro, pagina) => agenda.listarEntradas(filtro, pagina),
+    entradasAtrasadas: (pagina) => agenda.entradasAtrasadas(pagina),
+    crearEntradaManual: (datos, clave) => agenda.crearEntradaManual(datos, clave),
+    ajustarEntrada: (ajuste) => agenda.ajustarEntrada(ajuste),
+    completarEntrada: (entradaId, clave) => agenda.completarEntrada(entradaId, clave),
+    descartarEntrada: (entradaId, motivo) => agenda.descartarEntrada(entradaId, motivo),
 
     // =======================================================================
     // =======================================================================
@@ -182,81 +214,82 @@ export function crearCapaDatosMock(opciones: OpcionesCapaDatosMock = {}): CapaDa
 
     // S5 · Presentaciones y cotizaciones — pendiente de ensamblado
     // =======================================================================
-    listarPresentaciones: pendiente('la Sesión 5', 'listarPresentaciones'),
-    crearPresentacion: pendiente('la Sesión 5', 'crearPresentacion'),
-    actualizarPresentacion: pendiente('la Sesión 5', 'actualizarPresentacion'),
-    emitirPresentacion: pendiente('la Sesión 5', 'emitirPresentacion'),
-    listarCotizaciones: pendiente('la Sesión 5', 'listarCotizaciones'),
-    obtenerCotizacion: pendiente('la Sesión 5', 'obtenerCotizacion'),
-    crearCotizacion: pendiente('la Sesión 5', 'crearCotizacion'),
-    actualizarCotizacion: pendiente('la Sesión 5', 'actualizarCotizacion'),
-    previsualizarCotizacion: pendiente('la Sesión 5', 'previsualizarCotizacion'),
-    previsualizarTotales: pendiente('la Sesión 5', 'previsualizarTotales'),
-    compararConLista: pendiente('la Sesión 5', 'compararConLista'),
-    historialVersiones: pendiente('la Sesión 5', 'historialVersiones'),
-    firmarComoVendedor: pendiente('la Sesión 5', 'firmarComoVendedor'),
-    enviarARevision: pendiente('la Sesión 5', 'enviarARevision'),
-    emitirPdfDefinitivo: pendiente('la Sesión 5', 'emitirPdfDefinitivo'),
-    enviarAlCliente: pendiente('la Sesión 5', 'enviarAlCliente'),
-    marcarDesenlace: pendiente('la Sesión 5', 'marcarDesenlace'),
-    crearEnlace: pendiente('la Sesión 5', 'crearEnlace'),
-    revocarEnlace: pendiente('la Sesión 5', 'revocarEnlace'),
-    aperturasDePropuesta: pendiente('la Sesión 5', 'aperturasDePropuesta'),
-    constanciaDeCotizacion: pendiente('la Sesión 5', 'constanciaDeCotizacion'),
+    listarPresentaciones: (filtro, pagina) => propuestas.listarPresentaciones(filtro, pagina),
+    crearPresentacion: (datos, clave) => propuestas.crearPresentacion(datos, clave),
+    actualizarPresentacion: (id, cambios, version) => propuestas.actualizarPresentacion(id, cambios, version),
+    emitirPresentacion: (id, clave) => propuestas.emitirPresentacion(id, clave),
+    listarCotizaciones: (filtro, pagina) => propuestas.listarCotizaciones(filtro, pagina),
+    obtenerCotizacion: (id) => propuestas.obtenerCotizacion(id),
+    crearCotizacion: (datos, clave) => propuestas.crearCotizacion(datos, clave),
+    actualizarCotizacion: (id, cambios, version) => propuestas.actualizarCotizacion(id, cambios, version),
+    previsualizarCotizacion: (productoId, precios, variante) =>
+      propuestas.previsualizarCotizacion(productoId, precios, variante),
+    previsualizarTotales: (base) => propuestas.previsualizarTotales(base),
+    compararConLista: (productoId, precios) => propuestas.compararConLista(productoId, precios),
+    historialVersiones: (id) => propuestas.historialVersiones(id),
+    firmarComoVendedor: (cotizacionId, clave) => propuestas.firmarComoVendedor(cotizacionId, clave),
+    enviarARevision: (id, comentario, clave) => propuestas.enviarARevision(id, comentario, clave),
+    emitirPdfDefinitivo: (cotizacionId, clave) => propuestas.emitirPdfDefinitivo(cotizacionId, clave),
+    enviarAlCliente: (cotizacionId, clave) => propuestas.enviarAlCliente(cotizacionId, clave),
+    marcarDesenlace: (id, desenlace, motivo) => propuestas.marcarDesenlace(id, desenlace, motivo),
+    crearEnlace: (propuestaId, opciones, clave) => propuestas.crearEnlace(propuestaId, opciones, clave),
+    revocarEnlace: (enlaceId, motivo) => propuestas.revocarEnlace(enlaceId, motivo),
+    aperturasDePropuesta: (propuestaId, pagina) => propuestas.aperturasDePropuesta(propuestaId, pagina),
+    constanciaDeCotizacion: (cotizacionId) => propuestas.constanciaDeCotizacion(cotizacionId),
 
     // =======================================================================
     // S6 · Dinero del vendedor — pendiente de ensamblado
     // =======================================================================
-    resumenDinero: pendiente('la Sesión 6', 'resumenDinero'),
-    listarMensualidades: pendiente('la Sesión 6', 'listarMensualidades'),
-    listarLineasParticipacion: pendiente('la Sesión 6', 'listarLineasParticipacion'),
-    listarLiquidaciones: pendiente('la Sesión 6', 'listarLiquidaciones'),
-    obtenerLiquidacion: pendiente('la Sesión 6', 'obtenerLiquidacion'),
-    abrirObservacion: pendiente('la Sesión 6', 'abrirObservacion'),
+    resumenDinero: (periodo) => finanzas.resumenDinero(periodo),
+    listarMensualidades: (filtro, pagina) => finanzas.listarMensualidades(filtro, pagina),
+    listarLineasParticipacion: (periodo, pagina) => finanzas.listarLineasParticipacion(periodo, pagina),
+    listarLiquidaciones: (pagina) => finanzas.listarLiquidaciones(pagina),
+    obtenerLiquidacion: (id) => finanzas.obtenerLiquidacion(id),
+    abrirObservacion: (datos, clave) => finanzas.abrirObservacion(datos, clave),
 
     // =======================================================================
     // S6 · Administración — ⛔ los 42 métodos, con la guardia de rol puesta
     // =======================================================================
-    controlFinanciero: soloAdministrador('controlFinanciero'),
-    porCobrar: soloAdministrador('porCobrar'),
-    rankingVendedores: soloAdministrador('rankingVendedores'),
-    listarPresupuestos: soloAdministrador('listarPresupuestos'),
-    definirPresupuesto: soloAdministrador('definirPresupuesto'),
-    listarParticipacionesTodas: soloAdministrador('listarParticipacionesTodas'),
-    verificarCierrePeriodo: soloAdministrador('verificarCierrePeriodo'),
-    cerrarPeriodo: soloAdministrador('cerrarPeriodo'),
-    crearAjuste: soloAdministrador('crearAjuste'),
-    resolverObservacion: soloAdministrador('resolverObservacion'),
-    listarTodosLosClientes: soloAdministrador('listarTodosLosClientes'),
-    lineaDeTiempoDeCualquierCliente: soloAdministrador('lineaDeTiempoDeCualquierCliente'),
-    colaDeRevision: soloAdministrador('colaDeRevision'),
-    revisarCotizacion: soloAdministrador('revisarCotizacion'),
-    recalcularCotizacion: soloAdministrador('recalcularCotizacion'),
-    firmarComoCeo: soloAdministrador('firmarComoCeo'),
-    firmasDeCotizacion: soloAdministrador('firmasDeCotizacion'),
-    anulacionesDeFirma: soloAdministrador('anulacionesDeFirma'),
-    listarConstancias: soloAdministrador('listarConstancias'),
-    reintentarNotificaciones: soloAdministrador('reintentarNotificaciones'),
-    listarParticipaciones: soloAdministrador('listarParticipaciones'),
-    publicarParticipacion: soloAdministrador('publicarParticipacion'),
-    cargarPreciosLista: soloAdministrador('cargarPreciosLista'),
-    publicarProducto: soloAdministrador('publicarProducto'),
-    listarActividadesPendientes: soloAdministrador('listarActividadesPendientes'),
-    confirmarActividad: soloAdministrador('confirmarActividad'),
-    fusionarActividad: soloAdministrador('fusionarActividad'),
-    editarTaxonomia: soloAdministrador('editarTaxonomia'),
-    crearVendedor: soloAdministrador('crearVendedor'),
-    cambiarRol: soloAdministrador('cambiarRol'),
-    desactivarVendedor: soloAdministrador('desactivarVendedor'),
-    reasignarCartera: soloAdministrador('reasignarCartera'),
-    obtenerParametros: soloAdministrador('obtenerParametros'),
-    actualizarParametros: soloAdministrador('actualizarParametros'),
-    estadoProveedores: soloAdministrador('estadoProveedores'),
-    usoPorVendedor: soloAdministrador('usoPorVendedor'),
-    listarAperturasEnlace: soloAdministrador('listarAperturasEnlace'),
-    listarSugerencias: soloAdministrador('listarSugerencias'),
-    resolverSugerencia: soloAdministrador('resolverSugerencia'),
-    agregadoSugerencias: soloAdministrador('agregadoSugerencias'),
+    controlFinanciero: soloAdministrador(finanzas.controlFinanciero),
+    porCobrar: soloAdministrador(finanzas.porCobrar),
+    rankingVendedores: soloAdministrador(finanzas.rankingVendedores),
+    listarPresupuestos: soloAdministrador(finanzas.listarPresupuestos),
+    definirPresupuesto: soloAdministrador(finanzas.definirPresupuesto),
+    listarParticipacionesTodas: soloAdministrador(finanzas.listarParticipacionesTodas),
+    verificarCierrePeriodo: soloAdministrador(finanzas.verificarCierrePeriodo),
+    cerrarPeriodo: soloAdministrador(finanzas.cerrarPeriodo),
+    crearAjuste: soloAdministrador(finanzas.crearAjuste),
+    resolverObservacion: soloAdministrador(finanzas.resolverObservacion),
+    listarTodosLosClientes: soloAdministrador(finanzas.listarTodosLosClientes),
+    lineaDeTiempoDeCualquierCliente: soloAdministrador(finanzas.lineaDeTiempoDeCualquierCliente),
+    colaDeRevision: soloAdministrador(finanzas.colaDeRevision),
+    revisarCotizacion: soloAdministrador(finanzas.revisarCotizacion),
+    recalcularCotizacion: soloAdministrador(finanzas.recalcularCotizacion),
+    firmarComoCeo: soloAdministrador(finanzas.firmarComoCeo),
+    firmasDeCotizacion: soloAdministrador(finanzas.firmasDeCotizacion),
+    anulacionesDeFirma: soloAdministrador(finanzas.anulacionesDeFirma),
+    listarConstancias: soloAdministrador(finanzas.listarConstancias),
+    reintentarNotificaciones: soloAdministrador(finanzas.reintentarNotificaciones),
+    listarParticipaciones: soloAdministrador(finanzas.listarParticipaciones),
+    publicarParticipacion: soloAdministrador(finanzas.publicarParticipacion),
+    cargarPreciosLista: soloAdministrador(finanzas.cargarPreciosLista),
+    publicarProducto: soloAdministrador(finanzas.publicarProducto),
+    listarActividadesPendientes: soloAdministrador(finanzas.listarActividadesPendientes),
+    confirmarActividad: soloAdministrador(finanzas.confirmarActividad),
+    fusionarActividad: soloAdministrador(finanzas.fusionarActividad),
+    editarTaxonomia: soloAdministrador(finanzas.editarTaxonomia),
+    crearVendedor: soloAdministrador(finanzas.crearVendedor),
+    cambiarRol: soloAdministrador(finanzas.cambiarRol),
+    desactivarVendedor: soloAdministrador(finanzas.desactivarVendedor),
+    reasignarCartera: soloAdministrador(finanzas.reasignarCartera),
+    obtenerParametros: soloAdministrador(finanzas.obtenerParametros),
+    actualizarParametros: soloAdministrador(finanzas.actualizarParametros),
+    estadoProveedores: soloAdministrador(finanzas.estadoProveedores),
+    usoPorVendedor: soloAdministrador(finanzas.usoPorVendedor),
+    listarAperturasEnlace: soloAdministrador(finanzas.listarAperturasEnlace),
+    listarSugerencias: soloAdministrador(finanzas.listarSugerencias),
+    resolverSugerencia: soloAdministrador(finanzas.resolverSugerencia),
+    agregadoSugerencias: soloAdministrador(finanzas.agregadoSugerencias),
 
     /**
      * ⛔ Append-only y sólo administrador. Los registros de acceso salen de
@@ -282,7 +315,7 @@ export function crearCapaDatosMock(opciones: OpcionesCapaDatosMock = {}): CapaDa
     },
   };
 
-  return { ...capa, mock: nucleo, sesion };
+  return { ...capa, mock: nucleo, sesion, publica };
 }
 
 /** Rol con el que responde el mock en este momento. Para pruebas y para QA §1.6. */

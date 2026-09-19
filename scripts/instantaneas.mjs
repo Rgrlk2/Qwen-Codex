@@ -14,7 +14,7 @@
  * ⛔ No se inventa contenido: todo sale de packages/mock. Si una pantalla sale
  *    en estado de error o vacia, es porque asi esta hoy, y hay que verlo.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 
 import { crearCapaDatosMock } from '@labia/mock';
@@ -44,6 +44,25 @@ globalThis.requestAnimationFrame = (f) => dom.window.setTimeout(f, 0);
 globalThis.cancelAnimationFrame = (h) => dom.window.clearTimeout(h);
 
 const leer = (ruta) => { try { return readFileSync(`${RAIZ}/${ruta}`, 'utf8'); } catch { return ''; } };
+
+/**
+ * Toda la hoja de estilos de una vista, se llame como se llame.
+ *
+ * ⛔ No se busca `estilos.css` por nombre: las nueve vistas no lo nombran
+ *    igual —hay `estilos.css`, `vista.css` e `ingreso.css`—. Buscarlo por un
+ *    nombre fijo dejo a Ingreso, Inicio, Dinero y Administracion sin sus
+ *    estilos propios durante varias corridas, y las instantaneas mostraban
+ *    algo que no era la pantalla.
+ */
+function cssDeVista(carpeta) {
+  const dir = `${RAIZ}/apps/escritorio/src/vistas/${carpeta}`;
+  let hojas = [];
+  try {
+    hojas = readdirSync(dir).filter((f) => f.endsWith('.css')).sort();
+  } catch { return ''; }
+  if (hojas.length === 0) return '';
+  return hojas.map((h) => `/* ${carpeta}/${h} */\n${leer(`apps/escritorio/src/vistas/${carpeta}/${h}`)}`).join('\n');
+}
 
 /** Hojas comunes: los ocho colores, la marca y los componentes base. */
 const CSS_COMUN = [
@@ -145,7 +164,7 @@ async function instantaneaDeIngreso() {
   await asentar();
   return {
     titulo: 'Ingreso', ruta: 'ingreso', cuerpo: raiz.outerHTML,
-    css: leer('apps/escritorio/src/vistas/ingreso/estilos.css'),
+    css: cssDeVista('ingreso'),
     nota: 'Es la unica pantalla sin la cascara: todavia no hay sesion.',
   };
 }
@@ -176,7 +195,7 @@ async function instantaneaDeVista(entrada, rol) {
 
   return {
     titulo: entrada.titulo, ruta: entrada.ruta, cuerpo: raiz.outerHTML,
-    css: leer(`apps/escritorio/src/vistas/${entrada.ruta}/estilos.css`),
+    css: cssDeVista(entrada.ruta),
     nota: rol === 'administrador'
       ? 'Se monto con rol administrador: es la unica que el vendedor no ve.'
       : 'Se monto con rol vendedor, con los datos de ejemplo del mock.',
@@ -205,7 +224,7 @@ async function instantaneaDelTaller() {
   await asentar();
   return {
     titulo: 'Ficha — taller', ruta: 'ficha-taller', cuerpo: raiz.outerHTML,
-    css: leer('apps/escritorio/src/vistas/fichas/estilos.css'),
+    css: cssDeVista('fichas'),
     nota: 'A la izquierda el vendedor arma la ficha; a la derecha ve lo que le llega al cliente.',
   };
 }
