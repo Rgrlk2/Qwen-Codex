@@ -59,6 +59,14 @@ con acceso directo.
 20. `reglas_de_la_agenda` — lo resuelto no se reabre; descartar y mover exigen motivo.
 21. `alta_manual_en_la_agenda` — la única entrada que se crea a mano.
 22. `fichas_descarte_y_escrituras` — dónde anotar un descarte, el tope de destacados y el enlace.
+23. `las_firmas_mandan` — sin firma no va a revisión; sin las dos, no sale el PDF ni se envía.
+24. `escrituras_de_propuestas` — altas de presentación y cotización, y la firma del vendedor.
+25. `el_precio_de_lista_sale_del_catalogo` — corrección: lo mandaba el navegador.
+26. `se_puede_cotizar_sin_precio_de_lista` — Smart Commerce y Exeq.IA quedaban fuera.
+27. `documentos_enlaces_y_nueva_version` — emitir, compartir y editar.
+28. `la_version_de_la_cotizacion_es_la_del_documento` — dos cosas se llamaban igual y se pisaban.
+29. `fi5_de_verdad_anula_las_firmas` — la regla estaba escrita y no funcionaba.
+30. `editar_lo_ya_enviado_tambien_caduca` — FI5 no alcanzaba a lo que ya tenía el cliente.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
@@ -335,11 +343,94 @@ Probado contra la API real:
 alguien pueda saltear: es que la columna no existe.** El error ni siquiera
 viene de una regla nuestra — viene de que no hay dónde escribir.
 
+## El circuito comercial
+
+```
+borrador → firma del vendedor → EN REVISIÓN (va al CEO)
+  → aprueba → firma del CEO → PDF definitivo
+  → recién ahí: enviada al cliente → enlace → respuesta
+```
+
+⛔ Nada de esto lo defiende el Escritorio. Probado contra la API real con dos
+sesiones, un vendedor y un administrador:
+
+| Intento | Resultado |
+|---|---|
+| Mandar al cliente sin aprobación | **rechazado** (G8) |
+| El vendedor aprueba su propia cotización | **rechazado**: sólo Administración |
+| Mandar a revisión sin firmar | **rechazado** |
+| Emitir el PDF con una sola firma | **rechazado** |
+| Enviar al cliente con una sola firma | **rechazado** |
+| Enlace sobre algo no aprobado | **rechazado** |
+| Editar mientras está en revisión | **rechazado**: la está mirando Administración |
+| Editar algo cerrado (aceptada, perdida, vencida) | **rechazado** |
+
+## FI5 estaba escrita y no funcionaba
+
+El hallazgo más serio de esta capa, y venía de antes.
+
+`transicion_de_cotizacion` tiene desde siempre un `UPDATE` que anula las firmas
+al editar algo aprobado. Pero **`firma` no tiene política de escritura**: con
+RLS activo, ese update no alcanza ninguna fila y Postgres no se queja. La regla
+existía en el código y no en los hechos.
+
+En concreto, verificado: el CEO aprueba y firma Gs. 2.400.000, el documento sale
+al cliente, el vendedor lo baja a Gs. 1.000.000 — y las dos firmas seguían
+figurando como vigentes.
+
+Y había un segundo tramo: FI5 sólo miraba `aprobada`, no `enviada_al_cliente`.
+Una cotización **ya en manos del cliente** se editaba en silencio.
+
+Corregido. La anulación pasa a `anular_firmas_de_version`, una función
+`SECURITY DEFINER` que **sólo sabe anular**: pone `anulada`, su fecha y su
+motivo, nada más. Y `firma` sigue sin política de update, así que nadie
+des-anula una firma a mano. Verificado contra la API:
+
+| Intento | Resultado |
+|---|---|
+| Editar una cotización ya enviada al cliente | versión 1 → 2, vuelve a borrador |
+| Las dos firmas | **caducadas**, con el motivo escrito |
+| Volver a mandarla al cliente | **rechazado**: ya no está aprobada |
+| Des-anular una firma a mano | **no alcanza ninguna fila** |
+
+## El precio de lista no lo manda el navegador
+
+Error mío, corregido. `crear_cotizacion` tomaba `setupLista` y `mensualLista`
+del cuerpo de la llamada.
+
+Los ahorros son **columnas generadas**: lista − especial. Si el navegador elige
+la lista, elige el ahorro que se le muestra al cliente. Un vendedor podía poner
+una lista inflada y la base calculaba fielmente una mentira: *"ahorra
+Gs. 5.000.000"* sobre un precio que nunca existió.
+
+La columna generada garantiza que la resta esté bien hecha. **No garantiza que
+los números sean los de Lab.IA.** Eso lo garantiza leerlos del catálogo.
+
+Probado: mandé una lista de 50.000.000 para Agendar.IA y quedó la real,
+3.000.000. También mandé otro nombre de producto y quedó el del catálogo.
+
+⛔ Smart Commerce y Exeq.IA no tienen precio publicado. Con `setup_lista`
+obligatorio no se los podía cotizar en absoluto —dos de los trece productos
+fuera del Escritorio—. Ahora la lista puede ser nula y el **ahorro queda nulo,
+no cero**: no hay contra qué comparar, y un "ahorra Gs. 0" sería tan falso como
+inventarle una lista.
+
+## Dos cosas que se llamaban igual
+
+`cotizacion.version` es la versión del **documento**, a la que se atan las
+firmas. Pero el sello de trazado la subía en cada escritura, porque ahí
+`version` es el bloqueo optimista.
+
+Verificado: pasar de borrador a revisión y a aprobada dejaba la cotización en
+versión 3, con la firma del vendedor huérfana en la 1, y el circuito se trababa
+en *"faltan firmas"* sin que faltara ninguna. El sello ahora acepta un argumento
+para no tocar esa columna donde significa otra cosa.
+
 ## Lo que falta del servidor
 
 - La capa de datos del navegador contra Supabase, en reemplazo del mock:
-  hechas la sesión, los clientes, el motor, la agenda y las fichas; faltan
-  propuestas, dinero, administración e inicio. Hasta que estén las nueve, el Escritorio
+  hechas la sesión, los clientes, el motor, la agenda, las fichas y las
+  propuestas; faltan dinero, administración e inicio. Hasta que estén las nueve, el Escritorio
   sigue eligiendo entre mock y HTTP: una `CapaDatos` a medias no se puede
   enchufar.
 - Elegir proveedor de investigación y desplegar la función de servidor que lo
