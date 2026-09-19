@@ -14,7 +14,7 @@ import { readFileSync } from 'node:fs';
 import {
   bloquesDelCopy, personalizacionInicial, validarPersonalizacion,
   fichaPublicaDe, revisarCopy, indiceDe, porNecesidad, MAXIMO_DESTACADOS,
-} from '../packages/mock/src/datos-fichas.ts';
+} from '../packages/compartido/src/fichas-logica.ts';
 import { ORDEN_CANONICO, PRODUCTOS } from '../packages/compartido/src/index.ts';
 import { crearCapaDatosMock } from '../packages/mock/src/index.ts';
 import { JSDOM } from 'jsdom';

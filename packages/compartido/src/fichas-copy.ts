@@ -10,9 +10,9 @@
  *    corte falla ruidosamente en vez de servir una ficha vacía.
  */
 
-import type { ProductoId } from '@labia/compartido';
-import { PRODUCTOS_ESPECIFICOS, PRODUCTOS_INTEGRALES } from '@labia/compartido';
-import { seccionDeProducto, type CopyDeProducto } from './datos-fichas';
+import type { ProductoId } from './catalogo';
+import { PRODUCTOS_ESPECIFICOS, PRODUCTOS_INTEGRALES } from './catalogo';
+import { seccionDeProducto, type CopyDeProducto } from './fichas-logica';
 
 import copyEspecificas from '../../../content/copy/LabIA_9_Soluciones_Especificas_Copy_Maestro.md?raw';
 import copyIntegrales from '../../../content/copy/LabIA_4_Soluciones_Integrales_Copy_Maestro.md?raw';

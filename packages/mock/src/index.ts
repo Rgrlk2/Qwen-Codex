@@ -53,7 +53,7 @@ import { crearCapaFinanzas } from './datos-finanzas';
 
 export * from './nucleo';
 export * from './datos-sesion';
-export * from './datos-fichas';
+export * from '@labia/compartido';
 
 export interface OpcionesCapaDatosMock {
   readonly configuracion?: Partial<ConfiguracionMock>;

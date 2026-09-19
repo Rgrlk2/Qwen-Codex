@@ -20,6 +20,8 @@ export * from './seguimiento';
 export * from './captura';
 export * from './motor-logica';
 export * from './agenda-vistas';
+export * from './fichas-logica';
+export * from './fichas-copy';
 export * from './alternativas';
 export * from './fichas';
 export * from './propuestas';

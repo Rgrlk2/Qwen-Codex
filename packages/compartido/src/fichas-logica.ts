@@ -1,5 +1,5 @@
 /**
- * Datos de ejemplo — dominio: fichas de producto.
+ * Las fichas de producto: del copy aprobado a la ficha que ve el cliente.
  *
  * ⛔ El contenido NO se escribe acá. Se lee del copy aprobado y congelado que
  *    vive en `content/copy/`, y se corta en bloques por sus encabezados. Eso
@@ -12,12 +12,13 @@
  * Ver packages/compartido/src/fichas.ts y docs/MASTER_SPEC.md §2.3.
  */
 
+import type { ProductoId } from './catalogo';
 import type {
   AvisoCopyDesactualizado, BloqueFicha, BloqueFichaId, EntradaPorNecesidad,
   EntradaPortafolio, FichaOficial, FichaPersonalizada, FichaPublica,
-  IndicePortafolio, NuevaFichaPersonalizada, PersonalizacionBloque, ProductoId,
-} from '@labia/compartido';
-import { ORDEN_CANONICO } from '@labia/compartido';
+  IndicePortafolio, PersonalizacionBloque,
+} from './fichas';
+import { ORDEN_CANONICO } from './fichas';
 
 /**
  * Encabezado del copy → bloque de la ficha.
@@ -258,4 +259,3 @@ export function porNecesidad(
   };
 }
 
-export type { NuevaFichaPersonalizada };

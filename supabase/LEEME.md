@@ -58,6 +58,7 @@ con acceso directo.
 19. `precios_de_lista_del_portafolio` — los 29 precios, que nunca se habían cargado.
 20. `reglas_de_la_agenda` — lo resuelto no se reabre; descartar y mover exigen motivo.
 21. `alta_manual_en_la_agenda` — la única entrada que se crea a mano.
+22. `fichas_descarte_y_escrituras` — dónde anotar un descarte, el tope de destacados y el enlace.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
@@ -305,10 +306,39 @@ AG4 se cumple, pero en silencio. No es un problema para el Escritorio, que no
 tiene método para borrar de la agenda; queda dicho porque un `204` invita a
 creer lo contrario.
 
+## Las fichas: el copy no está en la base
+
+⛔ **La ficha oficial no se guarda en el servidor.** El contenido sale del copy
+congelado de `content/copy/` en cada lectura, con la misma función que usan los
+datos de ejemplo. Por eso no puede haber una copia vieja en la base, y por eso
+el enlace sirve siempre el copy **vigente**. `revisarCopyDeFicha` es sólo un
+aviso para el vendedor: para que no se entere delante del cliente.
+
+Lo único que vive en la base es la **capa** del vendedor: qué bloques se ven,
+en qué orden, cuáles destacan, y sus dos textos propios.
+
+Probado contra la API real:
+
+| Intento | Resultado |
+|---|---|
+| Preparar una ficha con sus bloques | creada, todo en una transacción |
+| **Escribir copy propio en un bloque** | `Could not find the 'texto' column` |
+| Un **tercer** bloque destacado | **rechazado**: hasta dos |
+| Compartir | token de 44 caracteres |
+| ¿El token lleva adentro el id de la ficha? | **no** |
+| ¿Y el del cliente? | **no** |
+| ¿Una ficha pide código? | **no**: es material de presentación, no una cotización |
+| Descartar sin motivo | **rechazado** |
+| Descartar con motivo | queda con el motivo escrito |
+
+⛔ Ese segundo renglón es la prueba que importa. **PF1 no es una validación que
+alguien pueda saltear: es que la columna no existe.** El error ni siquiera
+viene de una regla nuestra — viene de que no hay dónde escribir.
+
 ## Lo que falta del servidor
 
 - La capa de datos del navegador contra Supabase, en reemplazo del mock:
-  hechas la sesión, los clientes, el motor y la agenda; faltan fichas,
+  hechas la sesión, los clientes, el motor, la agenda y las fichas; faltan
   propuestas, dinero, administración e inicio. Hasta que estén las nueve, el Escritorio
   sigue eligiendo entre mock y HTTP: una `CapaDatos` a medias no se puede
   enchufar.

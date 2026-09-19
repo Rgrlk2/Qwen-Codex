@@ -23,11 +23,11 @@ import type {
 } from '@labia/compartido';
 import { PRODUCTOS } from '@labia/compartido';
 import type { NucleoMock } from './nucleo';
-import { COPY_DE_LOS_TRECE, logoDe } from './copy-fichas';
+import { COPY_DE_LOS_TRECE, logoDe } from '@labia/compartido';
 import {
   fichaOficialDe, indiceDe, personalizacionInicial, porNecesidad, revisarCopy,
   validarPersonalizacion, type ErrorPersonalizacion,
-} from './datos-fichas';
+} from '@labia/compartido';
 import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
 
 const VENDEDOR_DEMO: Id = CUENTAS_DE_EJEMPLO.find((c) => c.rol === 'vendedor')?.id ?? 'usr-jpfdz';
