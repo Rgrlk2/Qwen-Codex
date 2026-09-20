@@ -18,13 +18,14 @@
 import type {
   AccesoEnlace, AvisoCopyDesactualizado, CapaFichas, EnlaceCompartido,
   EntradaPorNecesidad, FichaOficial, FichaPersonalizada, Id, IndicePortafolio,
-  NuevaFichaPersonalizada, OpcionesEnlaceFicha, OpcionesPagina,
-  PersonalizacionBloque, ProductoId, Resultado, Version,
+  Moneda, NuevaFichaPersonalizada, OpcionesEnlaceFicha, OpcionesPagina,
+  PersonalizacionBloque, PrecioPreparado, ProductoId, Resultado, Version,
 } from '@labia/compartido';
 import {
-  COPY_DE_LOS_TRECE, PRODUCTOS, fichaOficialDe, huellaDelCopy, indiceDe, logoDe, porNecesidad,
-  revisarCopy,
+  COPY_DE_LOS_TRECE, MAXIMO_ACLARACION_PRECIO, PRODUCTOS, fichaOficialDe, huellaDelCopy,
+  indiceDe, logoDe, porNecesidad, revisarCopy, validarPrecioPreparado,
 } from '@labia/compartido';
+import type { ErrorPrecioPreparado } from '@labia/compartido';
 import { supabase } from './conexion';
 import { bien, fallo } from './errores';
 import { armarPagina, rango } from './paginacion';
@@ -61,11 +62,33 @@ interface FilaFicha extends FilaTrazado {
   readonly lo_que_conversamos: string | null;
   readonly nota_del_vendedor: string | null;
   readonly huella_copy: string;
+  readonly precio_moneda: Moneda | null;
+  readonly precio_setup: number | null;
+  readonly precio_mensual: number | null;
+  readonly precio_aclaracion: string | null;
   readonly personalizacion_bloque?: ReadonlyArray<FilaBloque>;
 }
 
+/**
+ * El precio referencial del vendedor, de cuatro columnas a un objeto.
+ *
+ * ⛔ Sin moneda no hay precio: la base ya lo impide con `precio_entero_o_nada`,
+ *    y acá se traduce a `null`, que es "el cliente ve el precio del copy".
+ */
+function aPrecio(f: FilaFicha): PrecioPreparado | null {
+  if (f.precio_moneda === null) return null;
+  const moneda = f.precio_moneda;
+  return {
+    setup: f.precio_setup === null ? null : { monto: f.precio_setup, moneda },
+    mensual: f.precio_mensual === null ? null : { monto: f.precio_mensual, moneda },
+    aclaracion: f.precio_aclaracion,
+  };
+}
+
 const COLUMNAS_FICHA = `id, producto_id, cliente_id, vendedor_id, plan_id,
-  lo_que_conversamos, nota_del_vendedor, huella_copy, ${COLUMNAS_TRAZADO},
+  lo_que_conversamos, nota_del_vendedor, huella_copy,
+  precio_moneda, precio_setup, precio_mensual, precio_aclaracion,
+  ${COLUMNAS_TRAZADO},
   personalizacion_bloque ( bloque_id, visible, orden, destacado )`;
 
 function aFicha(f: FilaFicha): FichaPersonalizada {
@@ -85,6 +108,7 @@ function aFicha(f: FilaFicha): FichaPersonalizada {
     bloques,
     loQueConversamos: f.lo_que_conversamos,
     notaDelVendedor: f.nota_del_vendedor,
+    precio: aPrecio(f),
     huellaCopy: f.huella_copy,
     version: f.version,
   };
@@ -154,6 +178,47 @@ function aAcceso(f: FilaAcceso): AccesoEnlace {
     duracionSegundos: f.duracion_segundos,
     resultado: f.resultado,
   };
+}
+
+/**
+ * De `PrecioPreparado` a las cuatro columnas, o `null` para borrarlo entero.
+ *
+ * ⛔ La moneda sale de los propios importes, no de un campo aparte: así no
+ *    puede quedar una moneda que no sea la de ningún importe.
+ */
+function aColumnasDePrecio(precio: PrecioPreparado | null | undefined): {
+  readonly moneda: Moneda;
+  readonly setup: number | null;
+  readonly mensual: number | null;
+  readonly aclaracion: string | null;
+} | null {
+  if (!precio) return null;
+  const moneda = precio.setup?.moneda ?? precio.mensual?.moneda;
+  if (!moneda) return null;
+  const aclaracion = (precio.aclaracion ?? '').trim();
+  return {
+    moneda,
+    setup: precio.setup?.monto ?? null,
+    mensual: precio.mensual?.monto ?? null,
+    aclaracion: aclaracion === '' ? null : aclaracion,
+  };
+}
+
+/**
+ * El error de un precio mal armado, dicho como lo lee el vendedor.
+ *
+ * ⛔ La base igual lo rechaza —`precio_entero_o_nada`, `precio_de_ficha_no_negativo`—
+ *    pero un mensaje de Postgres en medio de una reunión no le sirve a nadie.
+ */
+function falloDePrecio(error: ErrorPrecioPreparado): Resultado<FichaPersonalizada> {
+  const mensaje = error.tipo === 'sin_importes'
+    ? 'Poné al menos un importe: la implementación, la mensualidad, o las dos.'
+    : error.tipo === 'monto_negativo'
+      ? 'Un precio no puede ser negativo.'
+      : error.tipo === 'monedas_mezcladas'
+        ? 'La implementación y la mensualidad tienen que ir en la misma moneda.'
+        : `La aclaración entra en ${MAXIMO_ACLARACION_PRECIO} caracteres; escribiste ${error.largo}.`;
+  return { ok: false, error: { codigo: 'validacion', mensajeAmable: mensaje, campo: 'precio' } };
 }
 
 // ---------------------------------------------------------------------------
@@ -242,6 +307,10 @@ export function crearCapaFichas(): CapaFichas {
           mensajeAmable: 'Ese producto no está en el portafolio.',
         } };
       }
+      if (datos.precio) {
+        const malo = validarPrecioPreparado(datos.precio);
+        if (malo) return falloDePrecio(malo);
+      }
       const { data, error } = await sb.rpc('preparar_ficha', {
         p_datos: {
           productoId: datos.productoId,
@@ -249,6 +318,7 @@ export function crearCapaFichas(): CapaFichas {
           planId: datos.planId ?? null,
           loQueConversamos: datos.loQueConversamos ?? null,
           notaDelVendedor: datos.notaDelVendedor ?? null,
+          precio: aColumnasDePrecio(datos.precio),
           // ⛔ La huella del copy VIGENTE al preparar. Con eso después se avisa
           //    si el texto cambió, antes de que el vendedor lo comparta.
           huellaCopy: oficial.huellaCopy,
@@ -267,6 +337,18 @@ export function crearCapaFichas(): CapaFichas {
       if (cambios.loQueConversamos !== undefined) parche['lo_que_conversamos'] = cambios.loQueConversamos;
       if (cambios.notaDelVendedor !== undefined) parche['nota_del_vendedor'] = cambios.notaDelVendedor;
       if (cambios.planId !== undefined) parche['plan_id'] = cambios.planId;
+
+      // ⛔ El precio se escribe entero o se borra entero: dejar la moneda con
+      //    los importes en nulo es un estado que la base rechaza, y con razón.
+      if (cambios.precio !== undefined) {
+        const error = cambios.precio ? validarPrecioPreparado(cambios.precio) : null;
+        if (error) return falloDePrecio(error);
+        const cols = aColumnasDePrecio(cambios.precio);
+        parche['precio_moneda'] = cols?.moneda ?? null;
+        parche['precio_setup'] = cols?.setup ?? null;
+        parche['precio_mensual'] = cols?.mensual ?? null;
+        parche['precio_aclaracion'] = cols?.aclaracion ?? null;
+      }
 
       const { error } = await sb.from('ficha_personalizada').update(parche).eq('id', id);
       if (error) return fallo<FichaPersonalizada>(error);

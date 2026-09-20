@@ -11,7 +11,7 @@
 import type {
   CapaDatos, FichaOficial, FichaPersonalizada, Id, PersonalizacionBloque, ProductoId,
 } from '@labia/compartido';
-import { fichaPublicaDe, personalizacionInicial } from '@labia/mock';
+import { conBloquesNuevos, fichaPublicaDe, personalizacionInicial } from '@labia/mock';
 
 import { crear, vaciar } from './dom';
 import { montarPreparar, type EstadoPreparacion } from './preparar';
@@ -78,14 +78,20 @@ export async function montarTaller(opciones: OpcionesTaller): Promise<void> {
 
   const inicial: EstadoPreparacion = opciones.existente
     ? {
-        bloques: opciones.existente.bloques,
+        // ⛔ Si el copy sumó una sección después de preparar esta ficha, acá
+        //    aparece, para que el vendedor la vea y decida. No se la esconde.
+        bloques: conBloquesNuevos(ficha, opciones.existente.bloques),
         loQueConversamos: opciones.existente.loQueConversamos ?? '',
         notaDelVendedor: opciones.existente.notaDelVendedor ?? '',
+        precio: opciones.existente.precio,
       }
     : {
         bloques: personalizacionInicial(ficha),
         loQueConversamos: '',
         notaDelVendedor: '',
+        // ⛔ Arranca sin precio propio: el cliente ve el del copy hasta que el
+        //    vendedor decida otra cosa.
+        precio: null,
       };
 
   function repintarPrevia(estado: EstadoPreparacion): void {
@@ -98,6 +104,7 @@ export async function montarTaller(opciones: OpcionesTaller): Promise<void> {
       bloques: estado.bloques,
       loQueConversamos: estado.loQueConversamos.trim() || null,
       notaDelVendedor: estado.notaDelVendedor.trim() || null,
+      precio: estado.precio,
       huellaCopy: ficha.huellaCopy,
       version: opciones.existente?.version ?? 0,
       creadoEn: '', creadoPor: '', actualizadoEn: '', actualizadoPor: '',
@@ -134,6 +141,7 @@ export async function montarTaller(opciones: OpcionesTaller): Promise<void> {
         bloques: estado.bloques as ReadonlyArray<PersonalizacionBloque>,
         ...(estado.loQueConversamos.trim() ? { loQueConversamos: estado.loQueConversamos.trim() } : {}),
         ...(estado.notaDelVendedor.trim() ? { notaDelVendedor: estado.notaDelVendedor.trim() } : {}),
+        ...(estado.precio ? { precio: estado.precio } : {}),
       },
       `ficha-${clienteId}-${productoId}-${Date.now()}`,
     ).then((r) => {

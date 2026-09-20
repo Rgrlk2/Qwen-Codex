@@ -13,7 +13,9 @@
  */
 
 import type { CapaPublica, ConstanciaRespuesta, OpcionRespuesta, RespuestaDelCliente } from '@labia/compartido';
-import { TEXTOS_OPCION, TEXTO_ACEPTACION, TEXTO_BOTON_ENVIO } from '@labia/compartido';
+import {
+  NOTA_PRECIO_REFERENCIAL, TEXTOS_OPCION, TEXTO_ACEPTACION, TEXTO_BOTON_ENVIO,
+} from '@labia/compartido';
 import { crear, vaciar } from './dom';
 import { formatearDinero, formatearFecha } from './formato';
 import { nuevaClaveIdempotencia } from './ids';
@@ -183,6 +185,15 @@ export function montarFichaPublica(
       });
       seccion.append(crear('h2', { texto: bloque.titulo }));
       dibujarCopy(seccion, bloque.contenido);
+      // ⛔ Una ficha nunca es una oferta cerrada. Lo diga el copy o lo diga el
+      //    vendedor, el precio de acá es de referencia: lo que compromete a
+      //    Lab.IA es la cotización, con su aprobación y su firma. Se lo
+      //    decimos al cliente en la misma pantalla donde lee el número.
+      if (bloque.id === 'precioDeReferencia') {
+        seccion.append(crear('p', {
+          clase: 'propuestas-ficha__nota-precio', texto: NOTA_PRECIO_REFERENCIAL,
+        }));
+      }
       pagina.append(seccion);
     }
 

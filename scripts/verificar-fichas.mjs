@@ -14,8 +14,11 @@ import { readFileSync } from 'node:fs';
 import {
   bloquesDelCopy, personalizacionInicial, validarPersonalizacion,
   fichaPublicaDe, revisarCopy, indiceDe, porNecesidad, MAXIMO_DESTACADOS,
+  validarPrecioPreparado, textoPrecioPreparado, NOTA_PRECIO_REFERENCIAL,
+  conBloquesNuevos,
 } from '../packages/compartido/src/fichas-logica.ts';
-import { ORDEN_CANONICO, PRODUCTOS } from '../packages/compartido/src/index.ts';
+import { textoDinero } from '../packages/compartido/src/core.ts';
+import { ENCABEZADOS_DEL_COPY, ORDEN_CANONICO, PRODUCTOS } from '../packages/compartido/src/index.ts';
 import { crearCapaDatosMock } from '../packages/mock/src/index.ts';
 import { JSDOM } from 'jsdom';
 import * as vistaClientes from '../apps/escritorio/src/vistas/clientes/vista.ts';
@@ -56,14 +59,69 @@ for (const [doc, lista, familia] of [[ESP, ESPECIFICAS, 'especifica'], [INT, INT
   }
 }
 comprobar('las 13 fichas se arman del copy', fichas.length === 13, `${fichas.length}`);
-comprobar('el orden de los bloques es el del documento fuente',
-  fichas.every((f) => f.bloques.map((b) => b.id).join() === ORDEN_CANONICO.join()));
+comprobar('⛔ el inventario de bloques esta completo en las trece',
+  fichas.every((f) => f.bloques.length === ORDEN_CANONICO.length));
+comprobar('⛔ los bloques presentes van en el orden del documento fuente, no en uno fijo',
+  fichas.every((f) => {
+    const presentes = f.bloques.filter((b) => b.presente).map((b) => b.id);
+    return presentes.every((id, i) => i === 0 || presentes.indexOf(id) === i);
+  }));
 
+// ⛔ EL QUE DUELE: un encabezado que el copy usa y el lector no conoce se
+//    descarta en silencio. Asi se perdieron el precio de cinco productos y
+//    "En una frase" de los trece.
+const encabezadosDelDocumento = new Set(
+  [...ESP.split('\n'), ...INT.split('\n')]
+    .map((l) => /^###\s+(.+?)\s*$/.exec(l))
+    .filter((m) => m !== null)
+    .map((m) => m[1]),
+);
+const sinMapear = [...encabezadosDelDocumento].filter((h) => !ENCABEZADOS_DEL_COPY.includes(h));
+comprobar('⛔ NINGUN encabezado del copy aprobado queda sin mapear',
+  sinMapear.length === 0, sinMapear.join(' | '));
+
+comprobar('⛔ las trece fichas tienen bloque de precio',
+  fichas.every((f) => f.bloques.some((b) => b.id === 'precioDeReferencia' && b.presente)),
+  fichas.filter((f) => !f.bloques.some((b) => b.id === 'precioDeReferencia' && b.presente))
+    .map((f) => f.nombreProducto).join(', '));
+comprobar('⛔ las trece fichas tienen "En una frase"',
+  fichas.every((f) => f.bloques.some((b) => b.id === 'enUnaFrase' && b.presente)),
+  fichas.filter((f) => !f.bloques.some((b) => b.id === 'enUnaFrase' && b.presente))
+    .map((f) => f.nombreProducto).join(', '));
+
+// --- Las particularidades que COPY_LOCK.md manda respetar -----------------
+const precioVivo = fichas.find((f) => f.nombreProducto === 'Precio Vivo');
+comprobar('⛔ Precio Vivo NO muestra "sin eslogan oficial" como titular',
+  !precioVivo.bloques.some((b) => b.presente && b.id === 'slogan'));
+comprobar('⛔ Precio Vivo muestra en su lugar la propuesta de valor documentada',
+  precioVivo.bloques.some((b) => b.presente && b.id === 'propuestaDeValor'));
+comprobar('⛔ y la tarjeta del portafolio de Precio Vivo tampoco dice "sin eslogan"',
+  !indiceDe(fichas).especificas.find((e) => e.nombreProducto === 'Precio Vivo')
+    .slogan.toLowerCase().includes('sin eslogan'));
+comprobar('⛔ Precio Vivo conserva SU encabezado: "¿Que mira?", no "¿Que hace?"',
+  precioVivo.bloques.find((b) => b.id === 'queHace')?.titulo === '¿Qué mira?');
+const cotiza = fichas.find((f) => f.nombreProducto === 'Cotiza Fácil');
+comprobar('⛔ Cotiza Facil conserva SU encabezado: "¿Que necesita del negocio?"',
+  cotiza.bloques.find((b) => b.id === 'datosQueNecesita')?.titulo === '¿Qué necesita del negocio?');
+comprobar('⛔ y lo lleva DESPUES de "¿Que hace?", como en el documento',
+  cotiza.bloques.filter((b) => b.presente).map((b) => b.id).indexOf('datosQueNecesita')
+    > cotiza.bloques.filter((b) => b.presente).map((b) => b.id).indexOf('queHace'));
 const merma = fichas.find((f) => f.nombreProducto === 'Merma IA');
-const conDatos = fichas.filter((f) => f.bloques.find((b) => b.id === 'datosQueNecesita')?.presente);
-comprobar('⛔ "¿Qué datos necesita?" existe SOLO en Merma IA (COPY_LOCK)',
-  conDatos.length === 1 && conDatos[0].nombreProducto === 'Merma IA',
-  conDatos.map((f) => f.nombreProducto).join(', ') || 'ninguna');
+comprobar('⛔ Merma IA conserva el suyo y lo lleva ANTES, como en el documento',
+  merma.bloques.find((b) => b.id === 'datosQueNecesita')?.titulo === '¿Qué datos necesita?'
+  && merma.bloques.filter((b) => b.presente).map((b) => b.id).indexOf('datosQueNecesita')
+     < merma.bloques.filter((b) => b.presente).map((b) => b.id).indexOf('queHace'));
+comprobar('⛔ y los otros once NO tienen esa seccion: no se rellena para emparejar',
+  fichas.filter((f) => f.bloques.some((b) => b.id === 'datosQueNecesita' && b.presente)).length === 2);
+
+// COPY_LOCK.md dice que Merma IA es la unica con la seccion *titulada*
+// "¿Que datos necesita?", y eso sigue siendo exacto: Cotiza Facil tiene la
+// misma seccion con SU propio encabezado aprobado, y lo conserva.
+const conEseTitulo = fichas.filter((f) =>
+  f.bloques.some((b) => b.presente && b.titulo === '¿Qué datos necesita?'));
+comprobar('⛔ el encabezado "¿Qué datos necesita?" existe SOLO en Merma IA (COPY_LOCK)',
+  conEseTitulo.length === 1 && conEseTitulo[0].nombreProducto === 'Merma IA',
+  conEseTitulo.map((f) => f.nombreProducto).join(', ') || 'ninguna');
 
 // ===========================================================================
 seccion('La capa de personalizacion y sus limites');
@@ -119,6 +177,113 @@ const ordenada = { ...capa, bloques: capa.bloques.map((b) => ({ ...b, orden: 100
 const alReves = fichaPublicaDe(merma, ordenada, 'Juan Pablo');
 comprobar('el cliente recibe los bloques en el orden que eligio el vendedor',
   alReves.bloques[0].id !== publica.bloques[0].id);
+
+// ===========================================================================
+seccion('El precio de la ficha: referencial, y del vendedor');
+
+const fichaPrecio = fichas.find((f) => f.nombreProducto === 'Park.IA');
+const capaPrecio = {
+  id: 'p', productoId: 'park-ia', clienteId: 'c', vendedorId: 'v', planId: null,
+  bloques: personalizacionInicial(fichaPrecio),
+  loQueConversamos: null, notaDelVendedor: null, precio: null,
+  huellaCopy: 'h1', version: 1,
+  creadoEn: '', creadoPor: '', actualizadoEn: '', actualizadoPor: '',
+};
+
+// --- Sin precio propio: manda el copy -------------------------------------
+const sinPrecio = fichaPublicaDe(fichaPrecio, capaPrecio, 'Ana');
+const bloqueOficialPrecio = fichaPrecio.bloques.find((b) => b.id === 'precioDeReferencia');
+comprobar('sin precio del vendedor, el cliente lee el del copy, palabra por palabra',
+  sinPrecio.bloques.find((b) => b.id === 'precioDeReferencia')?.contenido
+    === bloqueOficialPrecio.contenido);
+
+// --- Con precio propio: manda el del vendedor -----------------------------
+const PRECIO = {
+  setup: { monto: 2_400_000, moneda: 'PYG' },
+  mensual: { monto: 620_000, moneda: 'PYG' },
+  aclaracion: 'Incluye los 40 lugares del subsuelo.',
+};
+const conPrecio = fichaPublicaDe(fichaPrecio, { ...capaPrecio, precio: PRECIO }, 'Ana');
+const textoCliente = conPrecio.bloques.find((b) => b.id === 'precioDeReferencia')?.contenido ?? '';
+comprobar('con precio del vendedor, el cliente lee ese importe',
+  textoCliente.includes(textoDinero(PRECIO.setup))
+  && textoCliente.includes(textoDinero(PRECIO.mensual)));
+comprobar('y la aclaracion del vendedor viaja con el',
+  textoCliente.includes(PRECIO.aclaracion));
+comprobar('⛔ el rango del copy ya no aparece: se reemplaza, no se suma',
+  !textoCliente.includes(bloqueOficialPrecio.contenido));
+
+// --- ⛔ La regla que no se negocia ----------------------------------------
+comprobar('⛔ el precio propio NO toca ningun otro bloque',
+  conPrecio.bloques.filter((b) => b.id !== 'precioDeReferencia').every((b) =>
+    b.contenido === fichaPrecio.bloques.find((o) => o.id === b.id).contenido));
+comprobar('⛔ y la ficha OFICIAL queda intacta tras mostrar el precio propio',
+  fichaPrecio.bloques.find((b) => b.id === 'precioDeReferencia').contenido
+    === bloqueOficialPrecio.contenido);
+
+// --- El bloque oculto no se muestra, haya precio o no ---------------------
+const ocultandoPrecio = {
+  ...capaPrecio,
+  precio: PRECIO,
+  bloques: capaPrecio.bloques.map((b) =>
+    b.bloqueId === 'precioDeReferencia' ? { ...b, visible: false } : b),
+};
+comprobar('⛔ poner precio no es decidir mostrarlo: con el bloque oculto, no sale',
+  !fichaPublicaDe(fichaPrecio, ocultandoPrecio, 'Ana').bloques
+    .some((b) => b.id === 'precioDeReferencia'));
+
+// --- La nota de "esto es referencia" no se pega dentro del copy -----------
+comprobar('⛔ la nota de referencia NO se mete en el texto del bloque',
+  !textoCliente.includes(NOTA_PRECIO_REFERENCIAL)
+  && NOTA_PRECIO_REFERENCIAL.length > 0);
+
+// --- Validaciones ---------------------------------------------------------
+comprobar('un precio sin ningun importe se rechaza',
+  validarPrecioPreparado({ setup: null, mensual: null, aclaracion: null })?.tipo === 'sin_importes');
+comprobar('un importe negativo se rechaza',
+  validarPrecioPreparado({ setup: { monto: -1, moneda: 'PYG' }, mensual: null, aclaracion: null })
+    ?.tipo === 'monto_negativo');
+comprobar('⛔ mezclar guaranies con dolares en el mismo precio se rechaza',
+  validarPrecioPreparado({
+    setup: { monto: 1, moneda: 'PYG' }, mensual: { monto: 1, moneda: 'USD' }, aclaracion: null,
+  })?.tipo === 'monedas_mezcladas');
+comprobar('una aclaracion larguisima se rechaza',
+  validarPrecioPreparado({ ...PRECIO, aclaracion: 'x'.repeat(241) })?.tipo === 'aclaracion_larga');
+comprobar('cero es un precio valido: una implementacion bonificada',
+  validarPrecioPreparado({ setup: { monto: 0, moneda: 'PYG' }, mensual: null, aclaracion: null })
+    === null);
+
+// --- Solo mensual, solo setup ---------------------------------------------
+const soloMensual = textoPrecioPreparado({
+  setup: null, mensual: { monto: 350_000, moneda: 'PYG' }, aclaracion: null });
+comprobar('un producto sin setup no muestra un renglon de implementacion en cero',
+  !soloMensual.includes('Implementación') && soloMensual.includes('Mensualidad'));
+
+// --- El importe se escribe igual en todos lados ---------------------------
+comprobar('los guaranies se agrupan con punto y sin decimales',
+  textoDinero({ monto: 2_400_000, moneda: 'PYG' }) === 'Gs.\u00A02.400.000');
+comprobar('los dolares se guardan en centavos y se muestran con coma',
+  textoDinero({ monto: 123_456, moneda: 'USD' }) === 'USD\u00A01.234,56');
+
+// --- Una ficha vieja y un copy con una seccion nueva ---------------------
+//
+// ⛔ Esto es lo que paso de verdad al mapear los encabezados que faltaban:
+//    aparecieron bloques que ninguna capa guardada conocia.
+const capaVieja = personalizacionInicial(fichaPrecio)
+  .filter((b) => b.bloqueId !== 'enUnaFrase' && b.bloqueId !== 'precioDeReferencia');
+const completada = conBloquesNuevos(fichaPrecio, capaVieja);
+comprobar('⛔ una seccion aprobada DESPUES de preparar la ficha no desaparece',
+  completada.some((b) => b.bloqueId === 'enUnaFrase' && b.visible));
+comprobar('⛔ pero una seccion nueva SENSIBLE AL PRECIO entra oculta: la muestra el vendedor',
+  completada.some((b) => b.bloqueId === 'precioDeReferencia' && !b.visible));
+comprobar('y no toca las decisiones que el vendedor ya habia tomado',
+  capaVieja.every((v) => {
+    const igual = completada.find((c) => c.bloqueId === v.bloqueId);
+    return igual?.visible === v.visible && igual?.orden === v.orden;
+  }));
+comprobar('⛔ y el cliente la ve, aunque la capa guardada sea vieja',
+  fichaPublicaDe(fichaPrecio, { ...capaPrecio, bloques: capaVieja }, 'Ana')
+    .bloques.some((b) => b.id === 'enUnaFrase'));
 
 // ===========================================================================
 seccion('Aviso de copy desactualizado');

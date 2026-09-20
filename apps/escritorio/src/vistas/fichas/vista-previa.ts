@@ -10,6 +10,7 @@
  */
 
 import type { FichaPublica } from '@labia/compartido';
+import { NOTA_PRECIO_REFERENCIAL } from '@labia/compartido';
 import { crear, parrafosDeTexto, vaciar } from './dom';
 
 export interface OpcionesVistaPrevia {
@@ -64,6 +65,14 @@ export function pintarVistaPrevia({ contenedor, ficha, esEnsayo }: OpcionesVista
     });
     seccion.append(crear('h2', { texto: bloque.titulo }));
     seccion.append(...parrafosDeTexto(bloque.contenido));
+    // ⛔ El precio de una ficha SIEMPRE es referencial, lo escriba el copy o
+    //    lo escriba el vendedor. La nota va acá, aparte, y no dentro del
+    //    texto: el copy aprobado se sigue sirviendo sin agregarle un renglón.
+    if (bloque.id === 'precioDeReferencia') {
+      seccion.append(crear('p', {
+        clase: 'ficha-publica-nota-precio', texto: NOTA_PRECIO_REFERENCIAL,
+      }));
+    }
     pagina.append(seccion);
   }
 

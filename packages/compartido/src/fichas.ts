@@ -10,8 +10,9 @@
  * Tiene cuatro caras:
  *
  *   A) Para el VENDEDOR — parte de la ficha oficial y prepara una versión
- *      para ese prospecto: muestra, oculta, mueve y destaca bloques, y
- *      agrega "Lo que conversamos" y una nota propia.
+ *      para ese prospecto: muestra, oculta, mueve y destaca bloques, agrega
+ *      "Lo que conversamos" y una nota propia, y escribe el precio
+ *      REFERENCIAL para ese cliente (ver `PrecioPreparado`).
  *   B) Para el CLIENTE — recibe un enlace limpio y responsive. ⛔ No entra al
  *      Escritorio ni ve información operativa del vendedor.
  *   C) Para la PROPUESTA — ⛔ la ficha **no reemplaza la cotización**. Ayuda a
@@ -25,14 +26,19 @@
  *   La ficha oficial queda INTACTA como fuente maestra. La personalización es
  *   una CAPA ENCIMA. Nunca modifica el copy aprobado.
  *
- * Por eso `PersonalizacionFicha` no tiene ningún campo donde escribir el
- * contenido de un bloque: sólo puede decidir si se ve, dónde va y si se
- * destaca. El texto sale siempre de `content/copy/`, congelado por hash.
+ * Por eso la capa no tiene ningún campo donde escribir el contenido de un
+ * bloque: sólo puede decidir si se ve, dónde va y si se destaca. El texto sale
+ * siempre de `content/copy/`, congelado por hash.
+ *
+ * La única excepción, y es una excepción declarada: el PRECIO. El copy publica
+ * rangos a propósito —"según plan", "según cantidad de usuarios"—, así que el
+ * vendedor puede poner el importe de ese prospecto. Y aun así no escribe
+ * texto: pone dos números tipados y una aclaración suya. Ver `PrecioPreparado`.
  *
  * Ver MASTER_SPEC.md §2.3, USER_FLOWS.md F4b a F4d, DATA_MODEL.md §7b.
  */
 
-import type { Id, ISODate, Trazado } from './core';
+import type { Dinero, Id, ISODate, Trazado } from './core';
 import type { ProductoId } from './catalogo';
 import type { Necesidad } from './motor';
 
@@ -44,12 +50,19 @@ import type { Necesidad } from './motor';
  * Los bloques de una ficha. ⛔ Son exactamente las secciones del copy maestro
  * aprobado: no se inventa ninguno y no se renombra ninguno.
  *
- * `datosQueNecesita` existe **sólo en Merma IA**, tal como lo documenta
- * `content/copy/COPY_LOCK.md`. En los demás productos no aparece, y ⛔ no se
- * agrega para emparejar.
+ * ⛔ Un producto no los tiene todos, y **no se rellenan para emparejar**.
+ *
+ * Dos aclaraciones que salen del copy, no de una preferencia:
+ *  - `datosQueNecesita`: en Merma IA se titula "¿Qué datos necesita?" y en
+ *    Cotiza Fácil "¿Qué necesita del negocio?". Son la misma sección con dos
+ *    nombres aprobados; cada ficha conserva EL SUYO. En los otros once no
+ *    existe, y no se inventa (COPY_LOCK.md).
+ *  - `propuestaDeValor`: existe sólo en Precio Vivo, que ⛔ no tiene eslogan
+ *    oficial. Ahí ocupa el lugar del eslogan. No se inventa uno.
  */
 export type BloqueFichaId =
   | 'slogan'
+  | 'propuestaDeValor'
   | 'definicion'
   | 'datosQueNecesita'
   | 'queHace'
@@ -57,11 +70,24 @@ export type BloqueFichaId =
   | 'beneficios'
   | 'casosDeUso'
   | 'dondeTieneMasSentido'
-  | 'precioDeReferencia';
+  | 'precioDeReferencia'
+  | 'enUnaFrase';
 
-/** Orden canónico, el del documento fuente. El vendedor puede alterarlo en su capa. */
+/**
+ * Inventario de bloques y orden de referencia.
+ *
+ * ⛔ NO es el que manda: el orden REAL de cada ficha es el del documento
+ *    fuente, producto por producto, porque el copy aprobado no coloca las
+ *    secciones en el mismo lugar en los trece (Cotiza Fácil pone "¿Qué
+ *    necesita del negocio?" DESPUÉS de "¿Qué hace?", y Merma IA la pone
+ *    antes). COPY_LOCK.md regla 2: "mismo orden de secciones".
+ *
+ * Esta lista sirve para dos cosas: saber qué bloques existen, y ubicar los
+ * que un producto NO tiene. El vendedor puede alterar el orden en su capa.
+ */
 export const ORDEN_CANONICO: ReadonlyArray<BloqueFichaId> = [
   'slogan',
+  'propuestaDeValor',
   'definicion',
   'datosQueNecesita',
   'queHace',
@@ -70,6 +96,7 @@ export const ORDEN_CANONICO: ReadonlyArray<BloqueFichaId> = [
   'casosDeUso',
   'dondeTieneMasSentido',
   'precioDeReferencia',
+  'enUnaFrase',
 ];
 
 /**
@@ -118,6 +145,40 @@ export interface FichaOficial {
  *    La capa decide **presentación**, nunca contenido. Es la regla "la ficha
  *    oficial queda intacta", hecha imposible de romper por construcción.
  */
+/**
+ * El precio que el vendedor escribe en la ficha para ESTE prospecto.
+ *
+ * ⛔ POR QUÉ EXISTE: el precio de la ficha es REFERENCIAL. El copy maestro
+ *    publica rangos ("Gs. 270.000 a Gs. 960.000 por mes, según plan") porque
+ *    el valor real depende de usuarios, sucursales, canales e integraciones.
+ *    Después de la reunión el vendedor ya sabe el tamaño del cliente, y
+ *    mandarle un rango cuando puede mandarle SU número es mandarle menos.
+ *
+ * ⛔ LO QUE ESTO NO ES: no es la cotización. La ficha no compromete a nadie;
+ *    la cotización sí, y ésa pasa por la aprobación del CEO antes de salir.
+ *    Por eso acá no hay alternativas de pago, ni calendario, ni firma.
+ *
+ * ⛔ POR QUÉ ES ESTRUCTURADO Y NO TEXTO LIBRE: la regla "la capa nunca escribe
+ *    el contenido de un bloque" se sostiene. Esto son dos importes y una
+ *    aclaración del vendedor con su propia voz —como `loQueConversamos`—, no
+ *    un campo donde reescribir el copy aprobado. El texto que lee el cliente
+ *    lo arma `textoPrecioPreparado()`, en un solo lugar y siempre igual.
+ */
+export interface PrecioPreparado {
+  /** Implementación / setup. `null` cuando este producto no cobra setup. */
+  readonly setup: Dinero | null;
+  /** Mensualidad. `null` cuando el producto se cobra una sola vez. */
+  readonly mensual: Dinero | null;
+  /**
+   * La letra chica del vendedor: "incluye 3 sucursales", "hasta 5 usuarios".
+   * ⛔ Es la voz del vendedor, no la de Lab.IA: se muestra separada.
+   */
+  readonly aclaracion: string | null;
+}
+
+/** ⛔ Una aclaración es una línea, no un contrato. */
+export const MAXIMO_ACLARACION_PRECIO = 240;
+
 export interface PersonalizacionBloque {
   readonly bloqueId: BloqueFichaId;
   readonly visible: boolean;
@@ -152,6 +213,15 @@ export interface FichaPersonalizada extends Trazado {
   /** Nota del vendedor, en el cierre. Misma separación visual. */
   readonly notaDelVendedor: string | null;
 
+  /**
+   * El precio referencial que puso el vendedor para este prospecto.
+   *
+   * `null` ⇒ el cliente ve el precio del copy maestro, tal cual está aprobado.
+   * ⛔ Se muestra sólo si además el bloque `precioDeReferencia` está visible:
+   *    poner un precio no es decidir mostrarlo.
+   */
+  readonly precio: PrecioPreparado | null;
+
   /** Huella del copy vigente al preparar. Si cambia, se avisa antes de compartir. */
   readonly huellaCopy: string;
   readonly version: number;
@@ -165,6 +235,8 @@ export interface NuevaFichaPersonalizada {
   readonly bloques: ReadonlyArray<PersonalizacionBloque>;
   readonly loQueConversamos?: string;
   readonly notaDelVendedor?: string;
+  /** Omitido ⇒ el cliente ve el precio del copy. Ver `PrecioPreparado`. */
+  readonly precio?: PrecioPreparado;
 }
 
 // ===========================================================================

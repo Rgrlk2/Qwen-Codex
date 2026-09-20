@@ -59,6 +59,41 @@ export type TotalesPorMoneda = ReadonlyArray<Dinero>;
  */
 export type SumarDinero = <M extends Moneda>(a: Dinero<M>, b: Dinero<M>) => Dinero<M>;
 
+/** Etiqueta visible de cada moneda. ⛔ "$" no: en la región es ambiguo. */
+export const ETIQUETA_MONEDA: Readonly<Record<Moneda, string>> = {
+  PYG: 'Gs.',
+  USD: 'USD',
+};
+
+/** Decimales de la unidad mínima entera: PYG en guaraníes, USD en centavos. */
+export const DECIMALES_MONEDA: Readonly<Record<Moneda, number>> = { PYG: 0, USD: 2 };
+
+/**
+ * Un importe, escrito. **La única forma admitida de mostrar dinero.**
+ *
+ * ⛔ POR QUÉ ESTÁ ACÁ Y NO EN LA APLICACIÓN: el mismo importe lo escribe el
+ *    navegador del vendedor, el navegador del cliente y el servidor que arma
+ *    el PDF. Si hubiera dos implementaciones, el día que una agrupe distinto
+ *    el cliente va a leer dos precios diferentes del mismo número.
+ *
+ * ⛔ POR QUÉ NO USA `Intl`: `Intl` depende de los datos de idioma que traiga
+ *    cada entorno, y acá corren tres distintos (navegador, Deno, Node). Esto
+ *    da el mismo resultado en los tres, siempre: es-PY agrupa con punto y
+ *    separa decimales con coma.
+ *
+ * ⛔ Entre la moneda y el número va un espacio DURO (U+00A0): un importe es
+ *    una unidad y no se parte al final de un renglón.
+ */
+export function textoDinero(importe: Dinero): string {
+  const decimales = DECIMALES_MONEDA[importe.moneda];
+  const negativo = importe.monto < 0;
+  const crudo = Math.abs(Math.trunc(importe.monto)).toString().padStart(decimales + 1, '0');
+  const corte = crudo.length - decimales;
+  const entera = crudo.slice(0, corte).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const fraccion = decimales === 0 ? '' : `,${crudo.slice(corte)}`;
+  return `${ETIQUETA_MONEDA[importe.moneda]}\u00A0${negativo ? '-' : ''}${entera}${fraccion}`;
+}
+
 // ---------------------------------------------------------------------------
 // Resultados y errores
 // ---------------------------------------------------------------------------

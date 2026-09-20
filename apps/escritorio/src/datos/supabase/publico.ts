@@ -12,9 +12,9 @@
 
 import type {
   BloqueFichaId, CapaPublica, ClaveIdempotencia, ConstanciaRespuesta,
-  CotizacionPublica, FichaPublica, ISODate,
-  PersonalizacionBloque, PresentacionPublica, ProductoId, RespuestaDelCliente,
-  Resultado,
+  CotizacionPublica, FichaPublica, ISODate, Moneda,
+  PersonalizacionBloque, PrecioPreparado, PresentacionPublica, ProductoId,
+  RespuestaDelCliente, Resultado,
 } from '@labia/compartido';
 import {
   COPY_DE_LOS_TRECE, fichaOficialDe, fichaPublicaDe, huellaDelCopy, indiceDe, logoDe,
@@ -104,7 +104,25 @@ interface CapaDeFicha {
   }>;
   readonly loQueConversamos: string | null;
   readonly notaDelVendedor: string | null;
+  /** El precio referencial del vendedor. Nulo ⇒ se muestra el del copy. */
+  readonly precio: {
+    readonly moneda: Moneda;
+    readonly setup: number | null;
+    readonly mensual: number | null;
+    readonly aclaracion: string | null;
+  } | null;
   readonly nombreVendedor: string;
+}
+
+/** Del sobre del servidor al tipo del dominio. ⛔ Sin moneda no hay precio. */
+function aPrecioPreparado(p: CapaDeFicha['precio']): PrecioPreparado | null {
+  if (!p) return null;
+  const moneda = p.moneda;
+  return {
+    setup: p.setup === null ? null : { monto: p.setup, moneda },
+    mensual: p.mensual === null ? null : { monto: p.mensual, moneda },
+    aclaracion: p.aclaracion,
+  };
 }
 
 /**
@@ -192,6 +210,7 @@ export function crearCapaPublicaSupabase(): CapaPublica {
           })),
           loQueConversamos: capa.datos.loQueConversamos,
           notaDelVendedor: capa.datos.notaDelVendedor,
+          precio: aPrecioPreparado(capa.datos.precio),
           huellaCopy: oficial.huellaCopy,
           // ⛔ La trazabilidad de la ficha es del Escritorio, no del cliente:
           //    acá se arma sólo lo que `fichaPublicaDe` necesita para elegir y

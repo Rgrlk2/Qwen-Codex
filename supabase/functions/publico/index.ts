@@ -413,7 +413,7 @@ async function fichaPublica(
 
   const { data: ficha } = await sb
     .from('ficha_personalizada')
-    .select('id, producto_id, lo_que_conversamos, nota_del_vendedor, descartada_en, vendedor_id, personalizacion_bloque ( bloque_id, visible, orden, destacado )')
+    .select('id, producto_id, lo_que_conversamos, nota_del_vendedor, descartada_en, vendedor_id, precio_moneda, precio_setup, precio_mensual, precio_aclaracion, personalizacion_bloque ( bloque_id, visible, orden, destacado )')
     .eq('id', e.propuesta_id)
     .maybeSingle();
 
@@ -452,6 +452,16 @@ async function fichaPublica(
         })),
       loQueConversamos: f.lo_que_conversamos ?? null,
       notaDelVendedor: f.nota_del_vendedor ?? null,
+      // El precio REFERENCIAL que puso el vendedor para este prospecto. Nulo
+      // ⇒ el navegador muestra el del copy. ⛔ Son números, no texto: el
+      // renglón que lee el cliente lo arma `textoPrecioPreparado()`, la misma
+      // función que usa la pantalla del vendedor.
+      precio: f.precio_moneda === null || f.precio_moneda === undefined ? null : {
+        moneda: f.precio_moneda,
+        setup: f.precio_setup ?? null,
+        mensual: f.precio_mensual ?? null,
+        aclaracion: f.precio_aclaracion ?? null,
+      },
       nombreVendedor: nombre,
     },
   });

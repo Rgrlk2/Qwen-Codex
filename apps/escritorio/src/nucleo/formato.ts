@@ -14,6 +14,7 @@
  */
 
 import type { Dinero, ISODate, Moneda, TotalesPorMoneda } from '@labia/compartido';
+import { ETIQUETA_MONEDA as ETIQUETAS, textoDinero } from '@labia/compartido';
 
 export const LOCALE = 'es-PY';
 export const ZONA = 'America/Asuncion';
@@ -21,37 +22,11 @@ export const ZONA = 'America/Asuncion';
 /**
  * Etiqueta visible de cada moneda. ⛔ Siempre acompaña al importe.
  * El guaraní se escribe "Gs."; el dólar, "USD" (no "$": es ambiguo en la región).
+ *
+ * ⛔ Se re-exporta desde `@labia/compartido`: la misma tabla que usa el
+ *    servidor al armar el PDF y la pantalla del cliente.
  */
-export const ETIQUETA_MONEDA: Readonly<Record<Moneda, string>> = {
-  PYG: 'Gs.',
-  USD: 'USD',
-};
-
-/**
- * Decimales de la unidad mínima entera de cada moneda.
- * PYG se guarda en guaraníes; USD, en centavos (core.ts, `Dinero`).
- */
-const DECIMALES: Readonly<Record<Moneda, number>> = { PYG: 0, USD: 2 };
-
-const memo = new Map<string, Intl.NumberFormat>();
-
-function numerador(moneda: Moneda): Intl.NumberFormat {
-  const existente = memo.get(moneda);
-  if (existente) return existente;
-  const decimales = DECIMALES[moneda];
-  const creado = new Intl.NumberFormat(LOCALE, {
-    minimumFractionDigits: decimales,
-    maximumFractionDigits: decimales,
-  });
-  memo.set(moneda, creado);
-  return creado;
-}
-
-/** Pasa de la unidad mínima entera a la unidad de presentación. */
-function aUnidadDePresentacion(importe: Dinero): number {
-  const decimales = DECIMALES[importe.moneda];
-  return decimales === 0 ? importe.monto : importe.monto / 10 ** decimales;
-}
+export const ETIQUETA_MONEDA: Readonly<Record<Moneda, string>> = ETIQUETAS;
 
 /**
  * Formatea un importe. ⛔ Siempre con su moneda adelante: "Gs. 1.250.000".
@@ -67,7 +42,10 @@ function aUnidadDePresentacion(importe: Dinero): number {
  *    cortarse en sus otros espacios.
  */
 export function formatearDinero(importe: Dinero): string {
-  return `${ETIQUETA_MONEDA[importe.moneda]}\u00A0${numerador(importe.moneda).format(aUnidadDePresentacion(importe))}`;
+  // ⛔ Una sola implementación, en `@labia/compartido`. El vendedor, el
+  //    cliente y el PDF escriben el mismo número de la misma manera porque
+  //    ejecutan literalmente el mismo código.
+  return textoDinero(importe);
 }
 
 /**

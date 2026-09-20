@@ -149,6 +149,7 @@ export function crearCapaFichasMock(nucleo: NucleoMock): CapaFichas {
           bloques: datos.bloques,
           loQueConversamos: datos.loQueConversamos ?? null,
           notaDelVendedor: datos.notaDelVendedor ?? null,
+          precio: datos.precio ?? null,
           huellaCopy: ficha.huellaCopy,
           version: 1,
           creadoEn: AHORA, creadoPor: VENDEDOR_DEMO,
@@ -187,6 +188,8 @@ export function crearCapaFichasMock(nucleo: NucleoMock): CapaFichas {
         bloques,
         loQueConversamos: cambios.loQueConversamos ?? actual.loQueConversamos,
         notaDelVendedor: cambios.notaDelVendedor ?? actual.notaDelVendedor,
+        // ⛔ `undefined` es "no lo toqué"; `null` es "borralo y volvé al copy".
+        precio: cambios.precio === undefined ? actual.precio : cambios.precio,
         // ⛔ Al guardar se sella la huella vigente: es lo que compara el aviso.
         huellaCopy: ficha.huellaCopy,
         version: actual.version + 1,
@@ -311,6 +314,14 @@ function semilla(): ReadonlyArray<FichaPersonalizada> {
     notaDelVendedor:
       'Cualquier duda escribime y lo vemos juntos. Si querés, armamos una prueba con un solo '
       + 'sector del estacionamiento antes de decidir nada.',
+    // El vendedor ya sabe el tamaño del hotel, así que en vez del rango del
+    // copy le puso el número de ellos. ⛔ Sigue siendo referencial: lo que
+    // compromete a Lab.IA es la cotización, y ésa lleva aprobación.
+    precio: {
+      setup: { monto: 2_400_000, moneda: 'PYG' },
+      mensual: { monto: 620_000, moneda: 'PYG' },
+      aclaracion: 'Incluye los 40 lugares del subsuelo y 2 usuarios de recepción.',
+    },
     huellaCopy: parkIa.huellaCopy,
     version: 1,
     creadoEn: AHORA, creadoPor: VENDEDOR_DEMO,

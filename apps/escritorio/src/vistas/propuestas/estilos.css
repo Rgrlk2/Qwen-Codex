@@ -478,6 +478,124 @@
   font-size: .8rem;
 }
 
+/*
+ * LA FICHA QUE ABRE EL CLIENTE, casi siempre desde el teléfono y casi
+ * siempre en medio de otra cosa. Es la única pantalla de Lab.IA que ve
+ * alguien que todavía no es cliente.
+ *
+ * ⛔ Estas clases existían en el marcado y no tenían ni una regla acá: la
+ *    ficha se servía sin estilo. Se corrige con el mismo vocabulario de
+ *    tokens que el resto de la hoja.
+ */
+.propuestas-ficha__logo {
+  display: block;
+  width: 72px;
+  height: 72px;
+  /* ⛔ El logo oficial no se deforma ni se recorta: entra entero. */
+  object-fit: contain;
+  margin: 0 0 12px;
+}
+
+.propuestas-ficha h1 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin: 0 0 4px;
+  text-wrap: balance;
+}
+
+.propuestas-ficha__bloque {
+  margin: 20px 0 0;
+  padding: 0;
+}
+
+.propuestas-ficha__bloque h2 {
+  font-size: .78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--texto-3, rgba(174, 184, 200, .72));
+  margin: 0 0 6px;
+}
+
+.propuestas-ficha__bloque p {
+  margin: 0 0 8px;
+  line-height: 1.62;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.propuestas-ficha__bloque ul {
+  margin: 0 0 8px;
+  padding-inline-start: 20px;
+  line-height: 1.62;
+}
+
+/* Lo que el vendedor eligió resaltar. A lo sumo dos: si todo resalta, nada. */
+.propuestas-ficha__bloque--destacado {
+  padding: 14px 16px;
+  border: 1px solid var(--linea-acento, rgba(96, 165, 250, .38));
+  border-radius: var(--r-caja, 14px);
+  background: var(--glass, rgba(255, 255, 255, .04));
+}
+
+/* ⛔ Lo que dice el vendedor va visiblemente aparte de lo que dice Lab.IA. */
+.propuestas-ficha__conversado,
+.propuestas-ficha__nota {
+  margin: 20px 0 0;
+  padding: 14px 16px;
+  border-inline-start: 2px solid var(--linea-acento, rgba(96, 165, 250, .38));
+  border-radius: 0 var(--r-caja, 14px) var(--r-caja, 14px) 0;
+  background: var(--glass, rgba(255, 255, 255, .04));
+}
+
+.propuestas-ficha__conversado h2,
+.propuestas-ficha__nota h2 {
+  font-size: .82rem;
+  margin: 0 0 6px;
+  color: var(--texto-2, rgba(210, 219, 232, .9));
+}
+
+.propuestas-ficha__conversado p,
+.propuestas-ficha__nota p {
+  margin: 0;
+  line-height: 1.62;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * ⛔ El precio de una ficha es de REFERENCIA, siempre. Se lee, pero no compite
+ *    con el importe: el número que compromete a Lab.IA es el de la cotización.
+ */
+.propuestas-ficha__nota-precio {
+  margin: 10px 0 0;
+  font-size: .8rem;
+  line-height: 1.5;
+  color: var(--texto-3, rgba(174, 184, 200, .72));
+}
+
+.propuestas-ficha__cierre {
+  margin: 28px 0 0;
+  text-align: center;
+}
+
+.propuestas-ficha__accion {
+  /* 44 px de alto mínimo: se toca con el pulgar, no con un mouse. */
+  min-height: 44px;
+  padding: 12px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--acento, #2563EB);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.propuestas-ficha__accion:focus-visible {
+  outline: 2px solid var(--linea-acento, rgba(96, 165, 250, .38));
+  outline-offset: 3px;
+}
+
 @media (max-width: 389px) {
   .propuestas-dato__etiqueta { min-width: 0; width: 100%; }
 }
