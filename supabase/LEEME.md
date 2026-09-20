@@ -68,6 +68,12 @@ con acceso directo.
 29. `fi5_de_verdad_anula_las_firmas` — la regla estaba escrita y no funcionaba.
 30. `editar_lo_ya_enviado_tambien_caduca` — FI5 no alcanzaba a lo que ya tenía el cliente.
 31. `abrir_observacion` — la única escritura del vendedor sobre el dinero.
+32. `las_decisiones_de_administracion` — revisar, firmar como CEO, cerrar período, publicar participación.
+33. `parametros_sistema` — una sola fila, cambiar exige motivo, sin tipo de cambio institucional.
+34. `el_registro_de_quien_hizo_que` — el registro de accesos reconstruido contra el contrato.
+35. `las_cinco_que_faltaban` — presupuesto, ajuste, fusión de actividad, reasignación de cartera, uso del equipo.
+36. `el_registro_se_escribe_solo` — ocho disparadores: la auditoría no depende de que alguien se acuerde.
+37. `el_registro_necesita_hora_de_verdad` — `now()` era la hora de la transacción, no la del hecho.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
@@ -467,11 +473,138 @@ Armando los datos de prueba me frenaron dos veces, y las dos tenían razón:
 La cadena está encadenada de punta a punta: cotización → mensualidad → cobro
 confirmado → línea de participación. No se puede empezar por el medio.
 
+## Administración: la capa donde trabajás vos
+
+Ocho de nueve. Lo que se agregó en este tramo:
+
+**Las cinco funciones que la capa llamaba y no existían.** `administracion.ts`
+invocaba `definir_presupuesto`, `crear_ajuste`, `fusionar_actividad`,
+`reasignar_cartera` y `uso_por_vendedor`. Ninguna estaba escrita: la pantalla
+habría compilado y fallado al primer clic. Ahora están, con sus reglas adentro:
+
+- **Presupuesto.** Una sola fila por vendedor y período; redefinir **sube la
+  versión**, no agrega una fila (el ranking ordena por monto y dos filas lo
+  romperían). Meta de cero rechazada. Período cerrado no recibe metas nuevas:
+  la meta se fija antes de jugar el partido.
+- **Ajuste.** Motivo obligatorio, importe distinto de cero, y **se aplica sobre
+  un período abierto**. Un período cerrado no se reabre ni se reescribe: por eso
+  `reabrirPeriodo` no existe y el ajuste corrige hacia adelante. Si viene de una
+  observación, esa observación tiene que estar resuelta como *procede* o
+  *parcial*: una observación abierta o rechazada no mueve plata.
+- **Fusión de actividad.** El nombre viejo **sobrevive como sinónimo**, así la
+  captura sigue encontrando lo que la gente ya escribía. El término de origen
+  **no se borra**: los planes ya generados lo citan. Sin cadenas: no se fusiona
+  hacia algo que ya fue fusionado.
+- **Reasignación de cartera.** Qué pasa con lo en curso es una decisión
+  explícita, sin default silencioso: si no decidís qué hacer con los planes
+  abiertos, la función se planta. Lo que ya salió no se muda — una cotización
+  aprobada o enviada lleva firmas y el nombre del vendedor adentro. Y **las
+  líneas ya devengadas no se tocan nunca**: son de quien las generó. La función
+  las cuenta y te las informa.
+- **Uso del equipo.** Sólo Administración. Ingresos del período, planes,
+  seguimientos, cotizaciones que salieron del borrador, y el marcado de inactivo
+  contra el umbral de `parametros_sistema`.
+
+### El registro de accesos estaba mal hecho
+
+La tabla `registro_acceso` era un log de ingresos: `usuario_id`, `accion`,
+`resultado`. El contrato (`registros.ts`) pide otra cosa: **quién hizo qué,
+sobre qué entidad, y cómo estaba antes**. La capa de datos ya filtraba por
+`actor_id`, `entidad_tipo` y `entidad_id` — columnas que no existían. Se
+reconstruyó contra el contrato.
+
+Tres decisiones del rediseño:
+
+- **Sin política de INSERT.** El navegador no escribe el registro, ni siquiera
+  el tuyo. Se escribe sólo desde `anotar_registro()`, `SECURITY DEFINER`, que
+  no está expuesta como endpoint. Probado: con sesión de administrador, un
+  `insert` directo a nombre de otro vendedor fue rechazado por RLS.
+- **`nombre_actor` es una foto, no un join.** Si mañana alguien cambia de
+  nombre, el registro de ayer sigue diciendo el de ayer. Un registro que se
+  reescribe con el tiempo no es registro.
+- **Se anota solo, por disparador.** Ocho disparadores cubren alta y baja de
+  vendedor, participación, parámetros, cierre de período, emisión de PDF,
+  enlace emitido y revocado, borrado de audio, y las tres decisiones sobre una
+  cotización (aprobación, corrección, rechazo). Una línea de auditoría que
+  depende de que el que escribió el RPC se acuerde de llamarla no es auditoría.
+  Del audio borrado **no se guarda la referencia de almacenamiento**: el
+  registro dice *que* se borró, no *cómo* volver a encontrarlo.
+
+### Un defecto mío, encontrado por la propia prueba
+
+Puse `default now()` en `ocurrido_en`. En Postgres `now()` es la hora de
+**inicio de la transacción**, no la del hecho: dos decisiones tomadas en la
+misma transacción quedaban con el mismo sello y el orden entre ellas se perdía.
+En una auditoría eso es la diferencia entre *"aprobó y después firmó"* y
+*"firmó y después aprobó"*. Corregido a `clock_timestamp()`. Las nueve líneas
+anteriores al arreglo comparten cinco sellos y así van a quedar: el registro
+no se reescribe, ni para arreglarlo.
+
+### Una prueba que dio verde por el motivo equivocado
+
+Probé que una versión de participación publicada no se puede borrar. Dio OK.
+Estaba mal: el `DELETE` no lo frenó el disparador de inmutabilidad — lo filtró
+RLS, que devuelve **cero filas y ningún error**. La prueba no distinguía
+"bloqueado" de "no hizo nada". Rehecha contando filas antes y después:
+
+- Por la API, con sesión de administrador: el `DELETE` no borra nada, **en
+  silencio**. Las tres versiones siguen ahí.
+- Como dueña de la tabla: el disparador sí habla — *"Esta tabla es inmutable:
+  las filas se agregan, no se cambian ni se borran"*.
+
+Las dos protegen. Sólo una avisa. Es el mismo patrón ya anotado para la agenda
+y los cobros: **RLS filtra, no rechaza**.
+
+### Probado contra las reglas, intentando romperlas
+
+34 comprobaciones, cada una intentando la violación con la sesión real del rol
+que la intentaría — `role authenticated` más `request.jwt.claims`, el mismo
+camino que abre PostgREST, con RLS y `auth.uid()` de verdad:
+
+| | Lo que se intentó | Lo que contestó la base |
+|---|---|---|
+| PR1 | Un vendedor se fija su propia meta | *"Definir presupuestos es de Administración."* |
+| PR5 | Repetir la clave de idempotencia con otro monto | Quedó en 50.000.000, no en 99.999.999 |
+| PR8 | El vendedor se baja la meta por `PATCH` directo | 0 filas; la meta quedó intacta |
+| AJ1 | Un vendedor se ajusta la comisión a sí mismo | *"Crear ajustes es de Administración."* |
+| AJ4 | Ajustar contra una observación inexistente | *"Esa observación no existe."* |
+| AJ7 | Editar un ajuste ya creado | 0 filas; el importe quedó intacto |
+| FU5 | Fusionar y perder el nombre viejo | Sobrevivió como sinónimo |
+| FU7 | Fusionar hacia algo ya fusionado | *"El destino ya fue fusionado en otra actividad."* |
+| RC4 | Reasignar sin decidir qué pasa con los planes | *"Decí qué pasa con los planes abiertos: cerrar o transferir."* |
+| RC8 | — | Informó las líneas devengadas intactas |
+| US1 | Un vendedor mira el uso de todo el equipo | *"El uso del equipo lo ve Administración."* |
+| RG3 | Fabricar una línea de registro a nombre de otro | Rechazado por RLS |
+| RG6 | Borrar una versión de participación publicada | *"Esta tabla es inmutable"* |
+
+Y una más, sin número: intenté borrar el registro de accesos entero para
+limpiar mis propias pruebas. **Se negó**, incluso corriendo como dueña de la
+tabla. Las cinco líneas de esas pruebas siguen ahí, con mi nombre y mi rol.
+
+### Dos rastros que dejaron las pruebas, y no se borran
+
+- **Ojo Digital tiene tres versiones de participación.** La 1 es la del
+  portafolio (50/50), la 2 la publiqué en 60/40 para probar el disparador, y la
+  3 vuelve a 50/50 con el motivo escrito. No se puede borrar la 2 — y está
+  bien: así se corrige una regla comercial, publicando la siguiente. La vigente
+  es la 3, la regla comercial correcta.
+- **El registro tiene nueve líneas de prueba**, todas a tu nombre porque probé
+  con tu sesión. Append-only quiere decir esto.
+
+### Cuatro mapeos que compilaban y mentían
+
+`administracion.ts` casteaba filas `snake_case` directo al contrato
+`camelCase` para el registro de accesos, las aperturas de enlace y las
+sugerencias. TypeScript lo acepta con `as unknown as`; en ejecución
+`entidadTipo` habría sido `undefined`. Reemplazados por tres funciones que
+mapean campo por campo.
+
 ## Lo que falta del servidor
 
 - La capa de datos del navegador contra Supabase, en reemplazo del mock:
   hechas la sesión, los clientes, el motor, la agenda, las fichas, las
-  propuestas y el dinero; faltan administración e inicio. Hasta que estén las nueve, el Escritorio
+  propuestas, el dinero y administración; falta inicio. Hasta que estén las
+  nueve, el Escritorio
   sigue eligiendo entre mock y HTTP: una `CapaDatos` a medias no se puede
   enchufar.
 - Elegir proveedor de investigación y desplegar la función de servidor que lo
