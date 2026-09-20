@@ -599,14 +599,56 @@ sugerencias. TypeScript lo acepta con `as unknown as`; en ejecución
 `entidadTipo` habría sido `undefined`. Reemplazados por tres funciones que
 mapean campo por campo.
 
+## Inicio, y las nueve enchufadas
+
+La novena capa es chica —tres métodos— y su regla es una sola: **Inicio no
+calcula nada por su cuenta**. Las cuatro cifras se proyectan de la misma
+función que alimenta la pantalla de Dinero, y el contador de agenda sale de la
+misma que arma la Agenda. Si Inicio dijera una cifra y Dinero otra, el vendedor
+deja de creerle a las dos.
+
+Dos decisiones que quedaron escritas ahí:
+
+- **Lo que no es un seguimiento no se disfraza de seguimiento.** La agenda
+  tiene ocho orígenes; el contrato admite cuatro para un "próximo seguimiento".
+  El vencimiento de una cotización, una presentación enviada y una cotización
+  en revisión son estados del circuito comercial: aparecen en la Agenda, no en
+  la lista corta de Inicio. Antes que etiquetarlos mal, quedan afuera.
+- **`sinDatosTodavia` es literal**: ninguna venta registrada. Con una venta
+  cobrada en cero sigue siendo falso, porque hay actividad. La pantalla usa ese
+  campo para dejar las dos acciones protagonistas como lo único accionable, en
+  vez de mostrar cuatro ceros que no significan nada.
+
+### El ensamblado
+
+`apps/escritorio/src/datos/supabase/index.ts` junta las nueve en una sola
+`CapaDatos`. Aparece recién ahora a propósito: una `CapaDatos` a medias compila
+y revienta la primera vez que alguien abre la pantalla que falta. Que el
+typechecker acepte el ensamblado es la prueba de que no falta ningún método.
+
+### Cómo se elige el origen
+
+`VITE_CAPA_DATOS=supabase|http|mock` manda. Sin esa variable:
+
+- en desarrollo, **mock**;
+- en producción, **Supabase** si `VITE_SUPABASE_URL` está configurada, y HTTP si no.
+
+⛔ **Nunca mock en producción**, ni por descuido ni pidiéndolo: `VITE_CAPA_DATOS=mock`
+en una construcción de producción ahora **falla al arrancar** con un mensaje
+claro, en vez de servir datos de ejemplo como si fueran reales.
+
+⛔ Y nunca Supabase sin su configuración: se decide acá, con lo que se sabe, en
+vez de dejar que reviente a mitad de una pantalla con un error que no dice nada.
+
+Construcción verificada: `npm run build` pasa, y el paquete que va al navegador
+no contiene ninguna contraseña, ninguna clave de servicio, ningún teléfono ni
+ninguna referencia a la firma del CEO.
+
 ## Lo que falta del servidor
 
-- La capa de datos del navegador contra Supabase, en reemplazo del mock:
-  hechas la sesión, los clientes, el motor, la agenda, las fichas, las
-  propuestas, el dinero y administración; falta inicio. Hasta que estén las
-  nueve, el Escritorio
-  sigue eligiendo entre mock y HTTP: una `CapaDatos` a medias no se puede
-  enchufar.
+- ~~La capa de datos del navegador contra Supabase~~ — **hecha, las nueve.**
+  Sesión, inicio, motor, clientes, agenda, fichas, propuestas, dinero y
+  administración, ensambladas y enchufadas en `proveedor.ts`.
 - Elegir proveedor de investigación y desplegar la función de servidor que lo
   llame. Mientras tanto rige el respaldo por taxonomía de arriba.
 - Generación del PDF y transcripción de voz (funciones de servidor).

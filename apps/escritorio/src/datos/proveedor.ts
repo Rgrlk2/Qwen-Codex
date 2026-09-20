@@ -9,6 +9,7 @@
 import type { CapaDatos } from '@labia/compartido';
 import { crearCapaDatosMock, type CapaDatosMock } from '@labia/mock';
 import { crearCapaDatosHttp } from './http';
+import { crearCapaDatosSupabase } from './supabase';
 
 /**
  * Variables de entorno de la construcción. Se declaran acá para no depender de
@@ -22,6 +23,7 @@ import { crearCapaDatosHttp } from './http';
 interface EntornoConstruccion {
   readonly VITE_CAPA_DATOS?: string;
   readonly VITE_API_BASE?: string;
+  readonly VITE_SUPABASE_URL?: string;
   readonly DEV?: boolean;
 }
 
@@ -29,7 +31,7 @@ function entorno(): EntornoConstruccion {
   return (import.meta as unknown as { readonly env?: EntornoConstruccion }).env ?? {};
 }
 
-export type OrigenDatos = 'mock' | 'http';
+export type OrigenDatos = 'mock' | 'http' | 'supabase';
 
 export interface CapaElegida {
   readonly capa: CapaDatos;
@@ -39,25 +41,50 @@ export interface CapaElegida {
    *    ejemplo": nunca se presenta un dato ficticio como real.
    */
   readonly datosDeEjemplo: boolean;
-  /** Palancas del mock (latencia, falla forzada, vacío y rol). `null` con HTTP. */
+  /** Palancas del mock (latencia, falla forzada, vacío y rol). `null` si no es mock. */
   readonly mock: CapaDatosMock | null;
 }
 
 /**
  * Decide la implementación.
  *
- * `VITE_CAPA_DATOS=http|mock` manda. Sin esa variable: mock en desarrollo,
- * HTTP en producción. ⛔ Nunca al revés: una construcción de producción no
- * puede servir datos de ejemplo por descuido.
+ * `VITE_CAPA_DATOS=supabase|http|mock` manda. Sin esa variable:
+ *
+ *   - en desarrollo, mock;
+ *   - en producción, Supabase si está configurado, y HTTP si no.
+ *
+ * ⛔ Nunca mock en producción, ni por descuido ni pidiéndolo: una construcción
+ *    de producción no puede servir datos de ejemplo. Por eso `mock` sólo se
+ *    honra cuando `DEV` es verdadero.
+ * ⛔ Y nunca Supabase sin su configuración: `crearCapaDatosSupabase` falla al
+ *    construirse si faltan las variables, y ese error a mitad de una pantalla
+ *    no dice nada. Se decide acá, con lo que se sabe.
  */
 export function elegirCapaDatos(): CapaElegida {
   const env = entorno();
   const pedido = env.VITE_CAPA_DATOS;
-  const usarMock = pedido === 'mock' || (pedido !== 'http' && env.DEV === true);
+  const enDesarrollo = env.DEV === true;
+  const haySupabase = typeof env.VITE_SUPABASE_URL === 'string' && env.VITE_SUPABASE_URL !== '';
 
-  if (usarMock) {
+  if (pedido === 'mock' && !enDesarrollo) {
+    throw new Error(
+      'VITE_CAPA_DATOS=mock en una construcción de producción. Los datos de '
+      + 'ejemplo no salen a producción.',
+    );
+  }
+
+  if (pedido === 'mock' || (pedido === undefined && enDesarrollo)) {
     const capa = crearCapaDatosMock();
     return { capa, origen: 'mock', datosDeEjemplo: true, mock: capa };
+  }
+
+  if (pedido === 'supabase' || (pedido === undefined && haySupabase)) {
+    return {
+      capa: crearCapaDatosSupabase(),
+      origen: 'supabase',
+      datosDeEjemplo: false,
+      mock: null,
+    };
   }
 
   const capa = crearCapaDatosHttp({ base: env.VITE_API_BASE ?? '/api' });
