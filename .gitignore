@@ -16,3 +16,6 @@ scripts/.salida-taxonomia/
 # Claves del servidor: nunca en el repositorio.
 .env
 .env.local
+
+# Rastros de la CLI de Supabase.
+supabase/.temp/

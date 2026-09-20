@@ -74,6 +74,9 @@ con acceso directo.
 35. `las_cinco_que_faltaban` — presupuesto, ajuste, fusión de actividad, reasignación de cartera, uso del equipo.
 36. `el_registro_se_escribe_solo` — ocho disparadores: la auditoría no depende de que alguien se acuerde.
 37. `el_registro_necesita_hora_de_verdad` — `now()` era la hora de la transacción, no la del hecho.
+38. `la_respuesta_del_cliente` — la constancia, los importes congelados y la cola de avisos.
+39. `el_vendedor_tiene_telefono` — no había dónde guardarlo, y la cola apuntaba a la tabla equivocada.
+40. `completar_no_es_editar` — el documento emitido admite una sola transición: dónde quedó el archivo.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
@@ -644,6 +647,142 @@ Construcción verificada: `npm run build` pasa, y el paquete que va al navegador
 no contiene ninguna contraseña, ninguna clave de servicio, ningún teléfono ni
 ninguna referencia a la firma del CEO.
 
+## Las funciones de servidor
+
+Tres, desplegadas en el proyecto. Son todo lo que el navegador **no** puede
+hacer, y están ahí por una razón concreta cada una.
+
+### `publico` — el enlace del cliente
+
+La única puerta del sistema que se abre sin sesión. El cliente no tiene cuenta:
+para que leyera su cotización desde el navegador haría falta una política que
+deje leer cotizaciones sin sesión, y eso abre la tabla entera. Acá el servidor
+valida el token, resuelve qué fila corresponde y devuelve **sólo** los campos
+que ese cliente puede ver.
+
+Lo que nunca sale por ahí, aunque esté en la misma fila: notas internas del
+vendedor, precios de lista, comisiones, el plan que la originó, el ranking de
+productos, el teléfono del CEO y la imagen de las firmas.
+
+Un detalle que importa: **un solo mensaje** para token inexistente, vencido,
+revocado y agotado. Distinguirlos le diría a quien prueba tokens al azar cuáles
+existieron. El registro de aperturas sí distingue — ahí el motivo real queda.
+
+### `documento` — el PDF definitivo
+
+No puede vivir en el navegador (A12): el PDF lleva la imagen de la firma del
+CEO incrustada, y generarlo del lado del cliente obligaría a mandarle esa
+imagen a cualquiera que abra la pantalla. Acá se lee del depósito privado, se
+incrusta, y lo único que sale es el PDF.
+
+La función **no comprueba** que esté aprobada y firmada: llama a
+`emitir_documento` con la sesión de quien pide, y de eso se encarga el
+disparador `pdf_solo_si_aprobada`. Dos controles distintos para la misma regla
+serían dos lugares donde equivocarse.
+
+⛔ **No inventa activos.** Si falta la imagen de una firma, el documento sale
+con el nombre y la aclaración de quien firmó, y una línea que dice *"(firma
+registrada en el sistema)"*. Dibujar un garabato en lugar de una firma que no
+está sería una falsificación.
+
+### `avisos` — NO1 a NO4
+
+La cola guarda `destino_protegido = 'ceo'`, una referencia. El número real vive
+en una variable de entorno de esta función y no sale de ahí: no aparece en el
+enlace, ni en el PDF, ni en el código del navegador, ni en la respuesta de la
+API, ni en el mensaje de error de un aviso fallido. Lo único consultable desde
+afuera es **si está configurado**, nunca cuál es.
+
+⛔ **No hay proveedor de mensajería elegido, y no se simula uno.** Marcar
+"enviada" una notificación que nadie mandó sería peor que dejarla pendiente: el
+vendedor creería que al cliente ya lo llamaron. Mientras no exista
+`PROVEEDOR_MENSAJES`, cada intento falla con el motivo escrito y la cola
+reintenta con espera creciente (1, 5, 15, 60, 240 minutos) hasta rendirse a los
+seis. El canal `panel_administracion` no necesita proveedor: la fila **es** el
+aviso.
+
+### El mismo cálculo, no uno equivalente
+
+`supabase/functions/*/_compartido/calculo.ts` se **genera** con
+`npm run copiar:funciones`, extrayendo por nombre los símbolos que hacen falta
+de `packages/compartido/src/`. Nada se reescribe.
+
+La razón: la cotización que ve el cliente, la que firma el CEO y la que sale en
+el PDF tienen que dar exactamente los mismos números. Si alguien escribiera un
+cálculo "equivalente" para el servidor, el día que difiera un redondeo el
+cliente va a tener razón al reclamar. `npm run verificar:funciones` falla si la
+copia se separó del original, y está dentro de `npm run verificar`.
+
+⚠️ **Al desplegar**: la versión que corre hoy se subió por la herramienta de
+gestión, archivo por archivo. Para garantizar que lo desplegado es byte a byte
+lo del repositorio, desplegá con la CLI desde la raíz:
+`supabase functions deploy publico documento avisos`. Un despliegue **reemplaza
+todos los archivos** de la función, no sólo los que mandás.
+
+## El circuito comercial, probado de punta a punta
+
+Contra el servidor real, con los tres despliegues vivos:
+
+| | Lo que se hizo | Lo que pasó |
+|---|---|---|
+| C1 | El vendedor firma y manda a revisión | La base exigió la firma antes de dejar avanzar |
+| C2 | El CEO aprueba y firma | Con comentario obligatorio y sin poder aprobar lo suyo |
+| C3 | Se crea el enlace | Token opaco, 32 bytes del generador criptográfico |
+| — | El cliente abre el enlace desde un iPhone | Cotización completa, dispositivo detectado como `celular` |
+| — | Token al azar | *"Este enlace ya no está disponible"*, el mismo mensaje que para uno vencido |
+| — | Sin la clave publicable | HTTP 401 antes de llegar a la función |
+| R1 | Responder sin marcar la casilla | *"Marcá la casilla para confirmar que revisaste la opción."* |
+| R2 | Responder con una opción inventada | *"Elegí una de las opciones."* |
+| R3 | Elegir *adelantado 12 meses* | Constancia guardada, importes congelados |
+| R4 | Reenviar eligiendo **otra** opción | Devolvió la **primera** constancia: una por enlace, y no se reescribe |
+| — | Los avisos, sin proveedor | 3 fallidos con motivo, reintento programado, constancia intacta (NO4) |
+| D1 | Pedir el PDF sin sesión | Rechazado |
+| D2 | Pedir el PDF con la sesión del vendedor | Generado, guardado en el depósito privado |
+| — | Bajarlo por el enlace del cliente | Enlace firmado de 5 minutos, PDF de verdad |
+
+Los números coincidieron en los tres lugares —página del cliente, constancia y
+PDF— porque los tres corren el mismo código:
+
+| Alternativa | Cuota | Total |
+|---|---|---|
+| Plan estándar | Gs. 750.000 × 12 | Gs. 11.400.000 |
+| Adelantado 12 | Gs. 8.100.000 × 1 | Gs. 10.500.000 |
+| Adelantado 24 | Gs. 14.400.000 × 1 | Gs. 16.800.000 |
+| Diferido | Gs. 675.000 × 11 | Gs. 9.825.000 |
+
+### Tres defectos que encontró esta prueba
+
+**El PDF existía y nadie podía encontrarlo.** La fila de `documento_emitido` es
+inmutable, así que guardar dónde quedó el archivo fallaba — y mi función no
+miraba ese error, de modo que contestaba que todo había salido bien mientras el
+PDF quedaba huérfano en el depósito. Se corrigió en los dos lados: la base
+ahora admite **una sola transición** (poner la referencia cuando era nula, todo
+lo demás igual), la función mira el error y, si no puede registrar el archivo,
+lo borra en vez de dejarlo colgando. La ruta pasó a ser fija —una por
+cotización y versión— así un reintento sobrescribe en lugar de acumular.
+
+**El cliente no veía qué incluye y qué no.** Filtraba el alcance por una clase
+(`condicion`) que la base no usa: las reales son `incluye`, `no_incluye` y
+`limite`. Ahora viaja entero y con su etiqueta.
+
+**El guardián de credenciales marcaba el nombre, no el valor.** `apikey` es el
+nombre de una cabecera HTTP que Supabase fija y que el navegador tiene que
+mandar; prohibirlo por el nombre obligaría a esconderlo, que es peor. La regla
+ahora mira el **valor**: acepta una variable `VITE_…PUBLIC/PUBLICABLE/ANON` y
+rechaza todo lo demás. Se probó en los dos sentidos —cuatro fugas inventadas
+que tiene que atrapar y el caso legítimo que tiene que dejar pasar— y la prueba
+está en el propio commit.
+
+### Lo que la base no dejó limpiar
+
+Al borrar los datos de prueba, la base se negó a eliminar la cotización, la
+constancia, el documento emitido y el enlace. Está bien: son registros
+inmutables de algo que un cliente respondió. El cliente de prueba quedó
+archivado y renombrado `[PRUEBA] Repuestera del Este S.A.`.
+
+⚠️ **Antes de salir a producción** conviene recrear la base desde las
+migraciones: por diseño, esta historia no se puede borrar desde adentro.
+
 ## Lo que falta del servidor
 
 - ~~La capa de datos del navegador contra Supabase~~ — **hecha, las nueve.**
@@ -651,8 +790,13 @@ ninguna referencia a la firma del CEO.
   administración, ensambladas y enchufadas en `proveedor.ts`.
 - Elegir proveedor de investigación y desplegar la función de servidor que lo
   llame. Mientras tanto rige el respaldo por taxonomía de arriba.
-- Generación del PDF y transcripción de voz (funciones de servidor).
-- Notificaciones salientes.
+- ~~Generación del PDF~~ — **hecha** (`documento`).
+- ~~Notificaciones salientes~~ — **la cola y los reintentos están hechos**
+  (`avisos`). Falta que elijas proveedor de mensajería y cargues
+  `PROVEEDOR_MENSAJES`, `PROVEEDOR_MENSAJES_CLAVE`, `CELULAR_CEO` y
+  `WHATSAPP_CORPORATIVO` en las variables de la función.
+- Transcripción de voz: falta elegir proveedor. Mientras tanto el vendedor
+  escribe el seguimiento, que es lo que el contrato ya permite.
 - El cronograma comercial: se arma sobre presentaciones y cotizaciones, que
   son de la capa de propuestas. Hasta que esa capa exista contra el servidor
   devuelve vacío. ⛔ Barras inventadas serían peores que ninguna.

@@ -238,12 +238,62 @@ for (const t of ['InvestigacionObjetivo', 'DatoInvestigado', 'FuenteInvestigacio
 if (!sinComentarios.includes('investigarObjetivo(')) {
   fallos.push('api.ts no declara investigarObjetivo() (API_CONTRACTS §2.3).');
 }
-/** Ninguna clave ni endpoint de proveedor puede vivir en el cliente. */
-const SECRETOS = /(apiKey|api_key|secret|bearer\s|sk-[A-Za-z0-9]|token:\s*['"][A-Za-z0-9]{12})/i;
+/**
+ * Ninguna clave ni endpoint de proveedor puede vivir en el cliente.
+ *
+ * La regla mira el VALOR, no el nombre. `apikey` es el nombre de una cabecera
+ * HTTP que Supabase fija y que el navegador tiene que mandar: prohibirlo por
+ * el nombre obligaria a esconderlo, que es peor. Lo que no puede aparecer es
+ * un valor que parezca una credencial: una cadena literal, una clave de
+ * servicio, un token de proveedor.
+ *
+ * ⛔ Lo unico admitido como valor es una variable de entorno de construccion
+ *    cuyo nombre diga PUBLIC / PUBLICABLE / ANON: esas son, por definicion,
+ *    las que estan pensadas para viajar al navegador. Cualquier otra cosa
+ *    —incluido `SERVICE_ROLE`— hace fallar esta verificacion.
+ */
+/** Una clave de servicio o de proveedor, en cualquier forma. */
+const CLAVE_DE_SERVIDOR = /(sk-[A-Za-z0-9]{8}|service_role|SERVICE_ROLE_KEY)/;
+
+/** Una credencial escrita a mano: nombre de clave = cadena larga. */
+const CREDENCIAL_LITERAL =
+  /\b(apikey|api_key|secret|token|authorization)\b\s*[:=]\s*['"`][A-Za-z0-9_\-.]{12,}/i;
+
+/** Armar una cabecera de autorizacion a mano, en el navegador. */
+const AUTORIZACION_A_MANO = /bearer\s+(\$\{|['"`])/i;
+
+/**
+ * El VALOR que recibe una cabecera de clave. `apikey` es el nombre de una
+ * cabecera que Supabase fija y que el navegador tiene que mandar: prohibirlo
+ * por el nombre obligaria a esconderlo, que es peor. Lo que se mira es que el
+ * valor sea una variable de entorno PUBLIC / PUBLICABLE / ANON, las unicas
+ * pensadas para viajar al navegador.
+ */
+const VALOR_DE_CLAVE = /\b(apikey|api_key)\b\s*:\s*([^,;\n]+)/gi;
+const VALOR_PUBLICO = /(VITE_[A-Z_]*(PUBLIC|PUBLICABLE|ANON)[A-Z_]*)$/;
+
 for (const archivo of archivos(join(RAIZ, 'apps'))) {
   const texto = codigoEfectivo(readFileSync(archivo, 'utf8'), extname(archivo));
-  if (SECRETOS.test(texto)) {
-    fallos.push(`${rel(archivo)}: posible credencial en el cliente. Investigacion y modelo de lenguaje viven en el servidor (MASTER_SPEC §3.5).`);
+
+  if (CLAVE_DE_SERVIDOR.test(texto)) {
+    fallos.push(`${rel(archivo)}: clave de servicio o de proveedor en el cliente. Vive solo en el servidor (MASTER_SPEC §3.5).`);
+  }
+  if (CREDENCIAL_LITERAL.test(texto)) {
+    fallos.push(`${rel(archivo)}: credencial escrita a mano en el cliente (MASTER_SPEC §3.5).`);
+  }
+  if (AUTORIZACION_A_MANO.test(texto)) {
+    fallos.push(`${rel(archivo)}: arma una cabecera de autorizacion a mano. En el navegador eso solo lo hace el cliente de Supabase (MASTER_SPEC §3.5).`);
+  }
+  for (const m of texto.matchAll(VALOR_DE_CLAVE)) {
+    // El valor termina donde termina la expresion: se limpia lo que venga
+    // despues (coma, cierre de objeto, parentesis) antes de juzgarlo.
+    const valor = m[2].trim().replace(/[\s,;)}\]]+$/, '');
+    if (!VALOR_PUBLICO.test(valor)) {
+      fallos.push(
+        `${rel(archivo)}: \`apikey\` toma \`${valor.slice(0, 40)}\`. En el navegador solo `
+        + 'puede ir una variable VITE_…PUBLIC/PUBLICABLE/ANON (MASTER_SPEC §3.5).',
+      );
+    }
   }
 }
 

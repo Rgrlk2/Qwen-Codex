@@ -20,9 +20,11 @@
     "verificar:portafolio": "node scripts/verificar-portafolio.mjs",
     "verificar:calculos": "npm run typecheck && node scripts/verificar-calculos.mjs",
     "verificar:nucleo": "vite build --config scripts/vite.verificacion.config.mjs && node scripts/.salida/verificar-nucleo.mjs",
-    "verificar": "npm run verificar:copy && npm run verificar:portafolio && npm run typecheck && node scripts/verificar-calculos.mjs && npm run verificar:nucleo && npm run verificar:fichas",
     "verificar:fichas": "vite build --config scripts/vite.fichas.config.mjs && node scripts/.salida-fichas/verificar-fichas.mjs",
-    "exportar:taxonomia": "vite build --config scripts/vite.taxonomia.config.mjs && node scripts/.salida-taxonomia/exportar-taxonomia.mjs"
+    "verificar:funciones": "node scripts/copiar-a-funciones.mjs --verificar",
+    "verificar": "npm run verificar:copy && npm run verificar:portafolio && npm run typecheck && node scripts/verificar-calculos.mjs && npm run verificar:nucleo && npm run verificar:fichas && npm run verificar:funciones",
+    "exportar:taxonomia": "vite build --config scripts/vite.taxonomia.config.mjs && node scripts/.salida-taxonomia/exportar-taxonomia.mjs",
+    "copiar:funciones": "node scripts/copiar-a-funciones.mjs"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",
