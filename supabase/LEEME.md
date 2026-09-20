@@ -77,6 +77,7 @@ con acceso directo.
 38. `la_respuesta_del_cliente` — la constancia, los importes congelados y la cola de avisos.
 39. `el_vendedor_tiene_telefono` — no había dónde guardarlo, y la cola apuntaba a la tabla equivocada.
 40. `completar_no_es_editar` — el documento emitido admite una sola transición: dónde quedó el archivo.
+41. `una_ficha_vacia_no_se_comparte` — sin bloques visibles no hay enlace.
 
 Para traerlas a un entorno local: `supabase link --project-ref ihkqtzqbdzhkorxmxhjx && supabase db pull`.
 
@@ -816,8 +817,51 @@ Inter desde Google. Funciona igual si no carga (cae a la del sistema), pero es
 un pedido a un tercero desde el enlace que abre tu cliente. Se puede servir la
 tipografía desde el propio sitio; avisame si querés que lo haga.
 
+### Las fichas por enlace, sin duplicar el copy
+
+El vendedor prepara una ficha para un prospecto y la comparte: `#/f/<token>`.
+
+⛔ **Por ese enlace no viaja ni una línea de copy.** El texto aprobado vive en
+`content/copy/`, congelado por huella, y llega al navegador con la propia
+aplicación. Lo que devuelve el servidor es **sólo la capa que armó el
+vendedor**: qué bloques se ven, en qué orden, cuáles pesan más, y sus dos
+textos propios. Si el copy pasara por ahí habría dos fuentes del mismo texto y
+una se iba a quedar vieja.
+
+Probado contra la función desplegada: la respuesta trae cinco claves —
+`productoId`, `bloques`, `loQueConversamos`, `notaDelVendedor`,
+`nombreVendedor`— y **ningún bloque trae texto**. Del vendedor sale sólo el
+nombre de pila: ni el correo, ni el teléfono, ni el rol.
+
+Y en el navegador, la ficha se lee como una ficha: el nombre del producto,
+"Lo que conversamos" primero y marcado como del vendedor, después los bloques
+del copy aprobado en el orden que él eligió, su nota, y una sola acción —
+"Hablemos". Nada del Escritorio.
+
+**Tres cosas que salieron de probarla:**
+
+- **Una ficha sin bloques visibles se podía compartir.** El cliente abría el
+  enlace y veía el nombre del producto y nada más. Ahora la base lo rechaza
+  antes: *"esta ficha no tiene ningún bloque visible: el cliente abriría el
+  enlace y no vería nada"*. Y una ficha descartada tampoco se comparte.
+- **El copy salía con los asteriscos a la vista** (`**El vendedor que nunca
+  duerme.**`). Dibujarlo literal no es mostrar la marca de negrita: es
+  mostrarla en negrita. Las listas del copy ahora son listas. ⛔ No se
+  interpreta nada más que esas dos marcas: ni enlaces, ni HTML, ni imágenes.
+- **La comprobación del navegador dio verde mostrando la pantalla de ingreso.**
+  Su lista de lo prohibido no nombraba «Escritorio Vendedores» ni
+  «CONTRASEÑA», así que no vio lo peor que puede pasar: pedirle usuario y
+  contraseña a alguien que no tiene cuenta. Corregida, y esos tres van
+  primeros en la lista.
+
+**Una duplicación menos**: la huella del copy estaba escrita tres veces —mock,
+capa autenticada y capa pública— y una de las tres daba un valor distinto. Vive
+una sola vez, en `fichas-logica.ts`. Si cada capa calculara la suya, el día que
+difieran el Escritorio avisaría de un cambio de copy que nunca ocurrió.
+
 ## Lo que falta del servidor
 
+- ~~Las fichas como lo que el cliente recibe~~ — **hechas** (`#/f/<token>`).
 - ~~La capa de datos del navegador contra Supabase~~ — **hecha, las nueve.**
   Sesión, inicio, motor, clientes, agenda, fichas, propuestas, dinero y
   administración, ensambladas y enchufadas en `proveedor.ts`.

@@ -26,9 +26,17 @@ let chromium;
 try { ({ chromium } = await import('playwright-core')); }
 catch { console.log('Sin playwright-core instalado. Se omite.'); process.exit(0); }
 
-/** ⛔ Nada de esto puede aparecer en la pantalla del cliente. */
+/**
+ * ⛔ Nada de esto puede aparecer en la pantalla del cliente.
+ *
+ * La pantalla de INGRESO va primera y en mayúsculas porque es la peor: si el
+ * ruteo publico falla, la aplicacion cae ahi y le pide usuario y contraseña a
+ * alguien que no tiene cuenta. Esta comprobacion ya dio verde una vez
+ * mostrando exactamente eso: la lista no lo nombraba.
+ */
 const DEL_ESCRITORIO = [
-  'Planificar', 'Administración', 'Cerrar sesión', 'Ingresar',
+  'Escritorio Vendedores', 'CONTRASEÑA', 'Ingresá con tu usuario',
+  'INGRESAR', 'Planificar', 'Administración', 'Cerrar sesión',
   'Mi cartera', 'Comisión', 'Datos de ejemplo',
 ];
 
@@ -70,7 +78,9 @@ pagina.on('console', (m) => {
   errores.push(t);
 });
 
-await pagina.goto(`${BASE}/#/p/${encodeURIComponent(TOKEN)}`, { waitUntil: 'networkidle' });
+// `TIPO=ficha` abre la otra puerta: #/f/<token>.
+const prefijo = (process.env.TIPO ?? 'cotizacion') === 'ficha' ? 'f' : 'p';
+await pagina.goto(`${BASE}/#/${prefijo}/${encodeURIComponent(TOKEN)}`, { waitUntil: 'networkidle' });
 await pagina.waitForTimeout(1200);
 
 const texto = (await pagina.innerText('body')).trim();

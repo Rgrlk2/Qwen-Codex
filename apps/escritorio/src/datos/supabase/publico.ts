@@ -11,9 +11,13 @@
  */
 
 import type {
-  CapaPublica, ClaveIdempotencia, ConstanciaRespuesta, CotizacionPublica,
-  FichaPublica, IndicePortafolio, ISODate, PresentacionPublica,
-  RespuestaDelCliente, Resultado,
+  BloqueFichaId, CapaPublica, ClaveIdempotencia, ConstanciaRespuesta,
+  CotizacionPublica, FichaPublica, ISODate,
+  PersonalizacionBloque, PresentacionPublica, ProductoId, RespuestaDelCliente,
+  Resultado,
+} from '@labia/compartido';
+import {
+  COPY_DE_LOS_TRECE, fichaOficialDe, fichaPublicaDe, huellaDelCopy, indiceDe, logoDe,
 } from '@labia/compartido';
 
 interface EntornoPublico {
@@ -85,6 +89,39 @@ function todaviaNo<T>(mensaje: string): Resultado<T> {
   return { ok: false, error: { codigo: 'no_encontrado', mensajeAmable: mensaje } };
 }
 
+function bien<T>(datos: T): Resultado<T> {
+  return { ok: true, datos };
+}
+
+/** Lo que el servidor manda de una ficha: la capa, nunca el texto. */
+interface CapaDeFicha {
+  readonly productoId: ProductoId;
+  readonly bloques: ReadonlyArray<{
+    readonly bloqueId: string;
+    readonly visible: boolean;
+    readonly orden: number;
+    readonly destacado: boolean;
+  }>;
+  readonly loQueConversamos: string | null;
+  readonly notaDelVendedor: string | null;
+  readonly nombreVendedor: string;
+}
+
+/**
+ * Las trece fichas oficiales, armadas del copy congelado.
+ *
+ * ⛔ La huella la calcula la misma función que la capa autenticada: si el copy
+ *    cambiara, cambia la huella, y el vendedor se entera. Acá no se recalcula
+ *    nada ni se reescribe una coma.
+ */
+const FICHAS_OFICIALES: ReadonlyMap<ProductoId, ReturnType<typeof fichaOficialDe>> = new Map(
+  COPY_DE_LOS_TRECE.map((copy) => [
+    copy.productoId,
+    fichaOficialDe(copy, logoDe(copy.productoId), huellaDelCopy(copy.bruto), 1),
+  ]),
+);
+
+
 export function crearCapaPublicaSupabase(): CapaPublica {
   return {
     async obtenerCotizacionPublica(token: string, codigo?: string) {
@@ -126,14 +163,50 @@ export function crearCapaPublicaSupabase(): CapaPublica {
       );
     },
 
-    async obtenerFichaPublica(_token: string) {
-      return todaviaNo<FichaPublica>(
-        'Esta ficha todavía no se puede ver por enlace. Pedísela a quien te la compartió.',
-      );
+    async obtenerFichaPublica(token: string) {
+      // ⛔ Del servidor viene SÓLO la capa que armó el vendedor. El copy sale
+      //    del archivo congelado que ya trae la aplicación: una sola fuente
+      //    del texto aprobado, y no una copia en la base que se quede vieja.
+      const capa = await llamar<CapaDeFicha>(`ficha?t=${encodeURIComponent(token)}`);
+      if (!capa.ok) return capa as Resultado<FichaPublica>;
+
+      const oficial = FICHAS_OFICIALES.get(capa.datos.productoId);
+      if (!oficial) {
+        // El enlace nombra un producto que este portafolio no tiene. No se
+        // improvisa una ficha: se dice.
+        return todaviaNo<FichaPublica>(
+          'No pudimos abrir esta ficha. Pedile una nueva a quien te la compartió.',
+        );
+      }
+
+      return bien(fichaPublicaDe(
+        oficial,
+        {
+          id: '', productoId: capa.datos.productoId, clienteId: '', vendedorId: '',
+          planId: null,
+          bloques: capa.datos.bloques.map((b): PersonalizacionBloque => ({
+            bloqueId: b.bloqueId as BloqueFichaId,
+            visible: b.visible,
+            orden: b.orden,
+            destacado: b.destacado,
+          })),
+          loQueConversamos: capa.datos.loQueConversamos,
+          notaDelVendedor: capa.datos.notaDelVendedor,
+          huellaCopy: oficial.huellaCopy,
+          // ⛔ La trazabilidad de la ficha es del Escritorio, no del cliente:
+          //    acá se arma sólo lo que `fichaPublicaDe` necesita para elegir y
+          //    ordenar bloques. Nada de esto se le muestra a nadie.
+          version: oficial.versionCatalogo,
+          creadoEn: '', creadoPor: '', actualizadoEn: '', actualizadoPor: '',
+        },
+        capa.datos.nombreVendedor,
+      ));
     },
 
     async obtenerIndicePublico() {
-      return todaviaNo<IndicePortafolio>('El portafolio público todavía no está publicado.');
+      // El índice sale del mismo copy congelado: es público por definición y
+      // no necesita ni token ni servidor.
+      return bien(indiceDe([...FICHAS_OFICIALES.values()]));
     },
   };
 }

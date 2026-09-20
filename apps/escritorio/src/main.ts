@@ -350,27 +350,40 @@ async function cerrarSesion(): Promise<void> {
  * El enlace llega como `#/p/<token>` (y `#/p/<token>/<codigo>` cuando el
  * vendedor le puso código).
  */
-const PREFIJO_PUBLICO = '#/p/';
+const PREFIJO_COTIZACION = '#/p/';
+const PREFIJO_FICHA = '#/f/';
 
-function enlaceDelCliente(): { token: string; codigo?: string } | null {
+type EnlaceDelCliente =
+  | { tipo: 'cotizacion'; token: string; codigo?: string }
+  | { tipo: 'ficha'; token: string };
+
+function enlaceDelCliente(): EnlaceDelCliente | null {
   const hash = window.location.hash;
-  if (!hash.startsWith(PREFIJO_PUBLICO)) return null;
-  const partes = hash.slice(PREFIJO_PUBLICO.length).split('/').filter(Boolean);
+  const esFicha = hash.startsWith(PREFIJO_FICHA);
+  if (!esFicha && !hash.startsWith(PREFIJO_COTIZACION)) return null;
+
+  const prefijo = esFicha ? PREFIJO_FICHA : PREFIJO_COTIZACION;
+  const partes = hash.slice(prefijo.length).split('/').filter(Boolean);
   const token = decodeURIComponent(partes[0] ?? '').trim();
   if (token === '') return null;
+
+  if (esFicha) return { tipo: 'ficha', token };
   const codigo = partes[1] === undefined ? undefined : decodeURIComponent(partes[1]);
-  return codigo === undefined ? { token } : { token, codigo };
+  return codigo === undefined
+    ? { tipo: 'cotizacion', token }
+    : { tipo: 'cotizacion', token, codigo };
 }
 
-async function montarPuertaDelCliente(enlace: { token: string; codigo?: string }): Promise<void> {
+async function montarPuertaDelCliente(enlace: EnlaceDelCliente): Promise<void> {
   const { crearCapaPublicaSupabase } = await import('./datos/supabase/publico');
-  const { montarCotizacionPublica } = await import('./vistas/propuestas/publico');
+  const { montarCotizacionPublica, montarFichaPublica } =
+    await import('./vistas/propuestas/publico');
   const raiz = raizApp();
   raiz.replaceChildren();
   document.body.dataset['vista'] = 'publica';
-  montarCotizacionPublica(
-    raiz, crearCapaPublicaSupabase(), enlace.token, enlace.codigo,
-  );
+  const capa = crearCapaPublicaSupabase();
+  if (enlace.tipo === 'ficha') montarFichaPublica(raiz, capa, enlace.token);
+  else montarCotizacionPublica(raiz, capa, enlace.token, enlace.codigo);
 }
 
 export async function iniciar(): Promise<void> {

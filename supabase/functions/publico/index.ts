@@ -389,6 +389,74 @@ async function pdfPublico(
 // Ruteo
 // ---------------------------------------------------------------------------
 
+/**
+ * La ficha que el vendedor preparó para este prospecto.
+ *
+ * ⛔ ACÁ NO VIAJA NI UNA LÍNEA DE COPY. El texto aprobado vive en el archivo
+ *    congelado (`content/copy/`, con su huella) y llega al navegador con la
+ *    propia aplicación. Lo que devuelve esta función es SÓLO la capa que armó
+ *    el vendedor: qué bloques se ven, en qué orden y cuál se destaca, más lo
+ *    que conversaron y su nota. Si el copy pasara por acá habría dos fuentes
+ *    del mismo texto, y una de las dos se iba a quedar vieja.
+ */
+async function fichaPublica(
+  sb: SupabaseClient, peticion: Request, token: string, codigo: string | null,
+): Promise<Response> {
+  const r = await abrir(sb, token, codigo);
+  if ('resultado' in r) {
+    const { data } = await sb.from('enlace_compartido').select('id').eq('token', token).maybeSingle();
+    await anotarApertura(sb, peticion, (data as { id: string } | null)?.id ?? null, 'ficha', r.resultado);
+    return enlaceNoDisponible();
+  }
+  const e = r.enlace;
+  if (e.tipo_propuesta !== 'ficha') return enlaceNoDisponible();
+
+  const { data: ficha } = await sb
+    .from('ficha_personalizada')
+    .select('id, producto_id, lo_que_conversamos, nota_del_vendedor, descartada_en, vendedor_id, personalizacion_bloque ( bloque_id, visible, orden, destacado )')
+    .eq('id', e.propuesta_id)
+    .maybeSingle();
+
+  if (!ficha) {
+    await anotarApertura(sb, peticion, e.id, 'ficha', 'codigo_invalido');
+    return enlaceNoDisponible();
+  }
+  const f = ficha as Record<string, unknown>;
+
+  // ⛔ Una ficha descartada deja de estar disponible, aunque el enlace siga
+  //    vivo: el vendedor la descartó por algo.
+  if (f.descartada_en !== null) {
+    await anotarApertura(sb, peticion, e.id, 'ficha', 'revocado');
+    return enlaceNoDisponible();
+  }
+
+  const { data: vendedor } = await sb
+    .from('usuario').select('nombre').eq('id', f.vendedor_id as string).maybeSingle();
+
+  await anotarApertura(sb, peticion, e.id, 'ficha', 'ok');
+
+  // Nombre de pila: el cliente tiene que saber con quién habla, no leer un
+  // legajo. ⛔ Ni el correo, ni el teléfono, ni el rol.
+  const nombre = ((vendedor as { nombre: string } | null)?.nombre ?? '').split(' ')[0] ?? '';
+
+  return responder({
+    ok: true,
+    datos: {
+      productoId: f.producto_id,
+      bloques: ((f.personalizacion_bloque ?? []) as Array<Record<string, unknown>>)
+        .map((b) => ({
+          bloqueId: b.bloque_id,
+          visible: b.visible,
+          orden: b.orden,
+          destacado: b.destacado,
+        })),
+      loQueConversamos: f.lo_que_conversamos ?? null,
+      notaDelVendedor: f.nota_del_vendedor ?? null,
+      nombreVendedor: nombre,
+    },
+  });
+}
+
 Deno.serve(async (peticion) => {
   if (peticion.method === 'OPTIONS') return new Response(null, { headers: CABECERAS });
 
@@ -416,6 +484,7 @@ Deno.serve(async (peticion) => {
 
     switch (accion) {
       case 'cotizacion': return await cotizacionPublica(sb, peticion, token, codigo);
+      case 'ficha':      return await fichaPublica(sb, peticion, token, codigo);
       case 'pdf':        return await pdfPublico(sb, peticion, token);
       case 'constancia': {
         const r = await abrir(sb, token, codigo);

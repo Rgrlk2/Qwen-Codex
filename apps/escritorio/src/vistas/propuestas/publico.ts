@@ -66,6 +66,149 @@ export function montarPresentacionPublica(raiz: HTMLElement, capa: CapaPublica, 
   });
 }
 
+/**
+ * El copy aprobado viene con el marcado que usó quien lo escribió: `**negrita**`
+ * y líneas que empiezan con `- `.
+ *
+ * ⛔ Esto NO reescribe el copy: lo dibuja como está escrito. Dejar los
+ *    asteriscos a la vista del cliente no es "literal", es mal dibujado. Y no
+ *    se interpreta nada más que esas dos marcas: ni enlaces, ni HTML, ni
+ *    imágenes. Lo que no se reconoce, se muestra tal cual.
+ */
+function conNegritas(texto: string): DocumentFragment {
+  const trozo = document.createDocumentFragment();
+  for (const parte of texto.split(/(\*\*[^*]+\*\*)/g)) {
+    if (parte === '') continue;
+    if (parte.startsWith('**') && parte.endsWith('**') && parte.length > 4) {
+      const fuerte = document.createElement('strong');
+      fuerte.textContent = parte.slice(2, -2);
+      trozo.append(fuerte);
+    } else {
+      trozo.append(document.createTextNode(parte));
+    }
+  }
+  return trozo;
+}
+
+/** Los párrafos y las listas del copy, cada uno como lo que es. */
+function dibujarCopy(destino: HTMLElement, contenido: string): void {
+  for (const bruto of contenido.split(/\n{2,}/)) {
+    const parrafo = bruto.trim();
+    if (parrafo === '') continue;
+
+    const lineas = parrafo.split('\n').map((l) => l.trim()).filter((l) => l !== '');
+    // Un bloque puede ser: puras viñetas, o una frase que las introduce y
+    // después las viñetas. Las dos formas aparecen en el copy aprobado.
+    const primerItem = lineas.findIndex((l) => l.startsWith('- '));
+    const todoLoDemasSonItems = primerItem >= 0
+      && lineas.slice(primerItem).every((l) => l.startsWith('- '));
+
+    if (todoLoDemasSonItems) {
+      if (primerItem > 0) {
+        const entrada = document.createElement('p');
+        entrada.append(conNegritas(lineas.slice(0, primerItem).join(' ')));
+        destino.append(entrada);
+      }
+      const lista = document.createElement('ul');
+      for (const item of lineas.slice(primerItem)) {
+        const li = document.createElement('li');
+        li.append(conNegritas(item.slice(2)));
+        lista.append(li);
+      }
+      destino.append(lista);
+      continue;
+    }
+
+    const p = document.createElement('p');
+    p.append(conNegritas(parrafo.replace(/\n/g, ' ')));
+    destino.append(p);
+  }
+}
+
+
+/**
+ * La ficha que el vendedor preparó, tal como la ve el prospecto.
+ *
+ * ⛔ El copy sale del archivo congelado y se dibuja LITERAL: ni resumido, ni
+ *    reescrito, ni acortado para que entre. Lo que el vendedor decidió es qué
+ *    bloques se ven, en qué orden y cuáles pesan más.
+ *
+ * ⛔ "Lo que conversamos" y la nota del vendedor van SEPARADOS y marcados como
+ *    suyos, para que el cliente distinga qué dice Lab.IA y qué dice la persona
+ *    con la que habló.
+ *
+ * ⛔ Una sola acción: "Hablemos". No hay formulario de datos, no hay pasarela
+ *    de pago, no hay precios de otros productos, no hay nada del Escritorio.
+ */
+export function montarFichaPublica(
+  raiz: HTMLElement, capa: CapaPublica, token: string,
+): void {
+  vaciar(raiz);
+  const cargando = crear('div', { clase: 'propuestas-cargando', atributos: { role: 'status' } });
+  cargando.append(crear('span', { texto: 'Cargando…' }));
+  raiz.append(cargando);
+
+  void capa.obtenerFichaPublica(token).then((resultado) => {
+    if (!resultado.ok) {
+      pantallaError(raiz, resultado.error.mensajeAmable);
+      return;
+    }
+    const ficha = resultado.datos;
+    vaciar(raiz);
+    const pagina = crear('div', { clase: 'propuestas-publico propuestas-ficha' });
+
+    const logo = crear('img', {
+      clase: 'propuestas-ficha__logo',
+      atributos: { src: ficha.logo, alt: ficha.nombreProducto, loading: 'lazy' },
+    });
+    pagina.append(logo, crear('h1', { texto: ficha.nombreProducto }));
+
+    // Lo del vendedor va primero y marcado: es la razón por la que el cliente
+    // está mirando esto.
+    if (ficha.loQueConversamos) {
+      const bloque = crear('section', { clase: 'propuestas-ficha__conversado' });
+      bloque.append(
+        crear('h2', { texto: 'Lo que conversamos' }),
+        crear('p', { texto: ficha.loQueConversamos }),
+      );
+      pagina.append(bloque);
+    }
+
+    const destacados = new Set(ficha.destacados);
+    for (const bloque of ficha.bloques) {
+      const seccion = crear('section', {
+        clase: destacados.has(bloque.id)
+          ? 'propuestas-ficha__bloque propuestas-ficha__bloque--destacado'
+          : 'propuestas-ficha__bloque',
+      });
+      seccion.append(crear('h2', { texto: bloque.titulo }));
+      dibujarCopy(seccion, bloque.contenido);
+      pagina.append(seccion);
+    }
+
+    if (ficha.notaDelVendedor) {
+      const nota = crear('section', { clase: 'propuestas-ficha__nota' });
+      nota.append(
+        crear('h2', { texto: `Nota de ${ficha.nombreVendedor}` }),
+        crear('p', { texto: ficha.notaDelVendedor }),
+      );
+      pagina.append(nota);
+    }
+
+    // ⛔ La única acción. Y no lleva a ningún lado que pida datos: le dice al
+    //    cliente con quién hablar.
+    const cierre = crear('section', { clase: 'propuestas-ficha__cierre' });
+    cierre.append(
+      crear('p', { texto: `${ficha.nombreVendedor} preparó esta ficha para vos.` }),
+      crear('p', { clase: 'propuestas-ficha__accion', texto: ficha.llamadoALaAccion }),
+    );
+    pagina.append(cierre);
+
+    pieDeMarca(pagina);
+    raiz.append(pagina);
+  });
+}
+
 function mostrarConstancia(raiz: HTMLElement, constancia: ConstanciaRespuesta): void {
   vaciar(raiz);
   const pagina = crear('div', { clase: 'propuestas-publico' });

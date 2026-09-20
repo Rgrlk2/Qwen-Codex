@@ -25,7 +25,7 @@ import { PRODUCTOS } from '@labia/compartido';
 import type { NucleoMock } from './nucleo';
 import { COPY_DE_LOS_TRECE, logoDe } from '@labia/compartido';
 import {
-  fichaOficialDe, indiceDe, personalizacionInicial, porNecesidad, revisarCopy,
+  fichaOficialDe, huellaDelCopy, indiceDe, personalizacionInicial, porNecesidad, revisarCopy,
   validarPersonalizacion, type ErrorPersonalizacion,
 } from '@labia/compartido';
 import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
@@ -33,27 +33,12 @@ import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
 const VENDEDOR_DEMO: Id = CUENTAS_DE_EJEMPLO.find((c) => c.rol === 'vendedor')?.id ?? 'usr-jpfdz';
 const AHORA: ISODate = '2026-09-15T08:00:00-03:00';
 
-/**
- * Huella del copy: identifica la versión del texto servido.
- *
- * ⛔ Se calcula del contenido, no se escribe a mano. Si el copy cambia, la
- *    huella cambia sola y el aviso al vendedor aparece sin que nadie lo
- *    acuerde de actualizar.
- */
-function huellaDe(bruto: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < bruto.length; i += 1) {
-    h ^= bruto.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return `copy-${h.toString(16).padStart(8, '0')}`;
-}
 
 /** Las trece, armadas del copy. Se calculan una vez por sesión del mock. */
 const FICHAS_OFICIALES: ReadonlyMap<ProductoId, FichaOficial> = new Map(
   COPY_DE_LOS_TRECE.map((copy) => [
     copy.productoId,
-    fichaOficialDe(copy, logoDe(copy.productoId), huellaDe(copy.bruto), 1),
+    fichaOficialDe(copy, logoDe(copy.productoId), huellaDelCopy(copy.bruto), 1),
   ]),
 );
 

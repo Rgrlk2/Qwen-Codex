@@ -22,7 +22,7 @@ import type {
   PersonalizacionBloque, ProductoId, Resultado, Version,
 } from '@labia/compartido';
 import {
-  COPY_DE_LOS_TRECE, PRODUCTOS, fichaOficialDe, indiceDe, logoDe, porNecesidad,
+  COPY_DE_LOS_TRECE, PRODUCTOS, fichaOficialDe, huellaDelCopy, indiceDe, logoDe, porNecesidad,
   revisarCopy,
 } from '@labia/compartido';
 import { supabase } from './conexion';
@@ -30,25 +30,11 @@ import { bien, fallo } from './errores';
 import { armarPagina, rango } from './paginacion';
 import { COLUMNAS_TRAZADO, aTrazado, type FilaTrazado } from './trazado';
 
-/**
- * Huella del copy: identifica la versión del texto servido.
- * ⛔ Se calcula del contenido. Si el copy cambia, la huella cambia sola y el
- *    aviso al vendedor aparece sin que nadie se acuerde de actualizar nada.
- */
-function huellaDe(bruto: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < bruto.length; i += 1) {
-    h ^= bruto.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h.toString(16).padStart(8, '0');
-}
-
 /** Las trece fichas oficiales, armadas del copy. Una vez por carga. */
 const FICHAS_OFICIALES: ReadonlyMap<ProductoId, FichaOficial> = new Map(
   COPY_DE_LOS_TRECE.map((copy) => [
     copy.productoId,
-    fichaOficialDe(copy, logoDe(copy.productoId), huellaDe(copy.bruto), 1),
+    fichaOficialDe(copy, logoDe(copy.productoId), huellaDelCopy(copy.bruto), 1),
   ]),
 );
 

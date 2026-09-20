@@ -120,6 +120,24 @@ export function seccionDeProducto(documento: string, nombreProducto: string): st
   return lineas.slice(inicio, fin).join('\n').trim();
 }
 
+/**
+ * Huella del copy: identifica la versión del texto servido.
+ *
+ * ⛔ Se calcula del contenido. Si el copy cambia, la huella cambia sola y el
+ *    aviso al vendedor aparece sin que nadie se acuerde de actualizar nada.
+ * ⛔ Vive acá, una sola vez. La capa autenticada y la pública tienen que dar
+ *    la MISMA huella para el mismo texto: si cada una calculara la suya, el
+ *    día que difieran el Escritorio avisaría de un cambio que no existió.
+ */
+export function huellaDelCopy(bruto: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < bruto.length; i += 1) {
+    h ^= bruto.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
+
 export function fichaOficialDe(
   copy: CopyDeProducto, logo: string, huellaCopy: string, versionCatalogo: number,
 ): FichaOficial {
