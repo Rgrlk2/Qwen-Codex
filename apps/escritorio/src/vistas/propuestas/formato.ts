@@ -17,6 +17,14 @@ const FORMATEADOR_FECHA = new Intl.DateTimeFormat('es-PY', {
   year: 'numeric',
 });
 
+/** Igual que el de arriba pero sin mover el día: para fechas de calendario. */
+const FORMATEADOR_FECHA_CALENDARIO = new Intl.DateTimeFormat('es-PY', {
+  timeZone: 'UTC',
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+});
+
 const FORMATEADOR_FECHA_HORA = new Intl.DateTimeFormat('es-PY', {
   timeZone: 'America/Asuncion',
   day: '2-digit',
@@ -37,7 +45,27 @@ export function formatearDinero(dinero: Dinero): string {
   return `USD ${FORMATEADOR_DECIMAL.format(dinero.monto / 100)}`;
 }
 
+/** `2026-10-05` sin hora: eso es una FECHA de calendario, no un instante. */
+const SOLO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Una fecha de calendario se dibuja como lo que es.
+ *
+ * ⛔ `new Date('2026-10-05')` se interpreta como medianoche UTC. Asunción está
+ *    detrás de UTC, así que al formatearla en zona local daba **el día
+ *    anterior**: una cotización válida hasta el 5 le decía al cliente que
+ *    vencía el 4. Un día menos del que le corresponde.
+ *
+ * Cuando el valor SÍ trae hora, es un instante y se formatea en la zona del
+ * negocio, que es lo correcto para "cuándo pasó esto".
+ */
 export function formatearFecha(fecha: ISODate): string {
+  if (SOLO_FECHA.test(fecha)) {
+    const [anio, mes, dia] = fecha.split('-').map(Number) as [number, number, number];
+    // Medianoche UTC de ese mismo día, formateada EN UTC: el calendario no se
+    // mueve de zona.
+    return FORMATEADOR_FECHA_CALENDARIO.format(Date.UTC(anio, mes - 1, dia));
+  }
   return FORMATEADOR_FECHA.format(new Date(fecha));
 }
 

@@ -783,6 +783,39 @@ archivado y renombrado `[PRUEBA] Repuestera del Este S.A.`.
 ⚠️ **Antes de salir a producción** conviene recrear la base desde las
 migraciones: por diseño, esta historia no se puede borrar desde adentro.
 
+### La puerta del cliente, en un navegador de verdad
+
+`main.ts` decide el enlace del cliente **antes que cualquier otra cosa**. Si el
+ruteo autenticado arrancara primero, mandaría a la pantalla de ingreso a
+alguien que no tiene cuenta — lo último que tiene que ver quien recibió una
+cotización. El enlace llega como `#/p/<token>`, y desde ahí no se monta nada
+del Escritorio: ni disposición, ni menú, ni sesión.
+
+Probado en Chromium sobre la construcción real
+(`npm run verificar:enlace-cliente`):
+
+- Sin responder, el cliente ve su cotización completa: folio y versión, a quién
+  va, producto, fechas, las cuatro alternativas con sus totales, bases y
+  condiciones, las seis opciones excluyentes con su texto exacto, la casilla
+  obligatoria y *"Enviar mi elección"*.
+- Ya respondida, ve su constancia y la frase que la define: *"Esto es una
+  constancia comercial (un aval de intención). No es un contrato ni una firma
+  electrónica legal."*
+- De «Planificar», «Administración», «Cerrar sesión», «Mi cartera», «Comisión»
+  o «Datos de ejemplo» no aparece nada. La comprobación falla si alguna se
+  filtra.
+
+**Y encontró un defecto que sólo se ve mirando la pantalla**: el servidor manda
+`2026-10-05` y el cliente leía *"válida hasta el 04 de octubre"*. `new Date()`
+sobre una fecha sin hora la toma como medianoche UTC, y Asunción está detrás de
+UTC: la cotización le sacaba **un día** al cliente. Una fecha de calendario
+ahora se dibuja como calendario, sin moverla de zona.
+
+⚠️ **Una decisión tuya, Rodrigo**: la pantalla del cliente carga la tipografía
+Inter desde Google. Funciona igual si no carga (cae a la del sistema), pero es
+un pedido a un tercero desde el enlace que abre tu cliente. Se puede servir la
+tipografía desde el propio sitio; avisame si querés que lo haga.
+
 ## Lo que falta del servidor
 
 - ~~La capa de datos del navegador contra Supabase~~ — **hecha, las nueve.**

@@ -24,7 +24,8 @@
     "verificar:funciones": "node scripts/copiar-a-funciones.mjs --verificar",
     "verificar": "npm run verificar:copy && npm run verificar:portafolio && npm run typecheck && node scripts/verificar-calculos.mjs && npm run verificar:nucleo && npm run verificar:fichas && npm run verificar:funciones",
     "exportar:taxonomia": "vite build --config scripts/vite.taxonomia.config.mjs && node scripts/.salida-taxonomia/exportar-taxonomia.mjs",
-    "copiar:funciones": "node scripts/copiar-a-funciones.mjs"
+    "copiar:funciones": "node scripts/copiar-a-funciones.mjs",
+    "verificar:enlace-cliente": "node scripts/verificar-enlace-cliente.mjs"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",

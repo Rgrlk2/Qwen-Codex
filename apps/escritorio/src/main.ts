@@ -336,7 +336,52 @@ async function cerrarSesion(): Promise<void> {
   else window.location.hash = HASH_INGRESO;
 }
 
+/**
+ * La puerta del cliente.
+ *
+ * ⛔ SE DECIDE ANTES QUE CUALQUIER OTRA COSA. El cliente no tiene cuenta: si
+ *    el ruteo autenticado arrancara primero, lo mandaría a la pantalla de
+ *    ingreso, que es lo último que tiene que ver alguien a quien le
+ *    compartieron una cotización.
+ *
+ * ⛔ Y NO se monta nada del Escritorio: ni la disposición, ni el menú, ni la
+ *    sesión. Lo único que existe en esta pantalla es su propia cotización.
+ *
+ * El enlace llega como `#/p/<token>` (y `#/p/<token>/<codigo>` cuando el
+ * vendedor le puso código).
+ */
+const PREFIJO_PUBLICO = '#/p/';
+
+function enlaceDelCliente(): { token: string; codigo?: string } | null {
+  const hash = window.location.hash;
+  if (!hash.startsWith(PREFIJO_PUBLICO)) return null;
+  const partes = hash.slice(PREFIJO_PUBLICO.length).split('/').filter(Boolean);
+  const token = decodeURIComponent(partes[0] ?? '').trim();
+  if (token === '') return null;
+  const codigo = partes[1] === undefined ? undefined : decodeURIComponent(partes[1]);
+  return codigo === undefined ? { token } : { token, codigo };
+}
+
+async function montarPuertaDelCliente(enlace: { token: string; codigo?: string }): Promise<void> {
+  const { crearCapaPublicaSupabase } = await import('./datos/supabase/publico');
+  const { montarCotizacionPublica } = await import('./vistas/propuestas/publico');
+  const raiz = raizApp();
+  raiz.replaceChildren();
+  document.body.dataset['vista'] = 'publica';
+  montarCotizacionPublica(
+    raiz, crearCapaPublicaSupabase(), enlace.token, enlace.codigo,
+  );
+}
+
 export async function iniciar(): Promise<void> {
+  const enlace = enlaceDelCliente();
+  if (enlace) {
+    // ⛔ Y acá termina. No se registra `hashchange`: desde la pantalla del
+    //    cliente no se navega a ninguna parte del Escritorio.
+    await montarPuertaDelCliente(enlace);
+    return;
+  }
+
   if (window.location.hash.trim() === '') {
     window.location.hash = hashDeRuta(RUTA_POR_DEFECTO);
   }
