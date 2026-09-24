@@ -39,6 +39,22 @@ function campoTexto(id: string, etiquetaTexto: string, opciones: { obligatorio?:
   return { campo, entrada };
 }
 
+/**
+ * Cuál de las dos puertas pidió Inicio, leída de la dirección.
+ *
+ * ⛔ Se lee del `hash` y no de `location.search`: toda la navegación del
+ *    Escritorio vive después del `#`, así que el parámetro llega como
+ *    `#/planificar?entrada=conocido`. Leerlo del lugar equivocado devuelve
+ *    siempre vacío, que es como si no estuviera.
+ */
+function entradaPedidaEnLaDireccion(): 'conocido' | 'rubro' | null {
+  const hash = window.location.hash;
+  const corte = hash.indexOf('?');
+  if (corte === -1) return null;
+  const valor = new URLSearchParams(hash.slice(corte + 1)).get('entrada');
+  return valor === 'conocido' || valor === 'rubro' ? valor : null;
+}
+
 export function montarEntrada(contexto: ContextoVista, contenedor: HTMLElement): void {
   vaciarNodo(contenedor);
   contenedor.className = 'planificar-entrada';
@@ -65,6 +81,22 @@ export function montarEntrada(contexto: ContextoVista, contenedor: HTMLElement):
   );
   acciones.append(botonConocido, botonRubro);
   contenedor.append(acciones, areaFormulario, areaResultado);
+
+  // ⛔ ESTO FALTABA, Y ERA LO QUE HACÍA PARECER QUE NADA FUNCIONABA.
+  //
+  //    Desde Inicio, los dos botones grandes llevan a `#/planificar?entrada=conocido`
+  //    y `?entrada=rubro`. Pero esta pantalla ignoraba el parámetro y volvía a
+  //    dibujar LOS MISMOS DOS BOTONES. El vendedor apretaba "Investigar una
+  //    empresa que conozco", llegaba acá, y veía otra vez el mismo botón: para
+  //    llegar al campo donde se escribe la empresa había que apretar dos veces
+  //    lo mismo, sin ninguna señal de que hubiera que hacerlo.
+  //
+  //    Ahora, si Inicio ya dijo cuál eligió, se abre ese formulario directo y
+  //    el cursor queda en el primer campo. Si entró por el menú lateral, sin
+  //    decir cuál quiere, siguen apareciendo las dos opciones como antes.
+  const eleccionDeInicio = entradaPedidaEnLaDireccion();
+  if (eleccionDeInicio === 'conocido') mostrarFormularioConocido();
+  else if (eleccionDeInicio === 'rubro') mostrarFormularioRubro();
 
   function crearAccionProtagonista(icono: string, titulo: string, ejemplo: string, onActivar: () => void): HTMLButtonElement {
     const boton = document.createElement('button');
@@ -130,6 +162,11 @@ export function montarEntrada(contexto: ContextoVista, contenedor: HTMLElement):
     enviar.textContent = 'Investigar';
     formulario.append(selector, camposEmpresa, camposProfesional, avisoValidacion, enviar);
     areaFormulario.appendChild(formulario);
+    // ⛔ El cursor va al primer campo. Si llegaste desde Inicio apretando
+    //    "Investigar una empresa que conozco", lo que sigue es escribir el
+    //    nombre: que haya que buscar dónde hacer clic es media pantalla
+    //    perdida.
+    formulario.querySelector('input')?.focus();
 
     formulario.addEventListener('submit', (evento) => {
       evento.preventDefault();
@@ -184,6 +221,11 @@ export function montarEntrada(contexto: ContextoVista, contenedor: HTMLElement):
     enviar.textContent = 'Explorar';
     formulario.append(rubro.campo, ciudad.campo, avisoValidacion, enviar);
     areaFormulario.appendChild(formulario);
+    // ⛔ El cursor va al primer campo. Si llegaste desde Inicio apretando
+    //    "Investigar una empresa que conozco", lo que sigue es escribir el
+    //    nombre: que haya que buscar dónde hacer clic es media pantalla
+    //    perdida.
+    formulario.querySelector('input')?.focus();
 
     formulario.addEventListener('submit', (evento) => {
       evento.preventDefault();
