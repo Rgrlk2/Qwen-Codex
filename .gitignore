@@ -19,3 +19,8 @@ scripts/.salida-taxonomia/
 
 # Rastros de la CLI de Supabase.
 supabase/.temp/
+
+# Estado local de la herramienta de publicación de Netlify. Lo escribe la
+# máquina de quien despliega y no describe el proyecto: el sitio se identifica
+# en `netlify.toml` y en el panel, no acá.
+.netlify/
