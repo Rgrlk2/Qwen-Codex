@@ -111,3 +111,25 @@ export async function leerTaxonomia(): Promise<DatosTaxonomia> {
     versionCatalogo: 1,
   };
 }
+
+// ---------------------------------------------------------------------------
+// La taxonomía, una sola vez por carga de la aplicación
+// ---------------------------------------------------------------------------
+
+/**
+ * ⛔ UNA SOLA CACHÉ, acá. El motor la usa para planificar y las fichas
+ *    internas la usan para saber cómo se vende cada producto. Si cada uno
+ *    guardara la suya, el día que el vendedor da de alta una actividad nueva
+ *    una de las dos se quedaría vieja, y no habría forma de saber cuál.
+ */
+let cargada: Promise<DatosTaxonomia> | null = null;
+
+export function taxonomiaCargada(): Promise<DatosTaxonomia> {
+  cargada ??= leerTaxonomia();
+  return cargada;
+}
+
+/** Tras dar de alta o fusionar un término, lo que está en memoria quedó viejo. */
+export function olvidarTaxonomiaCargada(): void {
+  cargada = null;
+}

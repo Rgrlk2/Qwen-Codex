@@ -17,14 +17,16 @@
 
 import type {
   AccesoEnlace, AvisoCopyDesactualizado, CapaFichas, EnlaceCompartido,
-  EntradaPorNecesidad, FichaOficial, FichaPersonalizada, Id, IndicePortafolio,
-  Moneda, NuevaFichaPersonalizada, OpcionesEnlaceFicha, OpcionesPagina,
-  PersonalizacionBloque, PrecioPreparado, ProductoId, Resultado, Version,
+  EntradaPorNecesidad, FichaInterna, FichaOficial, FichaPersonalizada, Id,
+  IndicePortafolio, Moneda, NuevaFichaPersonalizada, OpcionesEnlaceFicha,
+  OpcionesPagina, PersonalizacionBloque, PrecioPreparado, ProductoId, Resultado,
+  Version,
 } from '@labia/compartido';
 import {
-  COPY_DE_LOS_TRECE, MAXIMO_ACLARACION_PRECIO, PRODUCTOS, fichaOficialDe, huellaDelCopy,
-  indiceDe, logoDe, porNecesidad, revisarCopy, validarPrecioPreparado,
+  COPY_DE_LOS_TRECE, MAXIMO_ACLARACION_PRECIO, PRODUCTOS, fichaInternaDe, fichaOficialDe,
+  huellaDelCopy, indiceDe, logoDe, porNecesidad, revisarCopy, validarPrecioPreparado,
 } from '@labia/compartido';
+import { taxonomiaCargada } from './taxonomia';
 import type { ErrorPrecioPreparado } from '@labia/compartido';
 import { supabase } from './conexion';
 import { bien, fallo } from './errores';
@@ -254,6 +256,37 @@ export function crearCapaFichas(): CapaFichas {
 
     async indicePortafolio() {
       return bien<IndicePortafolio>(indiceDe([...FICHAS_OFICIALES.values()]));
+    },
+
+    /**
+     * La ficha interna del vendedor.
+     *
+     * ⛔ Se arma con la taxonomía que Administración carga —dolores,
+     *    argumentos, preguntas—, no con el copy comercial. El copy dice qué
+     *    ES el producto; esto dice cómo se vende, y son dos cosas distintas.
+     * ⛔ Si no hay nada cargado, la ficha vuelve marcada `sinTaxonomia` y la
+     *    pantalla lo dice. No se rellena con el copy disfrazado.
+     */
+    async fichaInternaDeProducto(productoId: ProductoId) {
+      const oficial = FICHAS_OFICIALES.get(productoId);
+      if (!oficial) {
+        return { ok: false as const, error: {
+          codigo: 'no_encontrado' as const,
+          mensajeAmable: 'Ese producto no está en el portafolio.',
+        } };
+      }
+      try {
+        const t = await taxonomiaCargada();
+        return bien(fichaInternaDe({
+          operaciones: t.operaciones,
+          necesidades: t.necesidades,
+          relacionesOperacionNecesidad: t.relacionesOperacionNecesidad,
+          relacionesNecesidadProducto: t.relacionesNecesidadProducto,
+          nombresDeProducto: new Map(t.productos.map((p) => [p.id, p.nombre])),
+        }, productoId, oficial));
+      } catch (error) {
+        return fallo<FichaInterna>(error);
+      }
     },
 
     async fichasPorNecesidad(necesidadId: Id) {

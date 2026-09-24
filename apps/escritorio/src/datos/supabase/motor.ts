@@ -20,7 +20,7 @@ import { crearMotorDePlanificacion } from '@labia/compartido';
 import { supabase } from './conexion';
 import { bien, fallo } from './errores';
 import { armarPagina, rango } from './paginacion';
-import { leerTaxonomia } from './taxonomia';
+import { olvidarTaxonomiaCargada, taxonomiaCargada } from './taxonomia';
 import { aplicarCorrecciones, respaldoPorTaxonomia } from './investigacion';
 
 // ---------------------------------------------------------------------------
@@ -30,13 +30,18 @@ import { aplicarCorrecciones, respaldoPorTaxonomia } from './investigacion';
 let motorCargado: Promise<MotorDePlanificacion> | null = null;
 
 function cargarMotor(): Promise<MotorDePlanificacion> {
-  motorCargado ??= leerTaxonomia().then(crearMotorDePlanificacion);
+  motorCargado ??= taxonomiaCargada().then(crearMotorDePlanificacion);
   return motorCargado;
 }
 
-/** Tras dar de alta un término nuevo, la taxonomía en memoria quedó vieja. */
+/**
+ * Tras dar de alta un término nuevo, la taxonomía en memoria quedó vieja.
+ * ⛔ Se olvidan LAS DOS: el motor armado y la taxonomía cruda que lo alimentó.
+ *    Olvidar sólo una deja al sistema contestando dos cosas distintas.
+ */
 function olvidarTaxonomia(): void {
   motorCargado = null;
+  olvidarTaxonomiaCargada();
 }
 
 // ---------------------------------------------------------------------------

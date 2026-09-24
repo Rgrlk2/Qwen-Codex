@@ -859,6 +859,70 @@ capa autenticada y capa pública— y una de las tres daba un valor distinto. Vi
 una sola vez, en `fichas-logica.ts`. Si cada capa calculara la suya, el día que
 difieran el Escritorio avisaría de un cambio de copy que nunca ocurrió.
 
+## El precio de la ficha, y el copy que se leía a medias
+
+**El precio de la ficha lo escribe el vendedor.** El copy maestro publica
+rangos a propósito —"Gs. 270.000 a Gs. 960.000 por mes, según plan"— porque el
+valor real depende de usuarios, sucursales, canales e integraciones. Después de
+la reunión el vendedor sabe el tamaño del cliente, así que `ficha_personalizada`
+ganó cuatro columnas: `precio_moneda`, `precio_setup`, `precio_mensual` y
+`precio_aclaracion`.
+
+⛔ No rompe la regla del copy: la capa sigue sin ningún campo donde escribir el
+contenido de un bloque. Son dos importes tipados y una aclaración con la voz
+del vendedor, como `lo_que_conversamos`. El renglón que lee el cliente lo arma
+`textoPrecioPreparado()`, una sola vez para las dos pantallas.
+
+Tres reglas lo defienden, y las tres se probaron contra esta base:
+`precio_entero_o_nada` (o está completo o no está: una moneda con los importes
+en nulo es un estado que no se puede mostrar), `precio_de_ficha_no_negativo`
+(cero sí, que es una implementación bonificada) y un tope para la aclaración.
+Y queda anotado: `anota_precio_de_ficha` escribe en el registro quién lo puso,
+cuándo, qué había antes y qué quedó —sólo cuando el precio cambia, porque un
+registro lleno de ruido es un registro que nadie lee—.
+
+**El copy se leía a medias.** Al escribir las verificaciones del precio apareció
+que el lector de copy sólo conocía los encabezados más frecuentes y descartaba
+el resto EN SILENCIO. El precio se titula "Precio de referencia" en ocho
+productos, pero "Precio" en Smart Commerce y Exeq.IA, "Precio documentado" en
+Park.IA y "Precio de referencia documentado" en Agendar.IA y Precio Vivo: cinco
+de los trece se le servían al cliente sin precio. "En una frase" está en los
+trece y se perdía en los trece. Precio Vivo mostraba de titular la nota interna
+"Sin eslogan oficial definido en la documentación revisada", también en la
+tarjeta del portafolio.
+
+⛔ El copy no se tocó: las huellas siguen dando OK. Lo que cambió es que ahora
+se lee entero, en el orden de cada documento, y que la verificación falla si
+aparece un encabezado que nadie mapeó, en vez de tirarlo sin avisar.
+
+## La ficha interna del vendedor
+
+La ficha oficial le explica al cliente QUÉ ES el producto. La interna le explica
+al vendedor CÓMO VENDERLO: a quién le sirve, qué señales indican que le sirve,
+qué preguntar, con qué se combina y dónde no ofrecerlo.
+
+⛔ **No tiene tabla propia y no guarda nada.** Se arma con la taxonomía que ya
+existe, leída al revés del camino que usa el motor: producto ← necesidad ←
+operación. Cada texto que aparece en pantalla está escrito en `necesidad`,
+`operacion`, `operacion_necesidad` o `necesidad_producto`, que es donde
+Administración lo edita. Ni un argumento inventado: un vendedor repite lo que
+lee con la misma cara, y el cliente no puede distinguir uno aprobado de uno
+improvisado.
+
+⛔ **Y nunca sale al cliente.** No hay método que la comparta, no entra en
+ningún documento y la verificación comprueba que ni uno de sus textos aparece
+en lo que recibe el cliente.
+
+Si un producto no tiene nada cargado, la ficha vuelve marcada `sinTaxonomia` y
+la pantalla manda a Administración. No se rellena con el copy comercial
+disfrazado: responde otra pregunta.
+
+Estado hoy en esta base: los trece productos tienen al menos un dolor
+documentado, pero seis tienen exactamente uno. La herramienta funciona; el
+conocimiento que la alimenta se enriquece desde Administración → Taxonomía.
+Ninguna relación está cargada como `no_recomendado`, así que "Dónde NO
+ofrecerlo" aparece vacío en los trece: no hay nada documentado todavía.
+
 ## Lo que falta del servidor
 
 - ~~Las fichas como lo que el cliente recibe~~ — **hechas** (`#/f/<token>`).

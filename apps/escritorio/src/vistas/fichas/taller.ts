@@ -15,6 +15,7 @@ import { conBloquesNuevos, fichaPublicaDe, personalizacionInicial } from '@labia
 
 import { crear, vaciar } from './dom';
 import { montarPreparar, type EstadoPreparacion } from './preparar';
+import { pintarFichaInterna } from './vista-interna';
 import { pintarVistaPrevia } from './vista-previa';
 import './estilos.css';
 
@@ -115,6 +116,19 @@ export async function montarTaller(opciones: OpcionesTaller): Promise<void> {
       esEnsayo: true,
     });
   }
+
+  // --- Cómo se vende: la ficha INTERNA, arriba de todo y plegada -----------
+  //
+  // ⛔ Va antes de preparar nada, porque decidir qué mostrarle a ESTE cliente
+  //    se hace mejor sabiendo qué le duele y qué preguntarle. Plegada, porque
+  //    el vendedor entró a preparar, no a estudiar.
+  // ⛔ Nunca sale al cliente: no hay enlace ni documento que la lleve.
+  const cajaInterna = crear('div', { clase: 'fichas-interna-lugar' });
+  columnaPreparar.append(cajaInterna);
+  void datos.fichaInternaDeProducto(productoId).then((r) => {
+    if (senal.aborted || !r.ok) return;
+    pintarFichaInterna({ contenedor: cajaInterna, ficha: r.datos });
+  });
 
   const leerEstado = montarPreparar({
     ficha,

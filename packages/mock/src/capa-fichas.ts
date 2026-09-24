@@ -17,18 +17,22 @@
 
 import type {
   AccesoEnlace, AvisoCopyDesactualizado, CapaFichas, ClaveIdempotencia,
-  EnlaceCompartido, EntradaPorNecesidad, FichaOficial, FichaPersonalizada, Id,
-  ISODate, NuevaFichaPersonalizada, OpcionesEnlaceFicha, OpcionesPagina,
-  ProductoId, Version,
+  EnlaceCompartido, EntradaPorNecesidad, FichaInterna, FichaOficial,
+  FichaPersonalizada, Id, ISODate, NuevaFichaPersonalizada, OpcionesEnlaceFicha,
+  OpcionesPagina, ProductoId, Version,
 } from '@labia/compartido';
 import { PRODUCTOS } from '@labia/compartido';
 import type { NucleoMock } from './nucleo';
 import { COPY_DE_LOS_TRECE, logoDe } from '@labia/compartido';
 import {
-  fichaOficialDe, huellaDelCopy, indiceDe, personalizacionInicial, porNecesidad, revisarCopy,
-  validarPersonalizacion, type ErrorPersonalizacion,
+  fichaInternaDe, fichaOficialDe, huellaDelCopy, indiceDe, personalizacionInicial,
+  porNecesidad, revisarCopy, validarPersonalizacion, type ErrorPersonalizacion,
 } from '@labia/compartido';
 import { CUENTAS_DE_EJEMPLO } from './datos-sesion';
+import {
+  NECESIDADES_SEMILLA, OPERACIONES_SEMILLA, PRODUCTOS_CATALOGO,
+  RELACIONES_NECESIDAD_PRODUCTO, RELACIONES_OPERACION_NECESIDAD,
+} from './datos-motor';
 
 const VENDEDOR_DEMO: Id = CUENTAS_DE_EJEMPLO.find((c) => c.rol === 'vendedor')?.id ?? 'usr-jpfdz';
 const AHORA: ISODate = '2026-09-15T08:00:00-03:00';
@@ -91,6 +95,28 @@ export function crearCapaFichasMock(nucleo: NucleoMock): CapaFichas {
      * ⛔ Entrada por dolor, no por nombre: el vendedor llega desde lo que el
      *    cliente dijo que le pasa. `porNecesidad` deja fuera lo adaptable.
      */
+    /**
+     * La ficha interna del vendedor, armada con la taxonomía de ejemplo.
+     * ⛔ Mismo razonamiento que contra el servidor: sólo cambia de dónde
+     *    salen los datos.
+     */
+    async fichaInternaDeProducto(productoId: ProductoId) {
+      const oficial = FICHAS_OFICIALES.get(productoId);
+      if (!oficial) {
+        return nucleo.responderError<FichaInterna>({
+          codigo: 'no_encontrado',
+          mensajeAmable: 'Ese producto no está en el portafolio.',
+        });
+      }
+      return nucleo.responder(fichaInternaDe({
+        operaciones: OPERACIONES_SEMILLA,
+        necesidades: NECESIDADES_SEMILLA,
+        relacionesOperacionNecesidad: RELACIONES_OPERACION_NECESIDAD,
+        relacionesNecesidadProducto: RELACIONES_NECESIDAD_PRODUCTO,
+        nombresDeProducto: new Map(PRODUCTOS_CATALOGO.map((p) => [p.id, p.nombre])),
+      }, productoId, oficial));
+    },
+
     async fichasPorNecesidad(necesidadId: Id) {
       const necesidad = NECESIDADES_DE_EJEMPLO.find((n) => n.id === necesidadId);
       if (!necesidad) {

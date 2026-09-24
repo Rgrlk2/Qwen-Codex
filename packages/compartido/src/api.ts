@@ -59,6 +59,7 @@ import type {
   AvisoCopyDesactualizado, EntradaPorNecesidad, FichaOficial, FichaPersonalizada,
   FichaPublica, IndicePortafolio, NuevaFichaPersonalizada, OpcionesEnlaceFicha,
 } from './fichas';
+import type { FichaInterna } from './fichas-internas';
 
 import type {
   ConstanciaRespuesta, CotizacionPublica, Firma, ResultadoNotificaciones,
@@ -264,6 +265,17 @@ export interface CapaFichas {
   indicePortafolio(): R<IndicePortafolio>;
   /** Entrada por dolor, no por nombre de producto. ⛔ Sólo `directo` y `cercano`. */
   fichasPorNecesidad(necesidadId: Id): R<EntradaPorNecesidad>;
+
+  /**
+   * La ficha INTERNA: la que lee el vendedor para saber CÓMO vender este
+   * producto —señales, preguntas, con qué se combina y dónde no ofrecerlo—.
+   *
+   * ⛔ NUNCA sale al cliente: no hay enlace, ni PDF, ni nada que la comparta.
+   *    Es conocimiento comercial interno.
+   * ⛔ Y no inventa nada: se arma con lo que Administración cargó en la
+   *    taxonomía. Si no hay nada cargado, lo dice (`sinTaxonomia`).
+   */
+  fichaInternaDeProducto(productoId: ProductoId): R<FichaInterna>;
 
   // La capa del vendedor, para un prospecto
   listarFichasPersonalizadas(clienteId: Id, pagina?: OpcionesPagina): R<Pagina<FichaPersonalizada>>;

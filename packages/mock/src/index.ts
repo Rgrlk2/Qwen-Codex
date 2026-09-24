@@ -202,6 +202,7 @@ export function crearCapaDatosMock(opciones: OpcionesCapaDatosMock = {}): CapaDa
     obtenerFichaOficial: (productoId) => fichas.obtenerFichaOficial(productoId),
     indicePortafolio: () => fichas.indicePortafolio(),
     fichasPorNecesidad: (necesidadId) => fichas.fichasPorNecesidad(necesidadId),
+    fichaInternaDeProducto: (productoId) => fichas.fichaInternaDeProducto(productoId),
     listarFichasPersonalizadas: (clienteId, pagina) => fichas.listarFichasPersonalizadas(clienteId, pagina),
     obtenerFichaPersonalizada: (id) => fichas.obtenerFichaPersonalizada(id),
     prepararFicha: (datos, clave) => fichas.prepararFicha(datos, clave),

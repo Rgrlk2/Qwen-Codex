@@ -20,6 +20,11 @@ import {
 import { textoDinero } from '../packages/compartido/src/core.ts';
 import { ENCABEZADOS_DEL_COPY, ORDEN_CANONICO, PRODUCTOS } from '../packages/compartido/src/index.ts';
 import { crearCapaDatosMock } from '../packages/mock/src/index.ts';
+import { fichaInternaDe } from '../packages/compartido/src/fichas-internas.ts';
+import {
+  NECESIDADES_SEMILLA, OPERACIONES_SEMILLA, PRODUCTOS_CATALOGO,
+  RELACIONES_NECESIDAD_PRODUCTO, RELACIONES_OPERACION_NECESIDAD,
+} from '../packages/mock/src/datos-motor.ts';
 import { JSDOM } from 'jsdom';
 import * as vistaClientes from '../apps/escritorio/src/vistas/clientes/vista.ts';
 
@@ -145,6 +150,100 @@ const ajeno = [...inicial, { bloqueId: 'datosQueNecesita', visible: true, orden:
 const ojo = fichas.find((f) => f.nombreProducto === 'Ojo Digital');
 comprobar('⛔ un bloque que el producto no tiene se rechaza',
   validarPersonalizacion(ojo, ajeno)?.tipo === 'bloque_ausente');
+
+// ===========================================================================
+seccion('La ficha INTERNA del vendedor — y la regla de no inventar');
+
+const FUENTES = {
+  operaciones: OPERACIONES_SEMILLA,
+  necesidades: NECESIDADES_SEMILLA,
+  relacionesOperacionNecesidad: RELACIONES_OPERACION_NECESIDAD,
+  relacionesNecesidadProducto: RELACIONES_NECESIDAD_PRODUCTO,
+  nombresDeProducto: new Map(PRODUCTOS_CATALOGO.map((p) => [p.id, p.nombre])),
+};
+const oficialV247 = fichas.find((f) => f.nombreProducto === 'Vendedor 24/7');
+const interna = fichaInternaDe(FUENTES, 'vendedor-24-7', oficialV247);
+
+comprobar('la ficha interna se arma con la taxonomia cargada',
+  !interna.sinTaxonomia && interna.queResuelve.length > 0);
+
+// ⛔ LA REGLA: ni un texto inventado. Cada cadena tiene que estar escrita en
+//    la taxonomia. Si alguna vez alguien "mejora" un argumento, esto falla.
+const TEXTOS_DE_LA_TAXONOMIA = new Set([
+  ...NECESIDADES_SEMILLA.flatMap((n) => [n.nombre, n.descripcion, n.preguntaConfirmacion]),
+  ...OPERACIONES_SEMILLA.flatMap((o) => [o.nombre, o.pregunta]),
+  ...RELACIONES_OPERACION_NECESIDAD.map((r) => r.motivo),
+  ...RELACIONES_NECESIDAD_PRODUCTO.flatMap((r) => [r.argumento, r.motivo, r.adaptacionRequerida ?? '']),
+  ...PRODUCTOS_CATALOGO.map((p) => p.nombre),
+]);
+const inventados = [
+  ...interna.queResuelve.flatMap((d) => [d.nombre, d.descripcion, d.argumento, d.motivo,
+    ...(d.adaptacionRequerida ? [d.adaptacionRequerida] : [])]),
+  ...interna.senales.flatMap((s) => [s.operacion, s.dolor, s.motivo]),
+  ...interna.preguntas.flatMap((p) => [p.texto, p.queValida]),
+  ...interna.complementarios.flatMap((c) => [c.nombreProducto, c.porLaOperacion, c.cubreElDolor]),
+  ...interna.noOfrecerlo.flatMap((n) => [n.dolor, n.motivo]),
+].filter((t) => !TEXTOS_DE_LA_TAXONOMIA.has(t));
+comprobar('⛔ NI UN texto inventado: todo sale de la taxonomia',
+  inventados.length === 0, inventados.slice(0, 2).join(' || '));
+
+comprobar('las senales van de una operacion del negocio a un dolor',
+  interna.senales.length > 0
+  && interna.senales.every((s) => s.operacion && s.dolor && s.motivo));
+comprobar('⛔ lo tipico va antes que lo ocasional',
+  interna.senales.every((s, i) => i === 0
+    || ['tipica', 'frecuente', 'ocasional'].indexOf(interna.senales[i - 1].probabilidad)
+       <= ['tipica', 'frecuente', 'ocasional'].indexOf(s.probabilidad)));
+comprobar('trae preguntas para descubrir, sin repetir ninguna',
+  interna.preguntas.length > 0
+  && new Set(interna.preguntas.map((p) => p.texto)).size === interna.preguntas.length);
+comprobar('⛔ un producto NUNCA se complementa a si mismo',
+  interna.complementarios.every((c) => c.productoId !== 'vendedor-24-7'));
+comprobar('los complementarios salen de una operacion compartida, no de una lista suelta',
+  interna.complementarios.every((c) =>
+    interna.queObservar.includes(c.porLaOperacion)));
+comprobar('⛔ lo no_recomendado NO aparece como algo que resuelve',
+  interna.queResuelve.every((d) => d.encaje !== 'no_recomendado'));
+comprobar('y si esta documentado donde NO va, se dice',
+  interna.noOfrecerlo.every((n) =>
+    RELACIONES_NECESIDAD_PRODUCTO.some((r) =>
+      r.productoId === 'vendedor-24-7' && r.necesidadId === n.necesidadId
+      && r.encaje === 'no_recomendado')));
+comprobar('⛔ primero el encaje directo, despues el cercano',
+  interna.queResuelve.every((d, i) => i === 0
+    || ['directo', 'cercano', 'adaptable'].indexOf(interna.queResuelve[i - 1].encaje)
+       <= ['directo', 'cercano', 'adaptable'].indexOf(d.encaje)));
+comprobar('trae el precio del copy a mano, para no ir a buscarlo',
+  typeof interna.precioDeReferencia === 'string' && interna.precioDeReferencia.length > 0);
+
+// --- Sin taxonomia cargada: se dice, no se rellena ------------------------
+const internaSinTaxonomia = fichaInternaDe(
+  { ...FUENTES, relacionesNecesidadProducto: [], relacionesOperacionNecesidad: [] },
+  'vendedor-24-7', oficialV247,
+);
+comprobar('⛔ sin taxonomia cargada, lo dice en vez de rellenar con el copy',
+  internaSinTaxonomia.sinTaxonomia
+  && internaSinTaxonomia.queResuelve.length === 0
+  && internaSinTaxonomia.senales.length === 0
+  && internaSinTaxonomia.preguntas.length === 0
+  && internaSinTaxonomia.complementarios.length === 0);
+
+// --- ⛔ Y NUNCA llega al cliente -----------------------------------------
+const publicaV247 = fichaPublicaDe(oficialV247, {
+  id: 'p', productoId: 'vendedor-24-7', clienteId: 'c', vendedorId: 'v', planId: null,
+  bloques: personalizacionInicial(oficialV247),
+  loQueConversamos: null, notaDelVendedor: null, precio: null,
+  huellaCopy: 'h1', version: 1,
+  creadoEn: '', creadoPor: '', actualizadoEn: '', actualizadoPor: '',
+}, 'Ana');
+const CAMPOS_PUBLICOS = JSON.stringify(publicaV247);
+const FILTRADO = [
+  ...interna.senales.map((s) => s.motivo),
+  ...interna.preguntas.map((p) => p.texto),
+  ...interna.queResuelve.map((d) => d.motivo),
+].filter((t) => t && CAMPOS_PUBLICOS.includes(t));
+comprobar('⛔ NADA de la ficha interna aparece en lo que recibe el cliente',
+  FILTRADO.length === 0, FILTRADO.slice(0, 1).join(''));
 
 // ===========================================================================
 seccion('Lo que ve el cliente — la superficie minima');
