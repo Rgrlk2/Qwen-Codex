@@ -1084,6 +1084,52 @@ function renderTaxonomiaPendiente(contenedor: HTMLElement, ctx: ContextoVista): 
   bloque.cargar();
 }
 
+/**
+ * El bloque con la clave inicial de un vendedor recién creado.
+ *
+ * ⛔ POR QUÉ ES UN BLOQUE Y NO UN AVISO QUE SE VA: esta clave existe una sola
+ *    vez. La genera la base al azar, no se guarda en ningún lado y no hay
+ *    forma de volver a pedirla. Si desaparece de la pantalla antes de que
+ *    Administración la copie, el único camino es dar de baja al vendedor y
+ *    crearlo de nuevo.
+ *
+ * ⛔ Y no se recarga la lista automáticamente después de crear: recargar
+ *    borraría este bloque de la pantalla, que es justo lo que no puede pasar.
+ */
+function bloqueDeClaveInicial(nombre: string, usuario: string, clave: string): HTMLElement {
+  const caja = crearElemento('div', 'admin-clave-inicial');
+  caja.setAttribute('role', 'status');
+  caja.appendChild(crearElemento('h5', undefined, `${nombre} quedó creado`));
+  caja.appendChild(crearElemento(
+    'p', 'admin-ayuda',
+    'Pasale estos dos datos por un medio seguro. La clave se muestra UNA sola vez: '
+    + 'si cerrás esta pantalla sin copiarla, hay que dar de baja al usuario y volver a crearlo. '
+    + 'En su primer ingreso el sistema le va a exigir cambiarla.',
+  ));
+
+  const datos = crearElemento('div', 'admin-clave-datos');
+  const filaUsuario = crearElemento('p');
+  filaUsuario.appendChild(crearElemento('span', 'admin-clave-etiqueta', 'Usuario'));
+  filaUsuario.appendChild(crearElemento('code', 'admin-clave-valor', usuario));
+  const filaClave = crearElemento('p');
+  filaClave.appendChild(crearElemento('span', 'admin-clave-etiqueta', 'Clave inicial'));
+  filaClave.appendChild(crearElemento('code', 'admin-clave-valor', clave));
+  datos.appendChild(filaUsuario);
+  datos.appendChild(filaClave);
+  caja.appendChild(datos);
+
+  const copiar = crearElemento('button', 'btn', 'Copiar usuario y clave');
+  copiar.type = 'button';
+  copiar.addEventListener('click', () => {
+    // Si el navegador no deja copiar, no se finge que copió: se dice.
+    void navigator.clipboard.writeText(`Usuario: ${usuario}\nClave inicial: ${clave}`)
+      .then(() => { copiar.textContent = 'Copiado'; })
+      .catch(() => { copiar.textContent = 'No pude copiar: anotala a mano'; });
+  });
+  caja.appendChild(copiar);
+  return caja;
+}
+
 function renderVendedores(contenedor: HTMLElement, ctx: ContextoVista): void {
   const contenedorTabla = crearElemento('div');
   const contenedorFormulario = crearElemento('div', 'admin-formulario');
@@ -1152,11 +1198,17 @@ function renderVendedores(contenedor: HTMLElement, ctx: ContextoVista): void {
         mostrarAviso(aviso, resultado.error.mensajeAmable);
         return;
       }
-      mostrarAviso(aviso, `${resultado.datos.nombre} creado. Va a tener que cambiar su clave en el primer ingreso.`);
+      // ⛔ LA CLAVE SE MUESTRA UNA SOLA VEZ, Y ACÁ.
+      //    La genera la base al azar y no queda en ningún lado: ni en el
+      //    repositorio, ni en un correo, ni en otra llamada. Antes esta
+      //    pantalla la tiraba y el vendedor quedaba creado sin poder entrar.
+      //    Por eso no se usa el aviso chico: se arma un bloque que se queda.
+      const alta = resultado.datos;
+      contenedorFormulario.appendChild(
+        bloqueDeClaveInicial(alta.usuario.nombre, alta.usuario.usuario, alta.claveInicial));
       entradaNombre.value = '';
       entradaEmail.value = '';
       entradaUsuario.value = '';
-      renderVendedores(contenedor, ctx);
     })();
   });
   contenedorFormulario.appendChild(boton);

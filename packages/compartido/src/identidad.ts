@@ -66,6 +66,48 @@ export interface Capacidades {
   readonly cerrarPeriodo: boolean;
 }
 
+/**
+ * Lo que devuelve un alta de usuario.
+ *
+ * ⛔ `claveInicial` se muestra UNA SOLA VEZ y no se guarda en ningún lado.
+ *    La base la genera al azar y no queda en el repositorio, ni en un correo,
+ *    ni en una segunda llamada: si Administración no la anota en ese momento,
+ *    hay que dar de baja al usuario y volver a crearlo.
+ *
+ * ⛔ Sin esto, el alta quedaba inservible: se creaba la cuenta y nadie sabía
+ *    con qué entrar. El vendedor nuevo quedaba afuera para siempre.
+ */
+export interface AltaDeUsuario {
+  readonly usuario: Usuario;
+  readonly claveInicial: string;
+}
+
+/**
+ * Qué puede hacer cada rol.
+ *
+ * ⛔ Esto decide QUÉ SE DIBUJA. No es la protección: la guardia de verdad vive
+ *    en el ruteo, en la capa de datos y —sobre todo— en las políticas de la
+ *    base, que son las únicas que un navegador no puede saltear.
+ *
+ * ⛔ POR QUÉ ESTÁ ACÁ Y NO DONDE ESTABA: vivía dentro del paquete de datos de
+ *    EJEMPLO, y la aplicación de producción lo importaba de ahí. Esa sola
+ *    línea arrastraba los clientes de ejemplo —"Ferretería Modelo S.R.L."—
+ *    dentro del archivo que se publica. Una regla de negocio no puede vivir
+ *    en el paquete de mentira.
+ */
+export function capacidadesDeRol(rol: Rol): Capacidades {
+  const admin = rol === 'administrador';
+  return {
+    verAdministracion: admin,
+    aprobarCotizaciones: admin,
+    configurarComercial: admin,
+    verTodosLosClientes: admin,
+    verAccesosDeVendedores: admin,
+    administrarVendedores: admin,
+    cerrarPeriodo: admin,
+  };
+}
+
 export interface FiltroUsuarios {
   readonly rol?: Rol;
   readonly activo?: boolean;

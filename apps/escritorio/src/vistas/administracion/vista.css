@@ -155,3 +155,55 @@
     grid-template-columns: 1fr;
   }
 }
+
+/*
+ * La clave inicial de un vendedor recién creado.
+ *
+ * ⛔ Se muestra UNA sola vez y no hay forma de volver a pedirla. Por eso no
+ *    se parece a un aviso que se va: es un bloque que se queda, con borde
+ *    marcado, hasta que Administración cambie de pantalla a propósito.
+ */
+.admin-clave-inicial {
+  margin-top: 1rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--linea-acento, rgba(96, 165, 250, .38));
+  border-radius: var(--r-caja, 14px);
+  background: var(--glass, rgba(255, 255, 255, .04));
+}
+
+.admin-clave-inicial h5 {
+  margin: 0 0 .375rem;
+  font-size: 1rem;
+}
+
+.admin-clave-datos {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+  margin: .75rem 0;
+}
+
+.admin-clave-datos p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .5rem;
+  margin: 0;
+}
+
+.admin-clave-etiqueta {
+  min-width: 6.5rem;
+  font-size: .8125rem;
+  color: var(--texto-3, rgba(174, 184, 200, .72));
+}
+
+/* Se selecciona con un doble clic y no se parte al final del renglón. */
+.admin-clave-valor {
+  padding: .25rem .5rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, .28);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .9375rem;
+  user-select: all;
+  overflow-wrap: anywhere;
+}

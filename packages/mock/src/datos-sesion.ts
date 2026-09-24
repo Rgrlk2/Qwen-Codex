@@ -18,6 +18,7 @@ import type {
   AccionRegistrada, Capacidades, EntidadRegistrada, FiltroRegistroAcceso, FiltroUsuarios,
   Id, Pagina, RegistroAcceso, Resultado, Rol, Sesion, Usuario,
 } from '@labia/compartido';
+import { capacidadesDeRol } from '@labia/compartido';
 
 import {
   ERROR_CREDENCIALES, ERROR_NO_AUTENTICADO, type NucleoMock,
@@ -106,24 +107,10 @@ function cuentaPorRol(rol: Rol): Usuario {
   return encontrada;
 }
 
-/**
- * Capacidades derivadas del rol.
- *
- * ⛔ Esto decide QUÉ SE DIBUJA. No es la protección: la guardia vive en el
- *    ruteo y en la capa de datos (MASTER_SPEC §1.3).
- */
-export function capacidadesDeRol(rol: Rol): Capacidades {
-  const admin = rol === 'administrador';
-  return {
-    verAdministracion: admin,
-    aprobarCotizaciones: admin,
-    configurarComercial: admin,
-    verTodosLosClientes: admin,
-    verAccesosDeVendedores: admin,
-    administrarVendedores: admin,
-    cerrarPeriodo: admin,
-  };
-}
+// ⛔ `capacidadesDeRol` se mudó a `@labia/compartido`: es una regla de
+//    negocio, no un dato de ejemplo, y tenerla acá hacía que la aplicación de
+//    producción importara este paquete entero —con sus clientes inventados
+//    adentro— sólo para preguntar qué puede hacer un administrador.
 
 // ---------------------------------------------------------------------------
 // Registro de acceso — ⛔ append-only: sin edición ni borrado

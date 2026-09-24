@@ -16,7 +16,7 @@
  */
 
 import type {
-  AccesoEnlace, AccionRevision, Actividad, Ajuste, AlternativaCalculada,
+  AccesoEnlace, AccionRevision, Actividad, Ajuste, AltaDeUsuario, AlternativaCalculada,
   CambioTaxonomia, CapaAdministracion, Cliente, CodigoAlternativa,
   ConstanciaRespuesta, ControlFinanciero, Cotizacion, CotizacionDetalle, Dinero,
   EstadoObservacion, EstadoProveedores, EventoLineaTiempo, FilaRanking,
@@ -867,25 +867,30 @@ export function crearCapaAdministracion(): CapaAdministracion {
         p_email_real: datos.email,
         p_rol: datos.rol,
       });
-      if (error) return fallo<Usuario>(error);
+      if (error) return fallo<AltaDeUsuario>(error);
       const filas = (data ?? []) as unknown as Array<{ usuario: string; clave_inicial: string }>;
       const alta = filas.length > 0 ? filas[0] : undefined;
-      if (!alta) return todaviaNo<Usuario>('No pudimos dar de alta al vendedor.');
+      if (!alta) return todaviaNo<AltaDeUsuario>('No pudimos dar de alta al vendedor.');
 
       const { data: creado } = await sb
         .from('usuario').select('*').eq('usuario', alta.usuario).maybeSingle();
       const u = (creado ?? {}) as unknown as Record<string, unknown>;
-      return bien<Usuario>({
-        id: u['id'] as string, nombre: u['nombre'] as string,
-        email: u['email'] as string, usuario: u['usuario'] as string,
-        rol: u['rol'] as Rol, activo: u['activo'] as boolean,
-        debeCambiarClave: u['debe_cambiar_clave'] as boolean,
-        ultimoIngresoEn: null,
-        creadoEn: u['creado_en'] as string,
-        creadoPor: (u['creado_por'] as string | null) ?? 'sistema',
-        actualizadoEn: u['actualizado_en'] as string,
-        actualizadoPor: (u['actualizado_por'] as string | null) ?? 'sistema',
-        version: u['version'] as number,
+      return bien<AltaDeUsuario>({
+        usuario: {
+          id: u['id'] as string, nombre: u['nombre'] as string,
+          email: u['email'] as string, usuario: u['usuario'] as string,
+          rol: u['rol'] as Rol, activo: u['activo'] as boolean,
+          debeCambiarClave: u['debe_cambiar_clave'] as boolean,
+          ultimoIngresoEn: null,
+          creadoEn: u['creado_en'] as string,
+          creadoPor: (u['creado_por'] as string | null) ?? 'sistema',
+          actualizadoEn: u['actualizado_en'] as string,
+          actualizadoPor: (u['actualizado_por'] as string | null) ?? 'sistema',
+          version: u['version'] as number,
+        },
+        // ⛔ Única vez que esta clave existe fuera de la base. Si no se
+        //    muestra acá, el vendedor nuevo queda creado y sin poder entrar.
+        claveInicial: alta.clave_inicial,
       });
     },
 

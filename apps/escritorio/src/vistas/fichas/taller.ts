@@ -11,7 +11,10 @@
 import type {
   CapaDatos, FichaOficial, FichaPersonalizada, Id, PersonalizacionBloque, ProductoId,
 } from '@labia/compartido';
-import { conBloquesNuevos, fichaPublicaDe, personalizacionInicial } from '@labia/mock';
+// ⛔ De `@labia/compartido`, NUNCA de `@labia/mock`: el paquete de ejemplo
+//    reexporta lo mismo, pero importarlo desde acá mete los clientes
+//    inventados dentro de lo que se publica.
+import { conBloquesNuevos, fichaPublicaDe, personalizacionInicial } from '@labia/compartido';
 
 import { crear, vaciar } from './dom';
 import { montarPreparar, type EstadoPreparacion } from './preparar';

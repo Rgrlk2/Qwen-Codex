@@ -1401,7 +1401,17 @@ export function crearCapaFinanzas(
         actualizadoEn: `${HOY}T12:00:00-04:00`, actualizadoPor: actorId, version: 1,
       }));
       if (!usuarios.some((u) => u.id === nuevo.id)) usuarios = [...usuarios, nuevo];
-      return responder(config, nuevo);
+      // ⛔ La clave inicial se devuelve UNA vez, igual que contra el servidor.
+      //    Se arma al vuelo y NO se escribe en este archivo: una cadena con
+      //    pinta de contraseña dentro del repositorio es exactamente lo que
+      //    `verificar:portafolio` rechaza, y con razón.
+      return responder(config, {
+        usuario: nuevo,
+        claveInicial: Array.from(
+          { length: 18 },
+          () => 'abcdefghijkmnpqrstuvwxyz23456789'[Math.floor(Math.random() * 32)],
+        ).join(''),
+      });
     },
 
     async cambiarRol(usuarioId, rol, motivo) {

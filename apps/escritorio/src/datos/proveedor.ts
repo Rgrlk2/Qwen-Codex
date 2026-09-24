@@ -73,7 +73,17 @@ export function elegirCapaDatos(): CapaElegida {
     );
   }
 
-  if (pedido === 'mock' || (pedido === undefined && enDesarrollo)) {
+  // ⛔ `import.meta.env.DEV` ESCRITO ASÍ, LITERAL, Y NO LA VARIABLE
+  //    `enDesarrollo`. No es un capricho de estilo: al construir para
+  //    producción, la herramienta reemplaza este texto por `false`, todo el
+  //    bloque queda muerto y `crearCapaDatosMock` deja de usarse, así que el
+  //    paquete de datos de ejemplo NO ENTRA en el archivo publicado.
+  //
+  //    Con la variable intermedia no podía saberlo, y los clientes inventados
+  //    —"Ferretería Modelo S.R.L.", "Hotel Las Mercedes"— viajaban dentro de
+  //    lo que se publica. No eran alcanzables, pero estaban. Que no se puedan
+  //    usar y que no estén son dos cosas distintas, y la segunda es la buena.
+  if (import.meta.env.DEV && (pedido === 'mock' || pedido === undefined)) {
     const capa = crearCapaDatosMock();
     return { capa, origen: 'mock', datosDeEjemplo: true, mock: capa };
   }

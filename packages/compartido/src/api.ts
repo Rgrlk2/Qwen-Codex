@@ -18,7 +18,9 @@ import type {
 } from './core';
 
 import type { FiltroProductos, PrecioLista, Producto, ProductoDetalle, ProductoId } from './catalogo';
-import type { Capacidades, FiltroUsuarios, NuevoUsuario, Rol, Sesion, Usuario } from './identidad';
+import type {
+  AltaDeUsuario, Capacidades, FiltroUsuarios, NuevoUsuario, Rol, Sesion, Usuario,
+} from './identidad';
 
 import type {
   Actividad, AjustePerfil, CambioTaxonomia, EjePlan, EntradaPlan, FiltroPlanes,
@@ -486,7 +488,12 @@ export interface CapaAdministracion {
   editarTaxonomia(cambio: CambioTaxonomia, clave: ClaveIdempotencia): R<void>;
 
   listarVendedores(filtro: FiltroUsuarios, pagina?: OpcionesPagina): R<Pagina<Usuario>>;
-  crearVendedor(datos: NuevoUsuario, clave: ClaveIdempotencia): R<Usuario>;
+  /**
+   * ⛔ Devuelve la clave inicial, que se muestra UNA vez y no vuelve a estar
+   *    disponible. Antes devolvía sólo el usuario y la clave se perdía: el
+   *    vendedor nuevo quedaba creado y sin forma de entrar.
+   */
+  crearVendedor(datos: NuevoUsuario, clave: ClaveIdempotencia): R<AltaDeUsuario>;
   cambiarRol(usuarioId: Id, rol: Rol, motivo: string): R<Usuario>;
   desactivarVendedor(id: Id, motivo: string): R<Usuario>;
   reasignarCartera(datos: ReasignacionCartera, clave: ClaveIdempotencia): R<ResultadoReasignacion>;

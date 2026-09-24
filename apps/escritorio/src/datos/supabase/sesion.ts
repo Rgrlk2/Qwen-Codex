@@ -13,7 +13,7 @@
  */
 
 import type { Capacidades, Resultado, Rol, Sesion, Usuario } from '@labia/compartido';
-import { capacidadesDeRol } from '@labia/mock';
+import { capacidadesDeRol } from '@labia/compartido';
 import { supabase } from './conexion';
 import { bien, fallo } from './errores';
 import { COLUMNAS_TRAZADO, aTrazado, type FilaTrazado } from './trazado';
