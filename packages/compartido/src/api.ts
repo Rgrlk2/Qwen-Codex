@@ -314,6 +314,12 @@ export interface CapaPropuestas {
   crearPresentacion(datos: NuevaPresentacion, clave: ClaveIdempotencia): R<Presentacion>;
   actualizarPresentacion(id: Id, cambios: Partial<NuevaPresentacion>, version: Version): R<Presentacion>;
   emitirPresentacion(id: Id, clave: ClaveIdempotencia): R<DocumentoEmitido>;
+  /**
+   * ⛔ Descarta la presentación, no los productos ni el copy. Y exige motivo:
+   *    un enlace que deja de abrir sin explicación es un problema para quien
+   *    lo tenga que atender después.
+   */
+  descartarPresentacion(id: Id, motivo: string): R<void>;
 
   // B · Cotización: precio propuesto por el vendedor
   listarCotizaciones(filtro: FiltroCotizaciones, pagina?: OpcionesPagina): R<Pagina<Cotizacion>>;

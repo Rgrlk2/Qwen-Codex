@@ -352,22 +352,38 @@ async function cerrarSesion(): Promise<void> {
  */
 const PREFIJO_COTIZACION = '#/p/';
 const PREFIJO_FICHA = '#/f/';
+/** Presentación: varios productos para un cliente, sin precio cerrado. */
+const PREFIJO_PRESENTACION = '#/s/';
 
 type EnlaceDelCliente =
   | { tipo: 'cotizacion'; token: string; codigo?: string }
-  | { tipo: 'ficha'; token: string };
+  | { tipo: 'ficha'; token: string }
+  | { tipo: 'presentacion'; token: string };
 
+/**
+ * ⛔ El prefijo dice QUÉ documento es, pero no da acceso a nada: el token es
+ *    lo único que vale, y el servidor comprueba que el enlace sea realmente
+ *    de ese tipo. Cambiar la letra a mano no abre otra cosa.
+ */
 function enlaceDelCliente(): EnlaceDelCliente | null {
   const hash = window.location.hash;
-  const esFicha = hash.startsWith(PREFIJO_FICHA);
-  if (!esFicha && !hash.startsWith(PREFIJO_COTIZACION)) return null;
 
-  const prefijo = esFicha ? PREFIJO_FICHA : PREFIJO_COTIZACION;
+  const tipo = hash.startsWith(PREFIJO_FICHA) ? 'ficha'
+    : hash.startsWith(PREFIJO_PRESENTACION) ? 'presentacion'
+      : hash.startsWith(PREFIJO_COTIZACION) ? 'cotizacion'
+        : null;
+  if (tipo === null) return null;
+
+  const prefijo = tipo === 'ficha' ? PREFIJO_FICHA
+    : tipo === 'presentacion' ? PREFIJO_PRESENTACION
+      : PREFIJO_COTIZACION;
   const partes = hash.slice(prefijo.length).split('/').filter(Boolean);
   const token = decodeURIComponent(partes[0] ?? '').trim();
   if (token === '') return null;
 
-  if (esFicha) return { tipo: 'ficha', token };
+  if (tipo === 'ficha') return { tipo: 'ficha', token };
+  if (tipo === 'presentacion') return { tipo: 'presentacion', token };
+
   const codigo = partes[1] === undefined ? undefined : decodeURIComponent(partes[1]);
   return codigo === undefined
     ? { tipo: 'cotizacion', token }
@@ -376,13 +392,14 @@ function enlaceDelCliente(): EnlaceDelCliente | null {
 
 async function montarPuertaDelCliente(enlace: EnlaceDelCliente): Promise<void> {
   const { crearCapaPublicaSupabase } = await import('./datos/supabase/publico');
-  const { montarCotizacionPublica, montarFichaPublica } =
+  const { montarCotizacionPublica, montarFichaPublica, montarPresentacionPublica } =
     await import('./vistas/propuestas/publico');
   const raiz = raizApp();
   raiz.replaceChildren();
   document.body.dataset['vista'] = 'publica';
   const capa = crearCapaPublicaSupabase();
   if (enlace.tipo === 'ficha') montarFichaPublica(raiz, capa, enlace.token);
+  else if (enlace.tipo === 'presentacion') montarPresentacionPublica(raiz, capa, enlace.token);
   else montarCotizacionPublica(raiz, capa, enlace.token, enlace.codigo);
 }
 

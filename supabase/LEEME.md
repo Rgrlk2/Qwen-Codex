@@ -923,6 +923,41 @@ conocimiento que la alimenta se enriquece desde Administración → Taxonomía.
 Ninguna relación está cargada como `no_recomendado`, así que "Dónde NO
 ofrecerlo" aparece vacío en los trece: no hay nada documentado todavía.
 
+## La presentación, que no se podía compartir
+
+`crear_enlace` sólo sabía de cotizaciones: buscaba el id en `cotizacion` y, si
+no estaba, fallaba con "No encontramos esa cotizacion". Es decir que una
+presentación **no se podía compartir en absoluto**, aunque el contrato dijera
+que sí y `tipo_propuesta` ya tuviera el valor `'presentacion'` esperándolo
+desde el primer día.
+
+Ahora resuelve el tipo mirando dónde vive el id, y le aplica a cada uno su
+propia regla. ⛔ G8 no se movió: una cotización sin aprobar sigue sin salir, y
+está probado contra esta base después del cambio. La presentación no lleva
+aprobación **por diseño** —no tiene precio cerrado—, pero sí tiene que tener al
+menos un producto y no estar descartada. Las tres cosas, probadas:
+
+    compartir una presentación VACÍA        → RECHAZADA
+    compartir una DESCARTADA                → RECHAZADA
+    compartir un id que no existe           → RECHAZADO
+    compartir una cotización EN BORRADOR    → RECHAZADA (G8 intacta)
+
+La presentación ganó además los dos textos del vendedor y el permiso para
+mostrar el rango de referencia, que **arranca apagado**. ⛔ Y perdió la lista
+de "casos de uso": era una copia del copy guardada en la base, o sea una
+segunda fuente del mismo texto. El cliente ve los casos de uso de cada
+producto desde el copy vigente; lo que hace relevante la presentación para ESE
+cliente son las palabras del vendedor, no una copia que mañana quede vieja.
+
+La pantalla que abre el cliente era un listado de identificadores
+—literalmente `ojo-digital` como viñeta—. Ahora muestra cada producto con su
+logo y su ficha oficial, el precio sólo si el vendedor lo habilitó y siempre
+como referencia, y una sola acción: Hablemos.
+
+Probado en vivo contra este proyecto: presentación creada como el vendedor,
+compartida, y abierta desde el enlace público. En la respuesta no viaja el id
+del cliente, ni el del vendedor, ni el plan, ni una línea de copy.
+
 ## Lo que falta del servidor
 
 - ~~Las fichas como lo que el cliente recibe~~ — **hechas** (`#/f/<token>`).
@@ -941,3 +976,7 @@ ofrecerlo" aparece vacío en los trece: no hay nada documentado todavía.
 - El cronograma comercial: se arma sobre presentaciones y cotizaciones, que
   son de la capa de propuestas. Hasta que esa capa exista contra el servidor
   devuelve vacío. ⛔ Barras inventadas serían peores que ninguna.
+- ~~La presentación compartible~~ — **hecha** (`#/s/<token>`), probada en vivo.
+- El PDF de una presentación. `emitirPresentacion` existe y la función
+  `documento` arma el de la cotización; la de la presentación todavía no. ⛔ No
+  se anuncia como disponible: el enlace sí funciona, el PDF no.

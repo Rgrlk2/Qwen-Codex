@@ -506,6 +506,64 @@ comprobar('⛔ lo directo va primero',
   dolor.ok && dolor.datos.fichas[0].productoId === 'merma-ia');
 
 // ===========================================================================
+seccion('La presentacion que abre el cliente');
+
+// Una presentacion son VARIOS productos para un cliente, sin precio cerrado.
+const presCreada = await datos.crearPresentacion({
+  clienteId: 'cliente-demo',
+  titulo: 'Lo que conversamos',
+  productosIncluidos: ['park-ia', 'vendedor-24-7'],
+  loQueConversamos: 'Me contaste que anotan las entradas en un cuaderno.',
+  notaDelVendedor: 'Cualquier duda escribime.',
+}, 'clave-pres-1');
+comprobar('se crea una presentacion con varios productos',
+  presCreada.ok && presCreada.datos.productosIncluidos.length === 2);
+
+comprobar('⛔ arranca SIN mostrar rango de referencia: una presentacion no lleva precio',
+  presCreada.ok && presCreada.datos.mostrarRangoDeReferencia === false);
+
+const enlacePres = await datos.crearEnlace(
+  presCreada.ok ? presCreada.datos.id : '', { venceEn: '2027-01-01T00:00:00-03:00' }, 'clave-pres-enlace');
+comprobar('se comparte por enlace', enlacePres.ok);
+
+const publicaPres = await datos.publica.obtenerPresentacionPublica(
+  enlacePres.ok ? enlacePres.datos.token : '');
+comprobar('y el cliente la abre', publicaPres.ok,
+  publicaPres.ok ? '' : publicaPres.error?.codigo);
+
+if (publicaPres.ok) {
+  const d = publicaPres.datos;
+  comprobar('trae los dos textos del vendedor',
+    d.loQueConversamos !== null && d.notaDelVendedor !== null);
+  comprobar('⛔ y el nombre de pila del vendedor, no su legajo',
+    typeof d.nombreVendedor === 'string' && !d.nombreVendedor.includes('@'));
+  comprobar('⛔ una sola accion: Hablemos', d.llamadoALaAccion === 'Hablemos');
+
+  // ⛔ La superficie minima: nada interno viaja.
+  const crudo = JSON.stringify(d);
+  const PROHIBIDO = ['clienteId', 'vendedorId', 'planId', 'comision', 'costo',
+    'cliente-demo', 'precioLista', 'nombreCliente'];
+  const filtrados = PROHIBIDO.filter((t) => crudo.includes(t));
+  comprobar('⛔ NADA interno viaja en la presentacion del cliente',
+    filtrados.length === 0, filtrados.join(', '));
+
+  // ⛔ Y no viaja copy: van los identificadores, el texto lo pone el navegador.
+  comprobar('⛔ viajan los IDENTIFICADORES de los productos, no su copy',
+    d.productos.every((x) => typeof x === 'string' && x.length < 40)
+    && !crudo.includes('### '));
+}
+
+// ⛔ Descartada: el enlace deja de abrir, aunque no haya vencido.
+const descartePres = await datos.descartarPresentacion(
+  presCreada.ok ? presCreada.datos.id : '', 'era para otro cliente');
+comprobar('descartar una presentacion exige motivo y responde bien', descartePres.ok);
+const presTrasDescarte = await datos.publica.obtenerPresentacionPublica(
+  enlacePres.ok ? enlacePres.datos.token : '');
+comprobar('⛔ una presentacion descartada deja de abrir', !presTrasDescarte.ok);
+comprobar('descartar SIN motivo se rechaza',
+  !(await datos.descartarPresentacion(presCreada.ok ? presCreada.datos.id : '', '   ')).ok);
+
+// ===========================================================================
 seccion('El taller se abre desde la ficha del cliente');
 
 // La vista de Clientes arma marcado con innerHTML y carga en varios turnos;

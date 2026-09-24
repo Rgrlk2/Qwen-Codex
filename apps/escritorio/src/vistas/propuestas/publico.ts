@@ -14,7 +14,8 @@
 
 import type { CapaPublica, ConstanciaRespuesta, OpcionRespuesta, RespuestaDelCliente } from '@labia/compartido';
 import {
-  NOTA_PRECIO_REFERENCIAL, TEXTOS_OPCION, TEXTO_ACEPTACION, TEXTO_BOTON_ENVIO,
+  COPY_DE_LOS_TRECE, NOTA_PRECIO_REFERENCIAL, TEXTOS_OPCION, TEXTO_ACEPTACION,
+  TEXTO_BOTON_ENVIO, fichasOficialesDelCopy, logoDe,
 } from '@labia/compartido';
 import { crear, vaciar } from './dom';
 import { formatearDinero, formatearFecha } from './formato';
@@ -48,21 +49,86 @@ export function montarPresentacionPublica(raiz: HTMLElement, capa: CapaPublica, 
     }
     const presentacion = resultado.datos;
     vaciar(raiz);
-    const pagina = crear('div', { clase: 'propuestas-publico' });
+    const pagina = crear('div', { clase: 'propuestas-publico propuestas-ficha' });
+
     pagina.append(crear('h1', { texto: presentacion.titulo }));
-    pagina.append(crear('p', { texto: `Preparado por ${presentacion.nombreVendedor} para ${presentacion.nombreCliente}.` }));
-    pagina.append(crear('p', { clase: 'propuestas-meta', texto: `Emitida el ${formatearFecha(presentacion.emitidaEn)}` }));
-    const productos = crear('ul');
-    for (const producto of presentacion.productos) productos.append(crear('li', { texto: producto }));
-    pagina.append(crear('h2', { texto: 'Productos' }), productos);
-    if (presentacion.casosDeUso.length > 0) {
-      const casos = crear('ul');
-      for (const caso of presentacion.casosDeUso) casos.append(crear('li', { texto: caso }));
-      pagina.append(crear('h2', { texto: 'Casos de uso' }), casos);
+    pagina.append(crear('p', {
+      clase: 'propuestas-meta',
+      texto: `Preparado por ${presentacion.nombreVendedor} · ${formatearFecha(presentacion.emitidaEn)}`,
+    }));
+
+    // ⛔ Lo que dice el vendedor va ARRIBA y separado de lo que dice Lab.IA.
+    //    El cliente tiene que poder distinguir una cosa de la otra.
+    if (presentacion.loQueConversamos) {
+      const bloque = crear('section', { clase: 'propuestas-ficha__conversado' });
+      bloque.append(
+        crear('h2', { texto: 'Lo que conversamos' }),
+        crear('p', { texto: presentacion.loQueConversamos }),
+      );
+      pagina.append(bloque);
     }
-    if (presentacion.rangoDeReferencia) {
-      pagina.append(crear('p', { clase: 'propuestas-referencia', texto: `Rango de referencia (no es un precio definitivo): ${presentacion.rangoDeReferencia}` }));
+
+    // ⛔ ACÁ NO LLEGÓ NI UNA LÍNEA DE COPY DEL SERVIDOR: del enlace vinieron
+    //    los identificadores de los productos, y el texto aprobado sale del
+    //    archivo congelado que ya trae esta aplicación. Una sola fuente.
+    const oficiales = fichasOficialesDelCopy(COPY_DE_LOS_TRECE, logoDe);
+    let algunoSeMostro = false;
+
+    for (const productoId of presentacion.productos) {
+      const oficial = oficiales.get(productoId);
+      // Un producto que este portafolio no tiene no se dibuja a medias.
+      if (!oficial) continue;
+      algunoSeMostro = true;
+
+      const seccion = crear('section', { clase: 'propuestas-presentacion__producto' });
+      const cabecera = crear('div', { clase: 'propuestas-presentacion__cabecera' });
+      const logo = crear('img', { clase: 'propuestas-ficha__logo' });
+      logo.src = oficial.logo;
+      logo.alt = oficial.nombreProducto;
+      cabecera.append(logo, crear('h2', { texto: oficial.nombreProducto }));
+      seccion.append(cabecera);
+
+      for (const bloque of oficial.bloques) {
+        if (!bloque.presente) continue;
+        // ⛔ El precio SÓLO si el vendedor lo decidió, y siempre como rango de
+        //    referencia: una presentación no lleva precio cerrado.
+        if (bloque.sensibleAlPrecio && !presentacion.mostrarRangoDeReferencia) continue;
+
+        const caja = crear('div', { clase: 'propuestas-ficha__bloque' });
+        caja.append(crear('h3', { texto: bloque.titulo }));
+        dibujarCopy(caja, bloque.contenido);
+        if (bloque.sensibleAlPrecio) {
+          caja.append(crear('p', {
+            clase: 'propuestas-ficha__nota-precio', texto: NOTA_PRECIO_REFERENCIAL,
+          }));
+        }
+        seccion.append(caja);
+      }
+      pagina.append(seccion);
     }
+
+    // ⛔ Antes que mostrarle al cliente una página con el título y nada más,
+    //    se dice. Una presentación vacía es un enlace roto con buena letra.
+    if (!algunoSeMostro) {
+      pantallaError(raiz, 'No pudimos abrir esta presentación. Pedile una nueva a quien te la compartió.');
+      return;
+    }
+
+    if (presentacion.notaDelVendedor) {
+      const nota = crear('section', { clase: 'propuestas-ficha__nota' });
+      nota.append(
+        crear('h2', { texto: `Nota de ${presentacion.nombreVendedor}` }),
+        crear('p', { texto: presentacion.notaDelVendedor }),
+      );
+      pagina.append(nota);
+    }
+
+    // ⛔ La única acción, igual que en la ficha: hablar con su vendedor. No
+    //    hay formulario de datos, ni pasarela, ni nada que pida información.
+    const cierre = crear('section', { clase: 'propuestas-ficha__cierre' });
+    cierre.append(crear('p', { texto: presentacion.llamadoALaAccion }));
+    pagina.append(cierre);
+
     pieDeMarca(pagina);
     raiz.append(pagina);
   });

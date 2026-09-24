@@ -467,6 +467,82 @@ async function fichaPublica(
   });
 }
 
+/**
+ * La presentación que el vendedor preparó para este prospecto.
+ *
+ * ⛔ IGUAL QUE LA FICHA: acá no viaja ni una línea de copy. Van los
+ *    identificadores de los productos y los dos textos del vendedor; el texto
+ *    aprobado lo pone el navegador desde el archivo congelado. Si el copy
+ *    pasara por acá habría dos fuentes del mismo texto y una quedaría vieja.
+ *
+ * ⛔ Y NO LLEVA PRECIO CERRADO. Como mucho, el permiso para mostrar el rango
+ *    documentado de cada producto. El número que compromete a Lab.IA es el de
+ *    la cotización, y ésa pasa por la aprobación del CEO.
+ */
+async function presentacionPublica(
+  sb: SupabaseClient, peticion: Request, token: string, codigo: string | null,
+): Promise<Response> {
+  const r = await abrir(sb, token, codigo);
+  if ('resultado' in r) {
+    const { data } = await sb.from('enlace_compartido').select('id').eq('token', token).maybeSingle();
+    await anotarApertura(sb, peticion, (data as { id: string } | null)?.id ?? null, 'presentacion', r.resultado);
+    return enlaceNoDisponible();
+  }
+  const e = r.enlace;
+  if (e.tipo_propuesta !== 'presentacion') return enlaceNoDisponible();
+
+  const { data: pres } = await sb
+    .from('presentacion')
+    .select('id, titulo, vendedor_id, lo_que_conversamos, nota_del_vendedor, mostrar_rango_referencia, descartada_en, creado_en, presentacion_producto ( producto_id )')
+    .eq('id', e.propuesta_id)
+    .maybeSingle();
+
+  if (!pres) {
+    await anotarApertura(sb, peticion, e.id, 'presentacion', 'codigo_invalido');
+    return enlaceNoDisponible();
+  }
+  const p = pres as Record<string, unknown>;
+
+  // ⛔ Una presentación descartada deja de abrir, aunque el enlace siga vivo.
+  if (p.descartada_en !== null) {
+    await anotarApertura(sb, peticion, e.id, 'presentacion', 'revocado');
+    return enlaceNoDisponible();
+  }
+
+  const productos = ((p.presentacion_producto ?? []) as Array<{ producto_id: string }>)
+    .map((x) => x.producto_id);
+
+  // Sin productos no hay nada que mostrar. ⛔ La base ya lo impide al crear el
+  //    enlace; acá se vuelve a mirar por si la presentación se vació después.
+  if (productos.length === 0) {
+    await anotarApertura(sb, peticion, e.id, 'presentacion', 'codigo_invalido');
+    return enlaceNoDisponible();
+  }
+
+  const { data: vendedor } = await sb
+    .from('usuario').select('nombre').eq('id', p.vendedor_id as string).maybeSingle();
+
+  await anotarApertura(sb, peticion, e.id, 'presentacion', 'ok');
+
+  // ⛔ Nombre de pila. Ni el correo, ni el teléfono, ni el rol.
+  const nombre = ((vendedor as { nombre: string } | null)?.nombre ?? '').split(' ')[0] ?? '';
+
+  return responder({
+    ok: true,
+    datos: {
+      tipo: 'presentacion',
+      titulo: p.titulo,
+      nombreVendedor: nombre,
+      emitidaEn: p.creado_en,
+      productos,
+      loQueConversamos: p.lo_que_conversamos ?? null,
+      notaDelVendedor: p.nota_del_vendedor ?? null,
+      mostrarRangoDeReferencia: p.mostrar_rango_referencia === true,
+      llamadoALaAccion: 'Hablemos',
+    },
+  });
+}
+
 Deno.serve(async (peticion) => {
   if (peticion.method === 'OPTIONS') return new Response(null, { headers: CABECERAS });
 
@@ -495,6 +571,7 @@ Deno.serve(async (peticion) => {
     switch (accion) {
       case 'cotizacion': return await cotizacionPublica(sb, peticion, token, codigo);
       case 'ficha':      return await fichaPublica(sb, peticion, token, codigo);
+      case 'presentacion': return await presentacionPublica(sb, peticion, token, codigo);
       case 'pdf':        return await pdfPublico(sb, peticion, token);
       case 'constancia': {
         const r = await abrir(sb, token, codigo);

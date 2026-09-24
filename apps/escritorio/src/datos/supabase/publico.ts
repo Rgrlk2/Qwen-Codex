@@ -172,12 +172,13 @@ export function crearCapaPublicaSupabase(): CapaPublica {
       return llamar<{ url: string; venceEn: ISODate }>(`pdf?t=${encodeURIComponent(token)}`);
     },
 
-    async obtenerPresentacionPublica(_token: string, _codigo?: string) {
-      // ⛔ Una presentación no es una cotización: no lleva precios cerrados ni
-      //    firmas, y su documento público todavía no está armado. Antes que
-      //    mostrarle al cliente una pantalla a medias, se dice.
-      return todaviaNo<PresentacionPublica>(
-        'Esta presentación todavía no se puede ver por enlace. Pedísela a quien te la compartió.',
+    async obtenerPresentacionPublica(token: string, codigo?: string) {
+      // ⛔ Del servidor vienen los IDENTIFICADORES de los productos y los dos
+      //    textos del vendedor. El copy aprobado lo pone esta aplicación desde
+      //    el archivo congelado: una sola fuente del texto, igual que la ficha.
+      const c = codigo ? `&c=${encodeURIComponent(codigo)}` : '';
+      return llamar<PresentacionPublica>(
+        `presentacion?t=${encodeURIComponent(token)}${c}`,
       );
     },
 

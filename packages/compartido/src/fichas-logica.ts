@@ -481,3 +481,32 @@ export function porNecesidad(
   };
 }
 
+
+// ---------------------------------------------------------------------------
+// Las trece fichas oficiales, armadas del copy congelado
+// ---------------------------------------------------------------------------
+
+/**
+ * Las trece, del copy, una sola vez por carga.
+ *
+ * ⛔ POR QUÉ ACÁ Y NO EN CADA CAPA: este mismo mapa se armaba en cuatro
+ *    lugares —los datos de ejemplo, la capa autenticada, la capa pública y
+ *    ahora la pantalla de la presentación—. Cuatro copias del mismo cálculo
+ *    son cuatro oportunidades de que una quede vieja, y ya pasó con la huella
+ *    del copy. Vive una vez.
+ */
+let cacheOficiales: ReadonlyMap<ProductoId, FichaOficial> | null = null;
+
+export function fichasOficialesDelCopy(
+  copias: ReadonlyArray<CopyDeProducto>,
+  logoDe: (id: ProductoId) => string,
+  versionCatalogo = 1,
+): ReadonlyMap<ProductoId, FichaOficial> {
+  cacheOficiales ??= new Map(
+    copias.map((copy) => [
+      copy.productoId,
+      fichaOficialDe(copy, logoDe(copy.productoId), huellaDelCopy(copy.bruto), versionCatalogo),
+    ]),
+  );
+  return cacheOficiales;
+}

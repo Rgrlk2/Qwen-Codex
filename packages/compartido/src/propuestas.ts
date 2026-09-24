@@ -63,14 +63,30 @@ export interface Presentacion extends Trazado {
   readonly vendedorId: Id;
   readonly titulo: string;
   readonly productosIncluidos: ReadonlyArray<ProductoId>;
-  readonly casosDeUsoIncluidos: ReadonlyArray<string>;
   /** Plan del motor que la originó: de ahí salen dolores y argumentos. */
   readonly planId: Id | null;
+
+  /**
+   * "Lo que conversamos": lo que el vendedor escuchó, con sus palabras.
+   * ⛔ Va claramente separado del copy oficial, igual que en la ficha, para
+   *    que el cliente distinga qué dice Lab.IA y qué dice su vendedor.
+   *
+   * ⛔ ESTO, Y NO UNA LISTA DE CASOS DE USO COPIADOS, es lo que hace la
+   *    presentación relevante para ese cliente. El copy aprobado vive en
+   *    `content/copy/` con su huella; guardarlo también acá crearía una
+   *    segunda fuente del mismo texto y una de las dos se quedaría vieja.
+   */
+  readonly loQueConversamos: string | null;
+  readonly notaDelVendedor: string | null;
+
   /**
    * Rango de referencia documentado, si se decide incluirlo.
-   * ⛔ Va SIEMPRE marcado como referencia. Nunca es un precio definitivo.
+   * ⛔ Va SIEMPRE marcado como referencia. Nunca es un precio definitivo:
+   *    eso es la cotización, y ésa pasa por la aprobación del CEO.
    */
   readonly mostrarRangoDeReferencia: boolean;
+
+  readonly descartadaEn: ISODate | null;
   readonly version: number;
 }
 
@@ -78,8 +94,9 @@ export interface NuevaPresentacion {
   readonly clienteId: Id;
   readonly titulo: string;
   readonly productosIncluidos: ReadonlyArray<ProductoId>;
-  readonly casosDeUsoIncluidos?: ReadonlyArray<string>;
   readonly planId?: Id;
+  readonly loQueConversamos?: string;
+  readonly notaDelVendedor?: string;
   readonly mostrarRangoDeReferencia?: boolean;
 }
 
@@ -493,15 +510,29 @@ export interface FiltroAperturas {
  * La vista pública de una COTIZACIÓN es `CotizacionPublica` (aceptacion.ts):
  * lleva alternativas, botones de opción y constancia.
  */
+/**
+ * Lo que el cliente abre de una presentación.
+ *
+ * ⛔ Superficie mínima, como la ficha: sin navegación al Escritorio, sin otros
+ *    clientes, sin nada operativo del vendedor. Y ⛔ SIN COPY: acá viajan los
+ *    identificadores de los productos; el texto aprobado lo pone el navegador
+ *    desde el archivo congelado, para que no haya dos fuentes del mismo texto.
+ */
 export interface PresentacionPublica {
   readonly tipo: 'presentacion';
   readonly titulo: string;
-  readonly nombreCliente: string;
   readonly nombreVendedor: string;
   readonly emitidaEn: ISODate;
+  /** ⛔ Sólo los identificadores. El copy lo pone el navegador. */
   readonly productos: ReadonlyArray<ProductoId>;
-  readonly casosDeUso: ReadonlyArray<string>;
-  /** ⛔ Sólo rangos de referencia documentados. Nunca un precio definitivo. */
-  readonly rangoDeReferencia: string | null;
-  readonly pdfDisponible: boolean;
+  readonly loQueConversamos: string | null;
+  readonly notaDelVendedor: string | null;
+  /**
+   * Si el cliente ve el rango documentado de cada producto.
+   * ⛔ Es un rango de referencia, nunca un precio cerrado: lo que compromete a
+   *    Lab.IA es la cotización, y ésa lleva aprobación y firma.
+   */
+  readonly mostrarRangoDeReferencia: boolean;
+  /** ⛔ Única acción disponible, igual que en la ficha. */
+  readonly llamadoALaAccion: 'Hablemos';
 }

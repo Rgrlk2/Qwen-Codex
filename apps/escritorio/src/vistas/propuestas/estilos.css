@@ -573,6 +573,42 @@
   color: var(--texto-3, rgba(174, 184, 200, .72));
 }
 
+/*
+ * LA PRESENTACIÓN: varios productos, uno debajo del otro, con una línea entre
+ * ellos. Cada uno se lee como su propia ficha.
+ */
+.propuestas-presentacion__producto {
+  margin: 28px 0 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--linea, rgba(255, 255, 255, .1));
+}
+
+.propuestas-presentacion__producto:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.propuestas-presentacion__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.propuestas-presentacion__cabecera h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+/* En la presentación el logo es más chico: hay varios en la misma página. */
+.propuestas-presentacion__cabecera .propuestas-ficha__logo {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
 .propuestas-ficha__cierre {
   margin: 28px 0 0;
   text-align: center;

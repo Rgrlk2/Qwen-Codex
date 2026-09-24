@@ -337,9 +337,15 @@ function crearAlmacenSemilla(): AlmacenPropuestas {
     vendedorId: VENDEDOR_DEMO_ID,
     titulo: 'Ojo Digital para Ferretería Modelo (ejemplo)',
     productosIncluidos: ['ojo-digital', 'radar-stock'],
-    casosDeUsoIncluidos: ['Control de mostrador con cámaras existentes', 'Alerta de quiebre de stock'],
     planId: null,
+    loQueConversamos:
+      'Me contaste que en el mostrador se pierde tiempo buscando repuestos que '
+      + 'figuran en el sistema y no están, y que las cámaras que ya tienen sólo '
+      + 'sirven para mirar después de que pasó algo.',
+    notaDelVendedor:
+      'Te dejo las dos soluciones que conversamos. Cualquier duda escribime y lo vemos juntos.',
     mostrarRangoDeReferencia: false,
+    descartadaEn: null,
     version: 1,
     creadoEn: haceMinutos(60 * 24 * 3),
     creadoPor: VENDEDOR_DEMO_ID,
@@ -705,9 +711,11 @@ export function crearCapaPropuestas(config: ConfiguracionMock): CapaPropuestas {
           vendedorId: VENDEDOR_DEMO_ID,
           titulo: datos.titulo,
           productosIncluidos: datos.productosIncluidos,
-          casosDeUsoIncluidos: datos.casosDeUsoIncluidos ?? [],
           planId: datos.planId ?? null,
+          loQueConversamos: datos.loQueConversamos ?? null,
+          notaDelVendedor: datos.notaDelVendedor ?? null,
           mostrarRangoDeReferencia: datos.mostrarRangoDeReferencia ?? false,
+          descartadaEn: null,
           version: 1,
           creadoEn: ahora,
           creadoPor: VENDEDOR_DEMO_ID,
@@ -730,7 +738,8 @@ export function crearCapaPropuestas(config: ConfiguracionMock): CapaPropuestas {
           ...actual,
           ...(cambios.titulo !== undefined ? { titulo: cambios.titulo } : {}),
           ...(cambios.productosIncluidos !== undefined ? { productosIncluidos: cambios.productosIncluidos } : {}),
-          ...(cambios.casosDeUsoIncluidos !== undefined ? { casosDeUsoIncluidos: cambios.casosDeUsoIncluidos } : {}),
+          ...(cambios.loQueConversamos !== undefined ? { loQueConversamos: cambios.loQueConversamos } : {}),
+          ...(cambios.notaDelVendedor !== undefined ? { notaDelVendedor: cambios.notaDelVendedor } : {}),
           ...(cambios.mostrarRangoDeReferencia !== undefined ? { mostrarRangoDeReferencia: cambios.mostrarRangoDeReferencia } : {}),
           version: actual.version + 1,
           actualizadoEn: new Date().toISOString(),
@@ -738,6 +747,23 @@ export function crearCapaPropuestas(config: ConfiguracionMock): CapaPropuestas {
         };
         almacen.presentaciones.set(id, actualizada);
         return ok(actualizada);
+      });
+    },
+
+    descartarPresentacion(id, motivo) {
+      return ejecutar(config, () => {
+        if (!motivo || motivo.trim().length === 0) {
+          return error('validacion', 'Contá por qué descartás esta presentación.');
+        }
+        const actual = almacen.presentaciones.get(id);
+        if (!actual) return error('no_encontrado', 'No se encontró la presentación.');
+        // ⛔ Desde acá el enlace deja de abrir, aunque no haya vencido.
+        almacen.presentaciones.set(id, {
+          ...actual,
+          descartadaEn: new Date().toISOString(),
+          version: actual.version + 1,
+        });
+        return ok(undefined as void);
       });
     },
 
@@ -1186,16 +1212,21 @@ export function crearCapaPublica(config: ConfiguracionMock): CapaPublica {
         if (enlace.tipoPropuesta !== 'presentacion') return error('no_encontrado', 'Este enlace no es de una presentación.');
         const presentacion = almacen.presentaciones.get(enlace.propuestaId);
         if (!presentacion) return error('no_encontrado', 'No se encontró la presentación.');
+        // ⛔ Una presentación descartada deja de abrir, aunque el enlace viva.
+        if (presentacion.descartadaEn !== null) {
+          return error('no_encontrado', 'Este enlace ya no está disponible.');
+        }
         const publica: PresentacionPublica = {
           tipo: 'presentacion',
           titulo: presentacion.titulo,
-          nombreCliente: resolverDestinatario(presentacion.clienteId, 'empresa').nombreEmpresaOProfesional,
-          nombreVendedor: VENDEDOR_DEMO_NOMBRE,
+          // ⛔ Nombre de pila del vendedor, y nada más del Escritorio.
+          nombreVendedor: VENDEDOR_DEMO_NOMBRE.split(' ')[0] ?? '',
           emitidaEn: presentacion.creadoEn,
           productos: presentacion.productosIncluidos,
-          casosDeUso: presentacion.casosDeUsoIncluidos,
-          rangoDeReferencia: null,
-          pdfDisponible: true,
+          loQueConversamos: presentacion.loQueConversamos,
+          notaDelVendedor: presentacion.notaDelVendedor,
+          mostrarRangoDeReferencia: presentacion.mostrarRangoDeReferencia,
+          llamadoALaAccion: 'Hablemos',
         };
         return ok(publica);
       });

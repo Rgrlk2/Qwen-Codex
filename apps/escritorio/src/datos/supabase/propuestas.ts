@@ -234,10 +234,15 @@ interface FilaPresentacion extends FilaTrazado {
   readonly vendedor_id: string;
   readonly titulo: string;
   readonly plan_id: string | null;
+  readonly lo_que_conversamos: string | null;
+  readonly nota_del_vendedor: string | null;
+  readonly mostrar_rango_referencia: boolean;
+  readonly descartada_en: string | null;
   readonly presentacion_producto?: ReadonlyArray<{ producto_id: string }>;
 }
 
 const COLUMNAS_PRESENTACION = `id, cliente_id, vendedor_id, titulo, plan_id,
+  lo_que_conversamos, nota_del_vendedor, mostrar_rango_referencia, descartada_en,
   ${COLUMNAS_TRAZADO}, presentacion_producto ( producto_id )`;
 
 function aPresentacion(f: FilaPresentacion): Presentacion {
@@ -249,11 +254,13 @@ function aPresentacion(f: FilaPresentacion): Presentacion {
     vendedorId: f.vendedor_id,
     titulo: f.titulo,
     productosIncluidos: (f.presentacion_producto ?? []).map((p) => p.producto_id as ProductoId),
-    casosDeUsoIncluidos: [],
     planId: f.plan_id,
-    // ⛔ Una presentación nunca lleva precio definitivo. Si alguna vez muestra
-    //    un rango, va marcado como referencia.
-    mostrarRangoDeReferencia: false,
+    loQueConversamos: f.lo_que_conversamos,
+    notaDelVendedor: f.nota_del_vendedor,
+    // ⛔ Una presentación nunca lleva precio definitivo. Cuando muestra un
+    //    rango, va marcado como referencia y sale del copy aprobado.
+    mostrarRangoDeReferencia: f.mostrar_rango_referencia,
+    descartadaEn: f.descartada_en,
     version: f.version,
   };
 }
@@ -338,6 +345,9 @@ export function crearCapaPropuestas(): CapaPropuestas {
           titulo: datos.titulo,
           planId: datos.planId ?? null,
           productos: datos.productosIncluidos,
+          loQueConversamos: datos.loQueConversamos ?? null,
+          notaDelVendedor: datos.notaDelVendedor ?? null,
+          mostrarRangoDeReferencia: datos.mostrarRangoDeReferencia ?? false,
         },
         p_clave: clave,
       });
@@ -349,9 +359,33 @@ export function crearCapaPropuestas(): CapaPropuestas {
       const parche: Record<string, unknown> = { version };
       if (cambios.titulo !== undefined) parche['titulo'] = cambios.titulo;
       if (cambios.planId !== undefined) parche['plan_id'] = cambios.planId;
+      if (cambios.loQueConversamos !== undefined) parche['lo_que_conversamos'] = cambios.loQueConversamos;
+      if (cambios.notaDelVendedor !== undefined) parche['nota_del_vendedor'] = cambios.notaDelVendedor;
+      if (cambios.mostrarRangoDeReferencia !== undefined) {
+        parche['mostrar_rango_referencia'] = cambios.mostrarRangoDeReferencia;
+      }
       const { error } = await sb.from('presentacion').update(parche).eq('id', id);
       if (error) return fallo<Presentacion>(error);
       return leerPresentacion(id);
+    },
+
+    async descartarPresentacion(id: Id, motivo: string) {
+      if (!motivo || motivo.trim().length === 0) {
+        return { ok: false as const, error: {
+          codigo: 'validacion' as const,
+          mensajeAmable: 'Contá por qué descartás esta presentación.',
+          campo: 'motivo',
+        } };
+      }
+      const { data: quien } = await sb.auth.getUser();
+      // ⛔ Desde ese momento el enlace deja de abrir, aunque no haya vencido.
+      const { error } = await sb.from('presentacion').update({
+        descartada_en: new Date().toISOString(),
+        motivo_descarte: motivo.trim(),
+        descartada_por: quien.user?.id ?? null,
+      }).eq('id', id);
+      if (error) return fallo<void>(error);
+      return bien(undefined as void);
     },
 
     async emitirPresentacion(id: Id, clave) {

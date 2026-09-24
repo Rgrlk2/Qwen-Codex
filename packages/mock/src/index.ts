@@ -219,6 +219,7 @@ export function crearCapaDatosMock(opciones: OpcionesCapaDatosMock = {}): CapaDa
     crearPresentacion: (datos, clave) => propuestas.crearPresentacion(datos, clave),
     actualizarPresentacion: (id, cambios, version) => propuestas.actualizarPresentacion(id, cambios, version),
     emitirPresentacion: (id, clave) => propuestas.emitirPresentacion(id, clave),
+    descartarPresentacion: (id, motivo) => propuestas.descartarPresentacion(id, motivo),
     listarCotizaciones: (filtro, pagina) => propuestas.listarCotizaciones(filtro, pagina),
     obtenerCotizacion: (id) => propuestas.obtenerCotizacion(id),
     crearCotizacion: (datos, clave) => propuestas.crearCotizacion(datos, clave),

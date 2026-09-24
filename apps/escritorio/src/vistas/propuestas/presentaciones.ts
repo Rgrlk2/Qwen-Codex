@@ -58,10 +58,27 @@ function panelFormulario(
   }
   campoProductos.append(listaCasillas);
 
+  // ⛔ ACÁ NO SE COPIAN LOS CASOS DE USO. El copy aprobado ya los trae, y el
+  //    cliente los ve del archivo congelado. Lo que hace relevante la
+  //    presentación para ESE cliente son las palabras del vendedor, no una
+  //    segunda copia del texto de Lab.IA que el día de mañana quede vieja.
   const campoCasos = crear('div', { clase: 'propuestas-campo' });
-  const etiquetaCasos = crear('label', { texto: 'Casos de uso (uno por línea)', atributos: { for: 'pres-casos' } });
+  const etiquetaCasos = crear('label', {
+    texto: 'Lo que conversamos', atributos: { for: 'pres-casos' },
+  });
+  const ayudaCasos = crear('span', {
+    clase: 'propuestas-meta',
+    texto: 'Lo que te dijo en la reunión, con tus palabras. Va arriba de todo y separado del texto de Lab.IA.',
+  });
   const areaCasos = crear('textarea', { atributos: { id: 'pres-casos', rows: '3' } });
-  campoCasos.append(etiquetaCasos, areaCasos);
+  campoCasos.append(etiquetaCasos, ayudaCasos, areaCasos);
+
+  const campoNota = crear('div', { clase: 'propuestas-campo' });
+  const etiquetaNota = crear('label', {
+    texto: 'Tu nota de cierre (opcional)', atributos: { for: 'pres-nota' },
+  });
+  const areaNota = crear('textarea', { atributos: { id: 'pres-nota', rows: '2' } });
+  campoNota.append(etiquetaNota, areaNota);
 
   const campoRango = crear('label', { clase: 'propuestas-checkbox' });
   const casillaRango = crear('input', { atributos: { type: 'checkbox' } });
@@ -75,7 +92,10 @@ function panelFormulario(
   botonGuardar.type = 'submit';
   acciones.append(botonGuardar);
 
-  formulario.append(campoCliente, campoTitulo, campoProductos, campoCasos, campoRango, zonaAviso, acciones);
+  formulario.append(
+    campoCliente, campoTitulo, campoProductos, campoCasos, campoNota, campoRango,
+    zonaAviso, acciones,
+  );
 
   formulario.addEventListener('submit', (evento) => {
     evento.preventDefault();
@@ -90,7 +110,8 @@ function panelFormulario(
       clienteId: entradaCliente.value.trim(),
       titulo: entradaTitulo.value.trim(),
       productosIncluidos,
-      casosDeUsoIncluidos: areaCasos.value.split('\n').map((l) => l.trim()).filter(Boolean),
+      ...(areaCasos.value.trim() ? { loQueConversamos: areaCasos.value.trim() } : {}),
+      ...(areaNota.value.trim() ? { notaDelVendedor: areaNota.value.trim() } : {}),
       mostrarRangoDeReferencia: casillaRango.checked,
     };
     botonGuardar.disabled = true;
