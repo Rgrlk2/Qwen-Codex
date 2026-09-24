@@ -958,6 +958,60 @@ Probado en vivo contra este proyecto: presentación creada como el vendedor,
 compartida, y abierta desde el enlace público. En la respuesta no viaja el id
 del cliente, ni el del vendedor, ni el plan, ni una línea de copy.
 
+## Un agujero de verdad: cualquiera podía anular tus firmas
+
+Esto no es una advertencia teórica de un analizador. Se probó contra este
+servidor, desde afuera, sin ninguna sesión, con la sola clave pública que
+viaja dentro del navegador de cualquiera:
+
+    POST /rest/v1/rpc/anular_firmas_de_version
+    {"p_cotizacion": "...", "p_version": 999, "p_motivo": "sonda"}
+    → 0
+
+Devolvió `0` porque la versión 999 no existe. Es decir: **la función se
+ejecutó**. Con un id y una versión reales habría anulado las firmas de
+cualquier cotización —la del vendedor y la del CEO—, sin sesión y sin dejar
+a nadie a quien reclamarle.
+
+La función es `SECURITY DEFINER`, así que corre como dueña y saltea RLS, y no
+tiene ninguna comprobación adentro. Estaba publicada como endpoint de la API
+sin que nadie lo hubiera decidido.
+
+⛔ **Y EL PRIMER ARREGLO NO SIRVIÓ**, que es la parte que vale la pena
+recordar. Quitarle el permiso a `anon` y a `authenticated` no cambió nada: se
+volvió a probar y la función seguía ejecutándose. En Postgres una función nace
+con `EXECUTE` para **PUBLIC**; `anon` no tenía el permiso a su nombre, lo
+heredaba de ahí. Hay que quitárselo a PUBLIC. La comprobación de después es la
+que dice la verdad, no la migración que "parece" correcta.
+
+Quedaron cerradas del todo, porque nunca debieron ser puertas —las llama un
+disparador, o la función de servidor con la clave de servicio, que ignora
+estos permisos—:
+
+    anular_firmas_de_version · anotar_por_disparador · anotar_registro
+    registrar_respuesta_del_cliente · sumar_apertura
+
+Y cerradas para quien entra SIN sesión, abiertas para quien la tiene:
+
+    alta_de_usuario · registrar_ingreso · cliente_es_mio
+    es_administrador · rol_actual
+
+⛔ Las tres últimas se quedan para `authenticated` porque las políticas de las
+tablas las evalúan con el rol de quien consulta: quitárselas apagaría el
+acceso de cada vendedor a sus propios datos.
+
+Comprobado después del cambio, con la misma llamada que antes funcionaba:
+
+    sin sesión, anular firmas          → permission denied
+    sin sesión, sumar apertura         → permission denied
+    el VENDEDOR, anular firmas         → permission denied
+    el vendedor sigue viendo lo suyo   → 2 clientes, 1 ficha, 1 cotización
+    el enlace del cliente sigue abriendo (ficha y presentación)
+
+Y para que no vuelva a pasar por descuido, en este esquema una función nueva
+ya no nace abierta a todo el mundo: hay que darle permiso a mano, que es justo
+el momento en que alguien se pregunta si debe ser una puerta.
+
 ## Lo que falta del servidor
 
 - ~~Las fichas como lo que el cliente recibe~~ — **hechas** (`#/f/<token>`).
