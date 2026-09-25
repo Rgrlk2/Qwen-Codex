@@ -1,0 +1,38 @@
+{
+  "name": "escritorio-vendedores-labia",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Escritorio Vendedores Lab.IA: una sola aplicacion, dos roles, 13 productos",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @labia/escritorio",
+    "build": "npm run build --workspace @labia/escritorio",
+    "instantaneas": "vite build --config scripts/vite.instantaneas.config.mjs && node scripts/.salida-instantaneas/instantaneas.mjs",
+    "typecheck": "tsc -b packages/compartido packages/mock apps/escritorio",
+    "verificar:copy": "cd content/copy && sha256sum -c copy.sha256",
+    "verificar:portafolio": "node scripts/verificar-portafolio.mjs",
+    "verificar:calculos": "npm run typecheck && node scripts/verificar-calculos.mjs",
+    "verificar:nucleo": "vite build --config scripts/vite.verificacion.config.mjs && node scripts/.salida/verificar-nucleo.mjs",
+    "verificar:fichas": "vite build --config scripts/vite.fichas.config.mjs && node scripts/.salida-fichas/verificar-fichas.mjs",
+    "verificar:funciones": "node scripts/copiar-a-funciones.mjs --verificar",
+    "verificar": "npm run verificar:copy && npm run verificar:portafolio && npm run typecheck && node scripts/verificar-calculos.mjs && npm run verificar:nucleo && npm run verificar:fichas && npm run verificar:funciones",
+    "exportar:taxonomia": "vite build --config scripts/vite.taxonomia.config.mjs && node scripts/.salida-taxonomia/exportar-taxonomia.mjs",
+    "copiar:funciones": "node scripts/copiar-a-funciones.mjs",
+    "verificar:enlace-cliente": "node scripts/verificar-enlace-cliente.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "typescript": "^5.6.0",
+    "vite": "^7.3.6"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.116.0"
+  }
+}

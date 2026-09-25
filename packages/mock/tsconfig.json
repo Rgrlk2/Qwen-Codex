@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "composite": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "paths": { "@labia/compartido": ["../compartido/src/index.ts"] }
+  },
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../compartido" }]
+}

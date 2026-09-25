@@ -1,0 +1,18 @@
+{
+  "name": "@labia/escritorio",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Escritorio Vendedores Lab.IA: una sola aplicacion, dos roles",
+  "type": "module",
+  "dependencies": {
+    "@labia/compartido": "0.2.0",
+    "@labia/mock": "0.2.0",
+    "@labia/ui": "0.2.0",
+    "@supabase/supabase-js": "^2.116.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --force"
+  }
+}

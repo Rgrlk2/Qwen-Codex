@@ -1,0 +1,330 @@
+/*
+ * Estilos propios de Planificar.
+ *
+ * ⛔ DUEÑO: Sesión 3. Prefijo `.planificar-` en todo lo que no sea un
+ *    componente compartido (docs/DESIGN_SYSTEM.md §5, packages/ui/base.css).
+ * ⛔ Ningún color literal: sólo var(--token). Los ocho colores oficiales
+ *    viven en packages/ui/src/marca-labia.css (Sesión 2); acá no se declara
+ *    ni un hex ni un rgba() nuevo.
+ * ⛔ Sin overflow-x: hidden. Todo desborde se corrige en su causa
+ *    (min-width: 0, overflow-wrap, grillas que bajan de columnas).
+ *
+ * Anchos validados sin scroll horizontal de página: 360, 390, 768, 1024, 1440.
+ */
+
+.planificar-plan,
+.planificar-investigacion,
+.planificar-productos-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * LA PÁGINA DE BÚSQUEDA
+ *
+ * Limpia a propósito: una marca chica, una frase y dos campos con su lupa.
+ * ⛔ No se agrega nada acá sin que lo pida el CEO. Cada cosa que se suma le
+ *    quita a los dos campos la única cualidad que tienen que tener, que es
+ *    ser lo primero y lo único que se ve.
+ * ------------------------------------------------------------------------ */
+
+.buscador {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  min-width: 0;
+  /* Centrada y angosta, como una página de búsqueda. En la computadora el
+     ancho completo dejaría los campos flotando de punta a punta. */
+  max-width: 620px;
+  margin-inline: auto;
+  padding-block: 0.5rem;
+}
+
+.buscador-encabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  min-width: 0;
+}
+
+/* La iconografía chica: un aro de vidrio con la lupa adentro. */
+.buscador-marca {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--linea-acento);
+  border-radius: var(--r-pilula);
+  background: var(--cian-suave);
+  color: var(--cian);
+}
+
+.buscador-marca svg {
+  width: 26px;
+  height: 26px;
+}
+
+.buscador-explicacion {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--texto-2);
+}
+
+.buscador-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.buscador-pregunta {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--texto);
+}
+
+/* El campo y la lupa son una sola pieza: el borde vive acá, no en el input. */
+.buscador-caja {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.35rem 0.35rem 0.35rem 1rem;
+  border: 1px solid var(--linea-2);
+  border-radius: var(--r-pilula);
+  background: var(--superficie);
+  box-shadow: var(--sombra-tarjeta), var(--luz-interior);
+  transition: border-color var(--rapido) var(--suave), box-shadow var(--rapido) var(--suave);
+}
+
+.buscador-caja:focus-within {
+  border-color: var(--linea-acento);
+  box-shadow: 0 0 0 1px var(--linea-acento), var(--halo-suave);
+}
+
+.buscador-entrada {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--texto);
+  /* ⛔ 16px o más: por debajo de eso el navegador del celular hace zoom solo
+     al tocar el campo, y la pantalla queda torcida. */
+  font-size: 16px;
+  font-family: inherit;
+  padding-block: 0.7rem;
+  outline: none;
+}
+
+.buscador-entrada::placeholder { color: var(--mudo); }
+
+/* Le saca a Safari y Chrome la "x" de limpiar, que se superpone con la lupa. */
+.buscador-entrada::-webkit-search-cancel-button { display: none; }
+
+.buscador-lupa {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 44 px: lo mínimo que un dedo acierta sin errarle. */
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--r-pilula);
+  background: var(--grad-cta);
+  box-shadow: var(--sombra-cta);
+  color: var(--texto);
+  cursor: pointer;
+  transition: box-shadow var(--rapido) var(--suave), transform var(--rapido) var(--suave);
+}
+
+.buscador-lupa svg { width: 20px; height: 20px; }
+
+.buscador-lupa:hover:not(:disabled),
+.buscador-lupa:focus-visible { box-shadow: var(--sombra-cta-alta); }
+.buscador-lupa:active:not(:disabled) { transform: var(--apretar); }
+.buscador-lupa:disabled { opacity: .55; cursor: progress; }
+
+@media (prefers-reduced-motion: reduce) {
+  .buscador-caja,
+  .buscador-lupa { transition: none; }
+  .buscador-lupa:active:not(:disabled) { transform: none; }
+}
+
+.buscador-ejemplo {
+  margin: 0;
+  padding-inline: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--texto-3);
+}
+
+.buscador-aviso {
+  margin: 0;
+  padding-inline: 1rem;
+  font-size: 0.85rem;
+  color: var(--peligro);
+}
+
+.buscador-aviso:empty { display: none; }
+
+/* Siempre tiene un hijo adentro (ver `marco` en entrada.ts), así que vacío
+   ocupa cero alto por sí solo: no hace falta esconderlo a mano. */
+.buscador-resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.planificar-form {
+  min-width: 0;
+}
+
+.planificar-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 42rem;
+}
+
+.planificar-form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  max-width: none;
+}
+
+.planificar-form-inline .entrada {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.planificar-seccion {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.planificar-dato {
+  border-block-start: 1px solid var(--linea);
+  padding-block-start: 0.75rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.planificar-dato:first-child {
+  border-block-start: none;
+  padding-block-start: 0;
+}
+
+.planificar-dato-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.planificar-destacados .rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 1rem;
+}
+
+.planificar-destacados .rejilla > * {
+  min-width: 0;
+}
+
+.ranking.planificar-plan .ranking-fila,
+.planificar-plan .ranking-fila {
+  border-block-start: 1px solid var(--linea);
+  padding-block: 0.75rem;
+  min-width: 0;
+}
+
+.planificar-ranking-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.ranking-fila--fuera-de-top10 {
+  opacity: 0.82;
+}
+
+.planificar-copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.planificar-copy > * {
+  max-width: 100%;
+}
+
+.planificar-precios {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.25rem 1rem;
+  min-width: 0;
+}
+
+@media (min-width: 480px) {
+  .planificar-precios {
+    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  }
+}
+
+.planificar-precios dt {
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.planificar-precios dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.planificar-productos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.planificar-producto-boton {
+  min-height: 44px;
+  text-align: left;
+  width: 100%;
+}
+
+.planificar-ficha {
+  min-width: 0;
+}
+
+.planificar-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.planificar-acciones .btn,
+.planificar-acciones .btn-borde {
+  min-height: 48px;
+}
+
+.planificar-campos-faltantes {
+  border-inline-start: 3px solid var(--cian);
+  padding-inline-start: 1rem;
+}
