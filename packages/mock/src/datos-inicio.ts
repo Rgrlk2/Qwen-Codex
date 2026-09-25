@@ -38,10 +38,12 @@ import type { NucleoMock } from './nucleo';
  * cambio de contrato.
  */
 export const RESUMEN_INICIO_CON_DATOS: ResumenInicio = {
-  dineroVendido: [{ monto: 48_500_000, moneda: 'PYG' }],
-  dineroCobrado: [{ monto: 31_200_000, moneda: 'PYG' }],
-  comisionAcumulada: [{ monto: 15_600_000, moneda: 'PYG' }],
-  comisionPendiente: [{ monto: 6_400_000, moneda: 'PYG' }],
+  /** ⛔ Las tres de abajo suman esta. No es adorno: es la regla del tablero. */
+  ventasAcumuladas: [{ monto: 48_500_000, moneda: 'PYG' }],
+  ventasEnSetup: [{ monto: 18_900_000, moneda: 'PYG' }],
+  mensualidadesCobradas: [{ monto: 23_200_000, moneda: 'PYG' }],
+  mensualidadesACobrar: [{ monto: 6_400_000, moneda: 'PYG' }],
+  visitas: { hechas: 4, objetivo: 6, desde: '2026-09-21T00:00:00-03:00', hasta: '2026-09-28T00:00:00-03:00' },
   sinDatosTodavia: false,
   periodo: '2026-09',
 };
@@ -134,10 +136,11 @@ export const RESUMEN_AGENDA_CON_DATOS: ResumenAgenda = {
 // ---------------------------------------------------------------------------
 
 export const RESUMEN_INICIO_VACIO: ResumenInicio = {
-  dineroVendido: [],
-  dineroCobrado: [],
-  comisionAcumulada: [],
-  comisionPendiente: [],
+  ventasAcumuladas: [],
+  ventasEnSetup: [],
+  mensualidadesCobradas: [],
+  mensualidadesACobrar: [],
+  visitas: { hechas: 0, objetivo: 6, desde: '2026-09-21T00:00:00-03:00', hasta: '2026-09-28T00:00:00-03:00' },
   sinDatosTodavia: true,
   periodo: '2026-09',
 };

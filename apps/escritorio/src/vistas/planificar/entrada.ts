@@ -1,42 +1,47 @@
 /**
- * Las dos puertas de entrada del motor (MASTER_SPEC.md §2.2, USER_FLOWS F2/F2b/F3):
+ * La página de búsqueda. Una sola pantalla, limpia, con dos campos.
  *
- *   A) Conocido — una empresa o un profesional: basta con lo mínimo que el
- *      vendedor tiene a mano (RUC, razón social o nombre comercial para una
- *      empresa; nombre + profesión para un profesional. Matrícula y ciudad
- *      SÓLO si las tiene).
- *   B) Rubro — texto libre. Acepta cualquier cosa: "motel", "gomería",
- *      "criadero de pollos". Nunca lo rechaza.
+ * ⛔ REESCRITA EL 25-09-2026 POR PEDIDO DEL CEO. Antes esta pantalla mostraba
+ *    dos tarjetas grandes; al apretar una se abría un formulario de cuatro o
+ *    cinco campos (RUC, razón social, nombre comercial, ciudad; o nombre,
+ *    profesión, matrícula, ciudad). Para empezar a buscar había que completar
+ *    un formulario. Ahora es esto:
  *
- * Las dos llaman a `investigarObjetivo`: el vendedor no completa el perfil a
- * mano, sólo confirma, corrige o agrega sobre lo que vuelve armado.
+ *      "¿A qué cliente querés investigar?"  [ campo ]  🔍
+ *      "¿Qué rubro querés investigar?"      [ campo ]  🔍
+ *
+ *    Nada más. Se aprieta la lupa y el motor arranca.
+ *
+ * ⛔ LOS DEMÁS DATOS NO SE PERDIERON: la ciudad, el teléfono y "a qué se
+ *    dedica" los pide el RESULTADO, que es donde el vendedor ya tiene algo
+ *    delante para corregir. Pedirlos antes es pedirle que llene una ficha a
+ *    ciegas.
+ *
+ * Las dos puertas siguen siendo las mismas del MASTER_SPEC §2.2 (USER_FLOWS
+ * F2/F2b/F3): un conocido, o un rubro entero. Cambió cómo se entra, no adónde.
  */
 
 import type { EntradaObjetivo, InvestigacionObjetivo, Resultado } from '@labia/compartido';
+import { crearIconoSvg } from '@labia/ui/iconos';
 import type { ContextoVista } from '../../nucleo/contrato-vista';
 import { crearBloqueCargando, crearBloqueError, vaciarNodo } from './estados';
 import { renderizarInvestigacion } from './investigacion-ui';
 
-type TipoConocido = 'empresa' | 'profesional';
+/**
+ * ¿El texto es un RUC y no un nombre?
+ *
+ * En Paraguay el RUC es una tira de dígitos con un dígito verificador al final,
+ * a veces con guion: 80012345-6, 4567890-1. Si lo es, se manda como RUC; si no,
+ * como nombre. ⛔ No se le pregunta al vendedor cuál de los dos escribió: lo
+ * escribió y listo.
+ */
+function pareceRuc(texto: string): boolean {
+  return /^\d{4,9}-?\d?$/.test(texto.replace(/\s+/g, ''));
+}
 
-function campoTexto(id: string, etiquetaTexto: string, opciones: { obligatorio?: boolean; ayuda?: string } = {}): { campo: HTMLElement; entrada: HTMLInputElement } {
-  const campo = document.createElement('div');
-  campo.className = 'campo';
-  const etiqueta = document.createElement('label');
-  etiqueta.htmlFor = id;
-  etiqueta.textContent = opciones.obligatorio ? `${etiquetaTexto} *` : etiquetaTexto;
-  const entrada = document.createElement('input');
-  entrada.type = 'text';
-  entrada.id = id;
-  entrada.className = 'entrada';
-  campo.append(etiqueta, entrada);
-  if (opciones.ayuda) {
-    const ayuda = document.createElement('p');
-    ayuda.className = 'texto-3';
-    ayuda.textContent = opciones.ayuda;
-    campo.appendChild(ayuda);
-  }
-  return { campo, entrada };
+interface CampoDeBusqueda {
+  readonly bloque: HTMLElement;
+  readonly entrada: HTMLInputElement;
 }
 
 /**
@@ -57,217 +62,162 @@ function entradaPedidaEnLaDireccion(): 'conocido' | 'rubro' | null {
 
 export function montarEntrada(contexto: ContextoVista, contenedor: HTMLElement): void {
   vaciarNodo(contenedor);
-  contenedor.className = 'planificar-entrada';
+  contenedor.className = 'buscador';
 
-  const acciones = document.createElement('div');
-  acciones.className = 'rejilla planificar-acciones-protagonistas';
+  const encabezado = document.createElement('div');
+  encabezado.className = 'buscador-encabezado';
 
-  const areaFormulario = document.createElement('div');
-  areaFormulario.className = 'planificar-formulario-activo';
+  /* La iconografía chica que pidió el CEO: una marca de agua, no un cartel. */
+  const marca = document.createElement('span');
+  marca.className = 'buscador-marca';
+  marca.setAttribute('aria-hidden', 'true');
+  marca.appendChild(crearIconoSvg('buscar'));
+  encabezado.appendChild(marca);
+
+  const explicacion = document.createElement('p');
+  explicacion.className = 'buscador-explicacion';
+  explicacion.textContent =
+    'Escribí un nombre o un rubro y apretá la lupa. El motor arma solo el perfil, '
+    + 'los dolores probables y qué productos de Lab.IA le encajan.';
+  encabezado.appendChild(explicacion);
+
   const areaResultado = document.createElement('div');
+  areaResultado.className = 'buscador-resultado';
   areaResultado.setAttribute('aria-live', 'polite');
 
-  const botonConocido = crearAccionProtagonista(
-    '🔍',
-    'Investigar una empresa o un profesional que conozco',
-    '"Mi amigo tiene una repuestera", "mi odontóloga", "el hotel de la esquina".',
-    () => mostrarFormularioConocido(),
-  );
-  const botonRubro = crearAccionProtagonista(
-    '🧭',
-    'Explorar oportunidades por rubro',
-    '"Quiero ver qué le puedo vender a las peluquerías", "gomerías", "moteles".',
-    () => mostrarFormularioRubro(),
-  );
-  acciones.append(botonConocido, botonRubro);
-  contenedor.append(acciones, areaFormulario, areaResultado);
+  /**
+   * ⛔ ESTE ENVOLTORIO NO ES DE ADORNO.
+   *
+   *    `renderizarInvestigacion` le PISA LA CLASE al nodo que recibe: le pone
+   *    `planificar-investigacion`. Si se le pasara `areaResultado` directo, el
+   *    resultado se dibujaría igual, pero `areaResultado` dejaría de llamarse
+   *    `buscador-resultado` y perdería sus estilos para siempre — incluido el
+   *    `:empty` que lo hace desaparecer cuando no hay nada.
+   *
+   *    Se lo descubrió con una comprobación automática, no mirando la pantalla:
+   *    en el navegador no se ve, porque la investigación trae sus propios
+   *    estilos encima.
+   */
+  const marco = document.createElement('div');
+  areaResultado.appendChild(marco);
 
-  // ⛔ ESTO FALTABA, Y ERA LO QUE HACÍA PARECER QUE NADA FUNCIONABA.
-  //
-  //    Desde Inicio, los dos botones grandes llevan a `#/planificar?entrada=conocido`
-  //    y `?entrada=rubro`. Pero esta pantalla ignoraba el parámetro y volvía a
-  //    dibujar LOS MISMOS DOS BOTONES. El vendedor apretaba "Investigar una
-  //    empresa que conozco", llegaba acá, y veía otra vez el mismo botón: para
-  //    llegar al campo donde se escribe la empresa había que apretar dos veces
-  //    lo mismo, sin ninguna señal de que hubiera que hacerlo.
-  //
-  //    Ahora, si Inicio ya dijo cuál eligió, se abre ese formulario directo y
-  //    el cursor queda en el primer campo. Si entró por el menú lateral, sin
-  //    decir cuál quiere, siguen apareciendo las dos opciones como antes.
-  const eleccionDeInicio = entradaPedidaEnLaDireccion();
-  if (eleccionDeInicio === 'conocido') mostrarFormularioConocido();
-  else if (eleccionDeInicio === 'rubro') mostrarFormularioRubro();
+  const campoCliente = crearCampo({
+    id: 'buscar-cliente',
+    pregunta: '¿A qué cliente querés investigar?',
+    ejemplo: 'El nombre de la empresa o del profesional. También sirve el RUC.',
+    marcador: 'Ferretería El Tornillo, mi odontóloga, 80012345-6',
+    aBuscar: (texto) => (pareceRuc(texto)
+      ? { tipo: 'empresa', ruc: texto.replace(/\s+/g, '') }
+      : { tipo: 'empresa', nombreComercial: texto }),
+    avisoVacio: 'Escribí el nombre del cliente que querés investigar.',
+  });
 
-  function crearAccionProtagonista(icono: string, titulo: string, ejemplo: string, onActivar: () => void): HTMLButtonElement {
-    const boton = document.createElement('button');
-    boton.type = 'button';
-    boton.className = 'tarjeta accion-protagonista';
-    const spanIcono = document.createElement('span');
-    spanIcono.setAttribute('aria-hidden', 'true');
-    spanIcono.textContent = icono;
-    const h3 = document.createElement('h3');
-    h3.textContent = titulo;
-    const p = document.createElement('p');
-    p.textContent = ejemplo;
-    boton.append(spanIcono, h3, p);
-    boton.addEventListener('click', onActivar);
-    return boton;
-  }
+  const campoRubro = crearCampo({
+    id: 'buscar-rubro',
+    pregunta: '¿Qué rubro querés investigar?',
+    ejemplo: 'Cualquier texto. No hay lista cerrada.',
+    marcador: 'Peluquerías, gomerías, moteles, criaderos de pollos',
+    aBuscar: (texto) => ({ tipo: 'rubro', rubro: texto }),
+    avisoVacio: 'Escribí un rubro para explorar.',
+  });
 
-  function mostrarFormularioConocido(): void {
-    vaciarNodo(areaFormulario);
-    vaciarNodo(areaResultado);
-    let tipo: TipoConocido = 'empresa';
+  contenedor.append(encabezado, campoCliente.bloque, campoRubro.bloque, areaResultado);
 
-    const selector = document.createElement('div');
-    selector.className = 'pestanas';
-    selector.setAttribute('role', 'tablist');
-    selector.setAttribute('aria-label', 'Tipo de conocido');
-    const tabEmpresa = crearPestana('Empresa', true);
-    const tabProfesional = crearPestana('Profesional', false);
-    selector.append(tabEmpresa, tabProfesional);
+  /* Si Inicio ya dijo cuál eligió, el cursor arranca en ese campo. Si entró por
+     el menú lateral, arranca en el primero, que es el caso más común. */
+  const eleccion = entradaPedidaEnLaDireccion();
+  (eleccion === 'rubro' ? campoRubro : campoCliente).entrada.focus();
 
-    const camposEmpresa = document.createElement('div');
-    const ruc = campoTexto('entrada-ruc', 'RUC', { ayuda: 'Basta con uno de los tres: RUC, razón social o nombre comercial.' });
-    const razonSocial = campoTexto('entrada-razon-social', 'Razón social');
-    const nombreComercial = campoTexto('entrada-nombre-comercial', 'Nombre comercial');
-    const ciudadEmpresa = campoTexto('entrada-ciudad-empresa', 'Ciudad (opcional)');
-    camposEmpresa.append(ruc.campo, razonSocial.campo, nombreComercial.campo, ciudadEmpresa.campo);
+  function crearCampo(opciones: {
+    readonly id: string;
+    readonly pregunta: string;
+    readonly ejemplo: string;
+    readonly marcador: string;
+    readonly aBuscar: (texto: string) => EntradaObjetivo;
+    readonly avisoVacio: string;
+  }): CampoDeBusqueda {
+    const bloque = document.createElement('form');
+    bloque.className = 'buscador-campo';
 
-    const camposProfesional = document.createElement('div');
-    camposProfesional.hidden = true;
-    const nombre = campoTexto('entrada-nombre', 'Nombre', { obligatorio: true });
-    const profesion = campoTexto('entrada-profesion', 'Profesión o especialidad', { obligatorio: true });
-    const matricula = campoTexto('entrada-matricula', 'Matrícula (sólo si la tenés a mano)');
-    const ciudadProfesional = campoTexto('entrada-ciudad-profesional', 'Ciudad (sólo si la tenés a mano)');
-    camposProfesional.append(nombre.campo, profesion.campo, matricula.campo, ciudadProfesional.campo);
+    const pregunta = document.createElement('label');
+    pregunta.className = 'buscador-pregunta';
+    pregunta.htmlFor = opciones.id;
+    pregunta.textContent = opciones.pregunta;
 
-    tabEmpresa.addEventListener('click', () => alternar('empresa'));
-    tabProfesional.addEventListener('click', () => alternar('profesional'));
-    function alternar(nuevoTipo: TipoConocido): void {
-      tipo = nuevoTipo;
-      tabEmpresa.setAttribute('aria-selected', String(nuevoTipo === 'empresa'));
-      tabProfesional.setAttribute('aria-selected', String(nuevoTipo === 'profesional'));
-      camposEmpresa.hidden = nuevoTipo !== 'empresa';
-      camposProfesional.hidden = nuevoTipo !== 'profesional';
-    }
+    const caja = document.createElement('div');
+    caja.className = 'buscador-caja';
 
-    const formulario = document.createElement('form');
-    formulario.className = 'planificar-form';
-    const avisoValidacion = document.createElement('p');
-    avisoValidacion.setAttribute('role', 'alert');
-    const enviar = document.createElement('button');
-    enviar.type = 'submit';
-    enviar.className = 'btn';
-    enviar.textContent = 'Investigar';
-    formulario.append(selector, camposEmpresa, camposProfesional, avisoValidacion, enviar);
-    areaFormulario.appendChild(formulario);
-    // ⛔ El cursor va al primer campo. Si llegaste desde Inicio apretando
-    //    "Investigar una empresa que conozco", lo que sigue es escribir el
-    //    nombre: que haya que buscar dónde hacer clic es media pantalla
-    //    perdida.
-    formulario.querySelector('input')?.focus();
+    const entrada = document.createElement('input');
+    entrada.type = 'search';
+    entrada.id = opciones.id;
+    entrada.className = 'buscador-entrada';
+    entrada.placeholder = opciones.marcador;
+    /* El teclado del celular no corrige ni pone mayúsculas: son nombres
+       propios y rubros, no prosa. */
+    entrada.autocapitalize = 'off';
+    entrada.autocomplete = 'off';
+    entrada.spellcheck = false;
 
-    formulario.addEventListener('submit', (evento) => {
+    const lupa = document.createElement('button');
+    lupa.type = 'submit';
+    lupa.className = 'buscador-lupa';
+    /* ⛔ El botón es sólo un ícono: sin este nombre, un lector de pantalla
+       anuncia "botón" y nada más. */
+    lupa.setAttribute('aria-label', opciones.pregunta);
+    lupa.appendChild(crearIconoSvg('buscar'));
+
+    caja.append(entrada, lupa);
+
+    const ejemplo = document.createElement('p');
+    ejemplo.className = 'buscador-ejemplo';
+    ejemplo.textContent = opciones.ejemplo;
+
+    const aviso = document.createElement('p');
+    aviso.className = 'buscador-aviso';
+    aviso.setAttribute('role', 'alert');
+
+    bloque.append(pregunta, caja, ejemplo, aviso);
+
+    bloque.addEventListener('submit', (evento) => {
       evento.preventDefault();
-      avisoValidacion.textContent = '';
-      let entrada: EntradaObjetivo;
-      if (tipo === 'empresa') {
-        const rucValor = ruc.entrada.value.trim();
-        const razonValor = razonSocial.entrada.value.trim();
-        const nombreValor = nombreComercial.entrada.value.trim();
-        if (!rucValor && !razonValor && !nombreValor) {
-          avisoValidacion.textContent = 'Completá al menos uno: RUC, razón social o nombre comercial.';
-          return;
-        }
-        entrada = {
-          tipo: 'empresa',
-          ...(rucValor ? { ruc: rucValor } : {}),
-          ...(razonValor ? { razonSocial: razonValor } : {}),
-          ...(nombreValor ? { nombreComercial: nombreValor } : {}),
-          ...(ciudadEmpresa.entrada.value.trim() ? { ciudad: ciudadEmpresa.entrada.value.trim() } : {}),
-        };
-      } else {
-        const nombreValor = nombre.entrada.value.trim();
-        const profesionValor = profesion.entrada.value.trim();
-        if (!nombreValor || !profesionValor) {
-          avisoValidacion.textContent = 'Completá nombre y profesión o especialidad.';
-          return;
-        }
-        entrada = {
-          tipo: 'profesional',
-          nombre: nombreValor,
-          profesionOEspecialidad: profesionValor,
-          ...(matricula.entrada.value.trim() ? { matricula: matricula.entrada.value.trim() } : {}),
-          ...(ciudadProfesional.entrada.value.trim() ? { ciudad: ciudadProfesional.entrada.value.trim() } : {}),
-        };
-      }
-      void investigar(entrada, enviar);
-    });
-  }
-
-  function mostrarFormularioRubro(): void {
-    vaciarNodo(areaFormulario);
-    vaciarNodo(areaResultado);
-    const formulario = document.createElement('form');
-    formulario.className = 'planificar-form';
-    const rubro = campoTexto('entrada-rubro', 'Rubro', { obligatorio: true, ayuda: 'Cualquier texto: "motel", "gomería", "criadero de pollos", lo que sea.' });
-    const ciudad = campoTexto('entrada-rubro-ciudad', 'Ciudad (opcional)');
-    const avisoValidacion = document.createElement('p');
-    avisoValidacion.setAttribute('role', 'alert');
-    const enviar = document.createElement('button');
-    enviar.type = 'submit';
-    enviar.className = 'btn';
-    enviar.textContent = 'Explorar';
-    formulario.append(rubro.campo, ciudad.campo, avisoValidacion, enviar);
-    areaFormulario.appendChild(formulario);
-    // ⛔ El cursor va al primer campo. Si llegaste desde Inicio apretando
-    //    "Investigar una empresa que conozco", lo que sigue es escribir el
-    //    nombre: que haya que buscar dónde hacer clic es media pantalla
-    //    perdida.
-    formulario.querySelector('input')?.focus();
-
-    formulario.addEventListener('submit', (evento) => {
-      evento.preventDefault();
-      const rubroValor = rubro.entrada.value.trim();
-      if (!rubroValor) {
-        avisoValidacion.textContent = 'Escribí un rubro para explorar.';
+      aviso.textContent = '';
+      const texto = entrada.value.trim();
+      if (!texto) {
+        aviso.textContent = opciones.avisoVacio;
+        entrada.focus();
         return;
       }
-      const entrada: EntradaObjetivo = {
-        tipo: 'rubro',
-        rubro: rubroValor,
-        ...(ciudad.entrada.value.trim() ? { ciudad: ciudad.entrada.value.trim() } : {}),
-      };
-      void investigar(entrada, enviar);
+      void investigar(opciones.aBuscar(texto), lupa);
     });
+
+    return { bloque, entrada };
   }
 
   async function investigar(entrada: EntradaObjetivo, boton: HTMLButtonElement): Promise<void> {
     boton.disabled = true;
-    vaciarNodo(areaResultado);
-    areaResultado.appendChild(crearBloqueCargando('Investigando fuentes públicas…'));
+    vaciarNodo(marco);
+    marco.className = '';
+    marco.appendChild(crearBloqueCargando('Investigando fuentes públicas…'));
+    /* El resultado aparece abajo: en el celular, si no se acompaña, queda
+       fuera de pantalla y parece que no pasó nada.
+       ⛔ Con `?.` porque esto también corre donde no hay pantalla — en las
+          verificaciones automáticas — y ahí `scrollIntoView` no existe. Sin el
+          `?.`, la búsqueda entera se cae con un error que en el navegador
+          nunca pasa y que por eso nadie encontraría. */
+    const sinMovimiento = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+    areaResultado.scrollIntoView?.({ behavior: sinMovimiento ? 'auto' : 'smooth', block: 'start' });
     const resultado = await contexto.datos.investigarObjetivo(entrada).catch((): Resultado<InvestigacionObjetivo> => ({
       ok: false,
       error: { codigo: 'desconocido', mensajeAmable: 'No se pudo completar la investigación. Volvé a intentar.' },
     }));
     boton.disabled = false;
     if (contexto.senal.aborted) return;
-    vaciarNodo(areaResultado);
+    vaciarNodo(marco);
     if (!resultado.ok) {
-      areaResultado.appendChild(crearBloqueError(resultado.error, () => void investigar(entrada, boton)));
+      marco.className = '';
+      marco.appendChild(crearBloqueError(resultado.error, () => void investigar(entrada, boton)));
       return;
     }
-    renderizarInvestigacion({ contexto, contenedor: areaResultado, investigacionInicial: resultado.datos });
+    renderizarInvestigacion({ contexto, contenedor: marco, investigacionInicial: resultado.datos });
   }
-}
-
-function crearPestana(texto: string, seleccionada: boolean): HTMLButtonElement {
-  const boton = document.createElement('button');
-  boton.type = 'button';
-  boton.className = 'pestana';
-  boton.setAttribute('role', 'tab');
-  boton.setAttribute('aria-selected', String(seleccionada));
-  boton.textContent = texto;
-  return boton;
 }

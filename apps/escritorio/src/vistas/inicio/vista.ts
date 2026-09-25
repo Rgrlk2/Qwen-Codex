@@ -3,19 +3,25 @@
  *
  * ⛔ DUEÑO: Sesión 2. Ninguna otra sesión edita esta carpeta.
  *
- * LA PLANIFICACIÓN ES EL COMIENZO. Esta pantalla muestra:
- *   · DOS ACCIONES PROTAGONISTAS, el elemento visual dominante
- *   · cuatro cifras: dinero vendido · dinero cobrado · comisión acumulada · comisión pendiente
+ * EL TABLERO. Pedido del CEO el 25-09-2026, y pensado para el celular, que es
+ * donde los vendedores lo van a mirar:
+ *
+ *   · CUATRO CIFRAS, dos arriba y dos abajo, en el orden en que él las nombró
+ *   · UN CÍRCULO con las investigaciones de la semana — la zanahoria
+ *   · UN acceso a la página de búsqueda
  *   · próximos seguimientos, con el acceso a Agenda al pie
  *
- * El vendedor arranca por gente que conoce: el amigo con la repuestera, el
- * pariente con el restaurante, el médico, el abogado, la odontóloga, la
- * peluquería, el hotel, el motel. El sistema recibe ese nombre y devuelve un
- * plan; no le pide primero que cargue un CRM.
- *
  * ⛔ PROHIBIDO acá: gráficos decorativos, embudos de conversión, tasas de
- *    cierre, mezcla de productos. Cuatro cifras, una lista y dos acciones.
- * ⛔ Con la cuenta vacía, las dos acciones quedan como lo único accionable.
+ *    cierre, mezcla de productos. Cuatro cifras, un círculo, un botón y una
+ *    lista. El círculo NO es un gráfico decorativo: es una sola cifra — cuántas
+ *    investigaciones van de las que se piden — dibujada de la forma en que se
+ *    entiende de un vistazo.
+ *
+ * ⛔ LO QUE NO SE HACE ACÁ: mentir. Con la cuenta vacía el tablero muestra
+ *    números de ejemplo, porque el CEO los pidió para poder ver el diseño; pero
+ *    los muestra CON UN CARTEL que dice que son de ejemplo. Un vendedor que
+ *    entra y ve Gs. 186.400.000 como si fueran suyos deja de creerle al
+ *    sistema el primer día, y no lo recupera más.
  *
  * Obligatorio: los cuatro estados — cargando, vacío, error con reintento, con
  * datos. Y los cinco anchos: 360, 390, 768, 1024 y 1440 px, sin scroll
@@ -24,114 +30,189 @@
  * MASTER_SPEC.md §2.1 · DESIGN_SYSTEM.md §4 · QA_CHECKLIST.md §2
  */
 
-import type { DefinicionAccion, ProximoSeguimiento, ResumenAgenda, ResumenInicio } from '@labia/compartido';
-import { crearIconoEnvuelto, type NombreIcono } from '@labia/ui/iconos';
+import type {
+  Dinero, MarcadorVisitas, ProximoSeguimiento, ResumenAgenda, ResumenInicio,
+  TotalesPorMoneda,
+} from '@labia/compartido';
+import { crearIconoEnvuelto } from '@labia/ui/iconos';
 import type { ContextoVista, Vista } from '../../nucleo/contrato-vista';
 import { esqueletoCifra, esqueletoTarjeta, montarBloqueAsincrono } from '../../nucleo/estados';
 import { formatearDinero, formatearFechaHora } from '../../nucleo/formato';
 import './vista.css';
 
+/** La única ruta que sale de esta pantalla hacia el motor. */
+const RUTA_BUSCAR = '#/planificar';
+
+type ClaveCifra = 'ventasAcumuladas' | 'ventasEnSetup' | 'mensualidadesCobradas' | 'mensualidadesACobrar';
+
+interface DefinicionCifra {
+  readonly clave: ClaveCifra;
+  readonly etiqueta: string;
+  /** La cifra de arriba a la izquierda es el total; las otras tres la componen. */
+  readonly principal?: boolean;
+}
+
 /**
- * Las dos acciones protagonistas. Texto de MASTER_SPEC.md §2.1 — no es copy de
- * producto (eso vive en content/copy/): es la interfaz propia de esta vista.
+ * Las cuatro, con el texto exacto que pidió el CEO.
+ *
+ * ⛔ Las tres últimas SUMAN la primera. Por eso la primera se dibuja más
+ *    grande y ocupa el ancho entero: es el total, no una cifra más.
  */
-const ACCION_CONOCIDO: DefinicionAccion = {
-  accion: 'investigar_conocido',
-  titulo: 'Investigar una empresa o un profesional que conozco',
-  ejemplo: '"Mi amigo tiene una repuestera", "mi odontóloga"',
-  ruta: '#/planificar?entrada=conocido',
-};
-
-const ACCION_RUBRO: DefinicionAccion = {
-  accion: 'explorar_rubro',
-  titulo: 'Explorar oportunidades por rubro',
-  ejemplo: 'Quiero ver qué le puedo vender a las peluquerías',
-  ruta: '#/planificar?entrada=rubro',
-};
-
-const ACCIONES: ReadonlyArray<DefinicionAccion> = [ACCION_CONOCIDO, ACCION_RUBRO];
-
-/** Íconos genéricos de interfaz, no una marca (docs/ASSET_SOURCES.md §1.5). */
-const ICONO_ACCION: Record<string, NombreIcono> = {
-  investigar_conocido: 'buscar',
-  explorar_rubro: 'brujula',
-};
-
-type ClaveCifra = 'dineroVendido' | 'dineroCobrado' | 'comisionAcumulada' | 'comisionPendiente';
-
-const ETIQUETAS_CIFRA: ReadonlyArray<{ readonly clave: ClaveCifra; readonly etiqueta: string }> = [
-  { clave: 'dineroVendido', etiqueta: 'Dinero vendido' },
-  { clave: 'dineroCobrado', etiqueta: 'Dinero cobrado' },
-  { clave: 'comisionAcumulada', etiqueta: 'Comisión acumulada' },
-  { clave: 'comisionPendiente', etiqueta: 'Comisión pendiente' },
+const CIFRAS: ReadonlyArray<DefinicionCifra> = [
+  { clave: 'ventasAcumuladas', etiqueta: 'Ventas acumuladas a hoy', principal: true },
+  { clave: 'ventasEnSetup', etiqueta: 'Ventas en setup al día de hoy' },
+  { clave: 'mensualidadesCobradas', etiqueta: 'Mensualidades cobradas hasta hoy' },
+  { clave: 'mensualidadesACobrar', etiqueta: 'Mensualidades a cobrar' },
 ];
+
+/**
+ * Números de ejemplo, en guaraníes, para una cuenta sin ventas cargadas.
+ *
+ * ⛔ Esto NO son datos de demostración escondidos: sólo se dibujan cuando la
+ *    cuenta está vacía y SIEMPRE con el cartel de "ejemplo" encima. En cuanto
+ *    entra la primera venta real, desaparecen para siempre.
+ *
+ * ⛔ Suman: 62.000.000 + 98.700.000 + 25.700.000 = 186.400.000. Un tablero de
+ *    ejemplo con cuentas que no cierran enseña a no mirar el tablero.
+ */
+const EJEMPLO: Readonly<Record<ClaveCifra, TotalesPorMoneda>> = {
+  ventasAcumuladas: [{ moneda: 'PYG', monto: 186_400_000 }],
+  ventasEnSetup: [{ moneda: 'PYG', monto: 62_000_000 }],
+  mensualidadesCobradas: [{ moneda: 'PYG', monto: 98_700_000 }],
+  mensualidadesACobrar: [{ moneda: 'PYG', monto: 25_700_000 }],
+};
+
+const VISITAS_DE_EJEMPLO = 4;
 
 interface DatosSeguimientos {
   readonly seguimientos: ReadonlyArray<ProximoSeguimiento>;
   readonly agenda: ResumenAgenda;
 }
 
-function crearAcciones(): HTMLElement {
-  const seccion = document.createElement('section');
-  seccion.className = 'inicio-seccion acciones-protagonistas';
-  seccion.setAttribute('aria-label', 'Empezar');
-
-  for (const accion of ACCIONES) {
-    const enlace = document.createElement('a');
-    enlace.className = 'accion-protagonista';
-    enlace.href = accion.ruta;
-
-    enlace.appendChild(crearIconoEnvuelto(ICONO_ACCION[accion.accion] ?? 'buscar', 'lg'));
-
-    const titulo = document.createElement('span');
-    titulo.className = 'accion-protagonista-titulo';
-    titulo.textContent = accion.titulo;
-    enlace.appendChild(titulo);
-
-    const ejemplo = document.createElement('span');
-    ejemplo.className = 'accion-protagonista-ejemplo';
-    ejemplo.textContent = accion.ejemplo;
-    enlace.appendChild(ejemplo);
-
-    seccion.appendChild(enlace);
-  }
-
-  return seccion;
+function elemento<K extends keyof HTMLElementTagNameMap>(
+  etiqueta: K, clase: string, texto?: string,
+): HTMLElementTagNameMap[K] {
+  const nodo = document.createElement(etiqueta);
+  nodo.className = clase;
+  if (texto !== undefined) nodo.textContent = texto;
+  return nodo;
 }
 
-function renderCifras(datos: ResumenInicio, contenedor: HTMLElement): void {
-  const rejilla = document.createElement('div');
-  rejilla.className = 'rejilla';
+/** Una cifra del tablero: rótulo arriba, número grande abajo. */
+function tarjetaCifra(definicion: DefinicionCifra, importes: TotalesPorMoneda): HTMLElement {
+  const tarjeta = elemento('div', definicion.principal ? 'tablero-cifra tablero-cifra--total' : 'tablero-cifra');
+  tarjeta.appendChild(elemento('span', 'tablero-cifra-etiqueta', definicion.etiqueta));
 
-  for (const { clave, etiqueta } of ETIQUETAS_CIFRA) {
-    const totales = datos[clave];
-    const cifra = document.createElement('div');
-    cifra.className = 'cifra';
+  const valor = elemento('span', 'tablero-cifra-valor');
+  /** ⛔ Una línea por moneda: nunca se suman ni se truncan entre sí. */
+  const lineas: ReadonlyArray<Dinero> = importes.length > 0 ? importes : [{ moneda: 'PYG', monto: 0 }];
+  for (const importe of lineas) {
+    valor.appendChild(elemento('span', 'tablero-cifra-linea', formatearDinero(importe)));
+  }
+  tarjeta.appendChild(valor);
+  return tarjeta;
+}
 
-    const etiquetaEl = document.createElement('span');
-    etiquetaEl.className = 'cifra-etiqueta';
-    etiquetaEl.textContent = etiqueta;
-    cifra.appendChild(etiquetaEl);
+const RADIO = 52;
+const PERIMETRO = 2 * Math.PI * RADIO;
 
-    const valorEl = document.createElement('span');
-    if (datos.sinDatosTodavia || totales.length === 0) {
-      valorEl.className = 'cifra-valor cifra-valor--vacia';
-      valorEl.textContent = 'Todavía no registraste ventas';
-    } else {
-      valorEl.className = 'cifra-valor';
-      /** ⛔ Una línea por moneda: nunca se suman ni se truncan entre sí. */
-      for (const importe of totales) {
-        const linea = document.createElement('span');
-        linea.textContent = formatearDinero(importe);
-        valorEl.appendChild(linea);
-      }
-    }
-    cifra.appendChild(valorEl);
+/**
+ * El círculo de visitas.
+ *
+ * Es un anillo: un arco gris de fondo y encima el arco cian recortado con
+ * `stroke-dasharray`, que es la forma barata de dibujar un porcentaje sin
+ * traer una biblioteca de gráficos entera para un solo número.
+ */
+function circuloDeVisitas(visitas: MarcadorVisitas, hechasMostradas: number): HTMLElement {
+  const objetivo = Math.max(1, visitas.objetivo);
+  const porcentaje = Math.min(100, Math.round((hechasMostradas / objetivo) * 100));
+  const completo = hechasMostradas >= objetivo;
 
-    rejilla.appendChild(cifra);
+  const bloque = elemento('div', completo ? 'tablero-meta tablero-meta--completa' : 'tablero-meta');
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 128 128');
+  svg.setAttribute('class', 'tablero-anillo');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute(
+    'aria-label',
+    `${hechasMostradas} de ${objetivo} investigaciones de la semana — ${porcentaje} por ciento`,
+  );
+
+  const fondo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  fondo.setAttribute('cx', '64');
+  fondo.setAttribute('cy', '64');
+  fondo.setAttribute('r', String(RADIO));
+  fondo.setAttribute('class', 'tablero-anillo-fondo');
+  svg.appendChild(fondo);
+
+  const arco = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  arco.setAttribute('cx', '64');
+  arco.setAttribute('cy', '64');
+  arco.setAttribute('r', String(RADIO));
+  arco.setAttribute('class', 'tablero-anillo-arco');
+  arco.setAttribute('stroke-dasharray', `${(PERIMETRO * porcentaje) / 100} ${PERIMETRO}`);
+  /* Arranca arriba y avanza como el reloj: el sentido en que la gente lee un
+     progreso. Sin esto empezaría a las tres. */
+  arco.setAttribute('transform', 'rotate(-90 64 64)');
+  svg.appendChild(arco);
+
+  const anillo = elemento('div', 'tablero-anillo-caja');
+  anillo.appendChild(svg);
+  const centro = elemento('div', 'tablero-anillo-centro');
+  centro.appendChild(elemento('span', 'tablero-anillo-numero', String(hechasMostradas)));
+  centro.appendChild(elemento('span', 'tablero-anillo-de', `de ${objetivo}`));
+  anillo.appendChild(centro);
+
+  const texto = elemento('div', 'tablero-meta-texto');
+  texto.appendChild(elemento('span', 'tablero-meta-titulo', 'Investigaciones de esta semana'));
+  texto.appendChild(elemento(
+    'span',
+    'tablero-meta-detalle',
+    completo
+      ? '¡Semana completa! Todo lo que hagas de acá en más suma de más.'
+      : `Te faltan ${objetivo - hechasMostradas} para llegar a la semana completa.`,
+  ));
+  bloque.append(anillo, texto);
+  return bloque;
+}
+
+/** El acceso a la página de búsqueda: una sola puerta, con la lupa. */
+function accesoABuscar(): HTMLElement {
+  const enlace = document.createElement('a');
+  enlace.className = 'tablero-buscar';
+  enlace.href = RUTA_BUSCAR;
+  enlace.appendChild(crearIconoEnvuelto('buscar', 'md'));
+  const texto = elemento('span', 'tablero-buscar-texto');
+  texto.appendChild(elemento('span', 'tablero-buscar-titulo', 'Buscar a quién visitar'));
+  texto.appendChild(elemento('span', 'tablero-buscar-ejemplo', 'Un cliente que conocés, o un rubro entero'));
+  enlace.appendChild(texto);
+  return enlace;
+}
+
+function renderTablero(datos: ResumenInicio, contenedor: HTMLElement): void {
+  const deEjemplo = datos.sinDatosTodavia;
+
+  if (deEjemplo) {
+    const aviso = elemento('p', 'tablero-aviso-ejemplo');
+    aviso.appendChild(elemento('strong', 'tablero-aviso-fuerte', 'Números de ejemplo.'));
+    aviso.appendChild(document.createTextNode(
+      ' Todavía no hay ventas cargadas en tu cuenta. Apenas se registre la primera, acá vas a ver la tuya.',
+    ));
+    contenedor.appendChild(aviso);
   }
 
+  const rejilla = elemento('div', 'tablero-rejilla');
+  for (const definicion of CIFRAS) {
+    rejilla.appendChild(tarjetaCifra(definicion, deEjemplo ? EJEMPLO[definicion.clave] : datos[definicion.clave]));
+  }
   contenedor.appendChild(rejilla);
+
+  contenedor.appendChild(circuloDeVisitas(
+    datos.visitas,
+    deEjemplo ? VISITAS_DE_EJEMPLO : datos.visitas.hechas,
+  ));
+  contenedor.appendChild(accesoABuscar());
 }
 
 function renderSeguimientos(datos: DatosSeguimientos, contenedor: HTMLElement): void {
@@ -215,12 +296,10 @@ export function crearVista(): Vista {
        vez, en el encabezado fijo. Antes los escribía también esta vista y se
        veían duplicados. Ver nucleo/disposicion.ts. */
 
-    contexto.raiz.appendChild(crearAcciones());
-
-    const seccionCifras = document.createElement('section');
-    seccionCifras.className = 'inicio-seccion';
-    seccionCifras.setAttribute('aria-label', 'Tu plata');
-    contexto.raiz.appendChild(seccionCifras);
+    const seccionTablero = document.createElement('section');
+    seccionTablero.className = 'inicio-seccion';
+    seccionTablero.setAttribute('aria-label', 'Tu tablero');
+    contexto.raiz.appendChild(seccionTablero);
 
     const seccionSeguimientos = document.createElement('section');
     seccionSeguimientos.className = 'inicio-seccion tarjeta';
@@ -228,12 +307,12 @@ export function crearVista(): Vista {
     contexto.raiz.appendChild(seccionSeguimientos);
 
     montarBloqueAsincrono<ResumenInicio>({
-      contenedor: seccionCifras,
-      etiqueta: 'tu plata',
+      contenedor: seccionTablero,
+      etiqueta: 'tu tablero',
       senal: contexto.senal,
       cargar: () => contexto.datos.resumenInicio(),
-      renderCargando: () => ETIQUETAS_CIFRA.map(() => esqueletoCifra()),
-      renderConDatos: (datos, contenedor) => renderCifras(datos, contenedor),
+      renderCargando: () => CIFRAS.map(() => esqueletoCifra()),
+      renderConDatos: (datos, contenedor) => renderTablero(datos, contenedor),
     });
 
     montarBloqueAsincrono<DatosSeguimientos>({
@@ -254,9 +333,9 @@ export function crearVista(): Vista {
         datos.seguimientos.length === 0
           ? {
               titulo: 'Todavía no tenés seguimientos',
-              mensaje: 'Arrancá por alguien que conocés: investigá una empresa o un profesional, o explorá un rubro.',
-              accionTexto: 'Investigar un conocido',
-              accionHref: ACCION_CONOCIDO.ruta,
+              mensaje: 'Arrancá por alguien que conocés: investigá un cliente, o explorá un rubro entero.',
+              accionTexto: 'Buscar a quién visitar',
+              accionHref: RUTA_BUSCAR,
             }
           : null,
       renderConDatos: (datos, contenedor) => renderSeguimientos(datos, contenedor),

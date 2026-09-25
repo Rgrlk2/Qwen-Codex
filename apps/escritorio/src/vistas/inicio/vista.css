@@ -1,6 +1,10 @@
 /*
  * Estilos propios de Inicio. Sólo tokens (docs/DESIGN_SYSTEM.md §2, regla CO1).
- * Prefijo .inicio- en todo lo que no sea un componente de packages/ui.
+ * Prefijo .inicio- / .tablero- en todo lo que no sea un componente de packages/ui.
+ *
+ * ⛔ ESCRITO PARA EL CELULAR PRIMERO. "Los vendedores por ahora lo van a ver en
+ *    su celular" (CEO, 25-09-2026). Las reglas de ancho suman aire a medida que
+ *    la pantalla crece; ninguna se lo saca al teléfono.
  */
 
 .inicio-titulo {
@@ -28,6 +32,245 @@
   letter-spacing: var(--etiqueta-track);
   color: var(--texto-2);
 }
+
+/* --- El cartel de números de ejemplo ------------------------------------- */
+
+.tablero-aviso-ejemplo {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--linea-acento);
+  border-radius: var(--r-medio);
+  background: var(--cian-suave);
+  color: var(--texto-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tablero-aviso-fuerte {
+  color: var(--cian);
+  font-weight: 700;
+}
+
+/* --- Las cuatro cifras ---------------------------------------------------- */
+
+/* Dos arriba y dos abajo, en el celular y en la computadora: es la forma en
+   que el CEO las describió, y es la que se lee de un vistazo. */
+.tablero-rejilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.tablero-cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--linea-2);
+  border-radius: var(--r-caja);
+  background: var(--superficie);
+  box-shadow: var(--sombra-tarjeta), var(--luz-interior);
+}
+
+/* La primera es el total; las otras tres la componen. Un filete cian alcanza
+   para decirlo sin escribirlo. */
+.tablero-cifra--total {
+  border-color: var(--linea-acento);
+  background: var(--superficie-2);
+}
+
+.tablero-cifra-etiqueta {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1.3;
+  color: var(--texto-2);
+  text-transform: uppercase;
+}
+
+.tablero-cifra-valor {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* ⛔ El número NO se parte en tres líneas — era uno de los defectos que se
+   veían en el celular. `tabular-nums` alinea las columnas de dígitos y
+   `clamp` achica la fuente lo justo en 360 px en vez de romper el renglón. */
+.tablero-cifra-linea {
+  font-size: clamp(16px, 4.6vw, 24px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) {
+  .tablero-rejilla { gap: 16px; }
+  .tablero-cifra { padding: 18px; }
+  .tablero-cifra-linea { font-size: 26px; }
+}
+
+/* --- El círculo de la semana (la zanahoria) ------------------------------- */
+
+.tablero-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--linea-2);
+  border-radius: var(--r-caja);
+  background: var(--superficie);
+  box-shadow: var(--sombra-tarjeta), var(--luz-interior);
+}
+
+.tablero-meta--completa {
+  border-color: var(--linea-acento);
+  box-shadow: var(--sombra-tarjeta), var(--halo-suave);
+}
+
+.tablero-anillo-caja {
+  position: relative;
+  flex: 0 0 auto;
+  width: 92px;
+  height: 92px;
+}
+
+.tablero-anillo {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.tablero-anillo-fondo {
+  fill: none;
+  stroke: var(--linea-2);
+  stroke-width: 11;
+}
+
+.tablero-anillo-arco {
+  fill: none;
+  stroke: var(--cian);
+  stroke-width: 11;
+  stroke-linecap: round;
+  transition: stroke-dasharray var(--normal) var(--suave);
+}
+
+/* Quien pidió menos movimiento no ve el arco crecer: aparece ya dibujado. */
+@media (prefers-reduced-motion: reduce) {
+  .tablero-anillo-arco { transition: none; }
+}
+
+.tablero-anillo-centro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  pointer-events: none;
+}
+
+.tablero-anillo-numero {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+}
+
+.tablero-anillo-de {
+  font-size: 11px;
+  color: var(--texto-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tablero-meta-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tablero-meta-titulo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--texto);
+}
+
+.tablero-meta-detalle {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--texto-2);
+}
+
+.tablero-meta--completa .tablero-meta-detalle { color: var(--cian); }
+
+@media (min-width: 768px) {
+  .tablero-anillo-caja { width: 112px; height: 112px; }
+  .tablero-anillo-numero { font-size: 32px; }
+}
+
+/* --- El acceso a la página de búsqueda ------------------------------------ */
+
+.tablero-buscar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--linea-acento);
+  border-radius: var(--r-caja);
+  background: var(--grad-suave);
+  box-shadow: var(--sombra-tarjeta), var(--luz-interior);
+  color: inherit;
+  text-decoration: none;
+  transition: transform var(--rapido) var(--suave), box-shadow var(--rapido) var(--suave);
+}
+
+.tablero-buscar:hover,
+.tablero-buscar:focus-visible {
+  transform: var(--alzar);
+  box-shadow: var(--sombra-alzada);
+}
+
+.tablero-buscar:active { transform: var(--apretar); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tablero-buscar { transition: none; }
+  .tablero-buscar:hover,
+  .tablero-buscar:focus-visible,
+  .tablero-buscar:active { transform: none; }
+}
+
+.tablero-buscar-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tablero-buscar-titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--texto);
+}
+
+.tablero-buscar-ejemplo {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--texto-2);
+}
+
+/* --- Pie de próximos seguimientos ---------------------------------------- */
 
 .inicio-agenda-acceso {
   display: flex;

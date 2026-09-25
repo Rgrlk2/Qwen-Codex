@@ -27,6 +27,9 @@ import {
 } from '../packages/mock/src/datos-motor.ts';
 import { JSDOM } from 'jsdom';
 import * as vistaClientes from '../apps/escritorio/src/vistas/clientes/vista.ts';
+import * as vistaInicio from '../apps/escritorio/src/vistas/inicio/vista.ts';
+import { montarEntrada } from '../apps/escritorio/src/vistas/planificar/entrada.ts';
+import { montarPresentaciones } from '../apps/escritorio/src/vistas/propuestas/presentaciones.ts';
 
 let ok = 0;
 const fallos = [];
@@ -646,6 +649,207 @@ if (primerCliente) {
 }
 
 vista.desmontar();
+
+// ===========================================================================
+// EL TABLERO DE INICIO  (pedido del CEO, 25-09-2026)
+// ===========================================================================
+seccion('El tablero de Inicio');
+
+/** Texto plano de un nodo, sin espacios de sobra: para comparar rotulos. */
+const limpio = (n) => (n?.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+/** Monta Inicio con el mock y devuelve la raiz ya asentada. */
+async function montarInicio(configuracion) {
+  const raiz = domC.window.document.createElement('div');
+  domC.window.document.body.appendChild(raiz);
+  const datos = crearCapaDatosMock({ configuracion: { latenciaMs: 0, ...configuracion } });
+  const control = new domC.window.AbortController();
+  const v = vistaInicio.crearVista();
+  await v.montar({ datos, raiz, rol: 'vendedor', senal: control.signal, datosDeEjemplo: true });
+  await asentar();
+  return { raiz, vista: v };
+}
+
+const LOS_CUATRO = [
+  'Ventas acumuladas a hoy',
+  'Ventas en setup al día de hoy',
+  'Mensualidades cobradas hasta hoy',
+  'Mensualidades a cobrar',
+];
+
+const conVentas = await montarInicio({});
+const rotulos = [...conVentas.raiz.querySelectorAll('.tablero-cifra-etiqueta')].map(limpio);
+comprobar('las cuatro cifras son las cuatro que pidio el CEO, y en su orden',
+  rotulos.length === 4 && LOS_CUATRO.every((r, i) => rotulos[i] === r), rotulos.join(' | '));
+
+comprobar('⛔ la primera es el total y se distingue de las otras tres',
+  conVentas.raiz.querySelectorAll('.tablero-cifra--total').length === 1);
+
+const valoresConVentas = [...conVentas.raiz.querySelectorAll('.tablero-cifra-valor')].map(limpio);
+comprobar('cada cifra trae un importe en guaranies',
+  valoresConVentas.length === 4 && valoresConVentas.every((v) => v.includes('Gs.')),
+  valoresConVentas.join(' | '));
+
+comprobar('⛔ con ventas cargadas NO aparece el cartel de numeros de ejemplo',
+  conVentas.raiz.querySelector('.tablero-aviso-ejemplo') === null);
+
+const anilloConVentas = conVentas.raiz.querySelector('.tablero-anillo');
+comprobar('el circulo de la semana se dibuja', anilloConVentas !== null);
+comprobar('⛔ y dice en palabras lo que muestra, para quien no lo ve',
+  /\d+ de \d+ investigaciones de la semana/.test(anilloConVentas?.getAttribute('aria-label') ?? ''),
+  anilloConVentas?.getAttribute('aria-label') ?? '');
+
+comprobar('hay UN acceso a la pagina de busqueda, y va a #/planificar',
+  conVentas.raiz.querySelectorAll('.tablero-buscar').length === 1
+  && conVentas.raiz.querySelector('.tablero-buscar')?.getAttribute('href') === '#/planificar');
+
+// ⛔ La regla vieja que sigue viva: Inicio no dibuja graficos. El unico SVG que
+//    puede haber es el anillo (una cifra) y los iconos de interfaz.
+const svgsRaros = [...conVentas.raiz.querySelectorAll('svg')]
+  .filter((s) => !s.classList.contains('tablero-anillo') && s.closest('.icono-envoltorio') === null);
+comprobar('⛔ ningun grafico decorativo: ni embudos, ni barras, ni tortas',
+  svgsRaros.length === 0, `${svgsRaros.length} svg de mas`);
+
+conVentas.vista.desmontar();
+
+const sinVentas = await montarInicio({ forzarVacio: true });
+comprobar('con la cuenta vacia aparece el cartel de numeros de ejemplo',
+  sinVentas.raiz.querySelector('.tablero-aviso-ejemplo') !== null);
+comprobar('⛔ y el cartel dice, con todas las letras, que son de ejemplo',
+  /ejemplo/i.test(limpio(sinVentas.raiz.querySelector('.tablero-aviso-ejemplo'))));
+
+const valoresVacia = [...sinVentas.raiz.querySelectorAll('.tablero-cifra-valor')].map(limpio);
+comprobar('⛔ la cuenta vacia NO muestra cuatro ceros: muestra el ejemplo',
+  valoresVacia.length === 4 && valoresVacia.every((v) => v !== 'Gs. 0'), valoresVacia.join(' | '));
+
+/** Los guaranies del rotulo, de vuelta a numero. */
+const aNumero = (texto) => Number((texto.match(/[\d.]+/)?.[0] ?? '0').replace(/\./g, ''));
+const [acumuladas, setup, cobradas, aCobrar] = valoresVacia.map(aNumero);
+comprobar('⛔ las tres cifras de ejemplo SUMAN la primera',
+  setup + cobradas + aCobrar === acumuladas,
+  `${setup} + ${cobradas} + ${aCobrar} = ${setup + cobradas + aCobrar} vs ${acumuladas}`);
+
+sinVentas.vista.desmontar();
+
+// ===========================================================================
+// LA PAGINA DE BUSQUEDA  (pedido del CEO, 25-09-2026)
+// ===========================================================================
+seccion('La pagina de busqueda');
+
+const raizB = domC.window.document.createElement('div');
+domC.window.document.body.appendChild(raizB);
+const datosB = crearCapaDatosMock({ configuracion: { latenciaMs: 0 } });
+let ultimaBusqueda = null;
+const datosEspiados = {
+  ...datosB,
+  investigarObjetivo: (entrada) => { ultimaBusqueda = entrada; return datosB.investigarObjetivo(entrada); },
+};
+const controlB = new domC.window.AbortController();
+montarEntrada(
+  { datos: datosEspiados, raiz: raizB, rol: 'vendedor', senal: controlB.signal, datosDeEjemplo: true },
+  raizB,
+);
+await asentar();
+
+const preguntas = [...raizB.querySelectorAll('.buscador-pregunta')].map(limpio);
+comprobar('las dos preguntas son las que dicto el CEO',
+  preguntas.length === 2
+  && preguntas[0] === '¿A qué cliente querés investigar?'
+  && preguntas[1] === '¿Qué rubro querés investigar?', preguntas.join(' | '));
+
+comprobar('⛔ NADA MAS: dos campos y ni uno solo de mas',
+  raizB.querySelectorAll('input, textarea, select').length === 2,
+  `${raizB.querySelectorAll('input, textarea, select').length} campos`);
+
+const lupas = [...raizB.querySelectorAll('.buscador-lupa')];
+comprobar('cada campo tiene su lupa', lupas.length === 2);
+comprobar('⛔ la lupa se anuncia con su pregunta, no como "boton" a secas',
+  lupas.every((l) => (l.getAttribute('aria-label') ?? '').length > 10));
+
+// Vacio: avisa, y NO llama al motor.
+ultimaBusqueda = null;
+lupas[0].click();
+await asentar();
+comprobar('⛔ con el campo vacio avisa en vez de buscar',
+  ultimaBusqueda === null && limpio(raizB.querySelector('.buscador-aviso')).length > 0);
+
+// Un nombre viaja como nombre.
+const campoCliente = raizB.querySelector('#buscar-cliente');
+campoCliente.value = 'Ferretería El Tornillo';
+lupas[0].click();
+await asentar();
+comprobar('un nombre arranca el motor como nombre comercial',
+  ultimaBusqueda?.tipo === 'empresa' && ultimaBusqueda?.nombreComercial === 'Ferretería El Tornillo',
+  JSON.stringify(ultimaBusqueda));
+
+// Un RUC viaja como RUC, sin preguntarle nada al vendedor.
+campoCliente.value = '80012345-6';
+lupas[0].click();
+await asentar();
+comprobar('⛔ un RUC se reconoce solo: viaja como RUC, no como nombre',
+  ultimaBusqueda?.tipo === 'empresa' && ultimaBusqueda?.ruc === '80012345-6'
+  && ultimaBusqueda?.nombreComercial === undefined, JSON.stringify(ultimaBusqueda));
+
+// El rubro, por su campo.
+raizB.querySelector('#buscar-rubro').value = 'peluquerías';
+lupas[1].click();
+await asentar();
+comprobar('el rubro arranca el motor como rubro',
+  ultimaBusqueda?.tipo === 'rubro' && ultimaBusqueda?.rubro === 'peluquerías',
+  JSON.stringify(ultimaBusqueda));
+
+comprobar('y el motor devuelve algo que mostrar',
+  limpio(raizB.querySelector('.buscador-resultado')).length > 200,
+  `${limpio(raizB.querySelector('.buscador-resultado')).length} caracteres`);
+
+// ===========================================================================
+// LA PRESENTACION SE MANDA COMO ENLACE, NO COMO PDF  (CEO, 25-09-2026)
+// ===========================================================================
+seccion('La presentacion se manda como enlace, no como PDF');
+
+const raizP = domC.window.document.createElement('div');
+domC.window.document.body.appendChild(raizP);
+const datosP = crearCapaDatosMock({ configuracion: { latenciaMs: 0 } });
+const controlP = new domC.window.AbortController();
+montarPresentaciones(raizP, {
+  datos: datosP, raiz: raizP, rol: 'vendedor', senal: controlP.signal, datosDeEjemplo: true,
+});
+await asentar();
+
+const textoPresentaciones = limpio(raizP);
+comprobar('⛔ en ningun lado dice PDF', !/\bPDF\b/i.test(textoPresentaciones));
+
+const botonEnlace = [...raizP.querySelectorAll('button')]
+  .find((b) => /Generar el enlace/i.test(b.textContent ?? ''));
+comprobar('el boton genera un enlace para el cliente', botonEnlace !== undefined);
+
+if (botonEnlace) {
+  botonEnlace.click();
+  await asentar();
+
+  const direccion = raizP.querySelector('.propuestas-enlace-direccion');
+  comprobar('y aparece la direccion completa, lista para copiar',
+    direccion !== null && /^https?:\/\/.+#\/s\/.+/.test(direccion?.value ?? ''),
+    direccion?.value ?? 'sin campo');
+
+  const porWhatsapp = [...raizP.querySelectorAll('a')]
+    .find((a) => /WhatsApp/i.test(a.textContent ?? ''));
+  comprobar('hay un boton que abre WhatsApp con el mensaje listo',
+    porWhatsapp !== undefined && (porWhatsapp?.href ?? '').startsWith('https://wa.me/?text='));
+
+  // ⛔ El vendedor manda desde SU WhatsApp y elige el contacto: ningun numero
+  //    de telefono viaja en el enlace.
+  comprobar('⛔ el enlace de WhatsApp no lleva ningun numero de telefono',
+    /^https:\/\/wa\.me\/\?text=/.test(porWhatsapp?.href ?? ''), porWhatsapp?.href ?? '');
+
+  comprobar('⛔ y el mensaje lleva adentro la direccion que va a abrir el cliente',
+    decodeURIComponent((porWhatsapp?.href ?? '').replace('https://wa.me/?text=', ''))
+      .includes('#/s/'));
+
+  const copiar = [...raizP.querySelectorAll('button')]
+    .find((b) => /Copiar enlace/i.test(b.textContent ?? ''));
+  comprobar('y un boton para copiarlo', copiar !== undefined);
+}
 
 // ===========================================================================
 console.log('\nResultado\n');

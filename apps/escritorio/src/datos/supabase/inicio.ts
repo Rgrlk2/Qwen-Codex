@@ -1,11 +1,20 @@
 /**
  * Inicio, contra Supabase. La pantalla que el vendedor ve primero.
  *
- * ⛔ LA REGLA QUE ESTE ARCHIVO HACE CUMPLIR: Inicio no calcula nada por su
- *    cuenta. Las cuatro cifras salen de la MISMA función que alimenta la
- *    pantalla de Dinero, y el contador de agenda de la MISMA que arma la
- *    Agenda. Si Inicio dijera una cifra y Dinero otra, el vendedor deja de
- *    creerle a las dos.
+ * ⛔ LA REGLA QUE ESTE ARCHIVO HACE CUMPLIR: Inicio no inventa ni un número.
+ *    Cada cifra sale de las MISMAS tablas que alimentan la pantalla de Dinero
+ *    — cotizaciones aceptadas y cobros de mensualidad — y el contador de
+ *    agenda de la MISMA función que arma la Agenda. Si Inicio dijera una cifra
+ *    y Dinero otra, el vendedor deja de creerle a las dos.
+ *
+ * ⛔ LAS CUATRO CIFRAS SON ACUMULADAS, NO MENSUALES. El CEO las pidió "a hoy"
+ *    y "hasta hoy": no llevan filtro de período. Y las tres últimas suman la
+ *    primera, a propósito.
+ *
+ * ⛔ NADIE FILTRA POR VENDEDOR ACÁ. Lo hace la base: las políticas de acceso
+ *    ya sólo devuelven las cotizaciones y los cobros del que está adentro. Un
+ *    filtro escrito en el navegador sería una segunda verdad que podría no
+ *    coincidir con la primera.
  *
  * ⛔ Nunca hay un total consolidado: cada cifra es `TotalesPorMoneda`.
  *
@@ -17,13 +26,13 @@
  */
 
 import type {
-  CapaInicio, CanalPreferido, EntradaAgenda, Id, ISODate, PeriodoMensual,
-  ProximoSeguimiento, Resultado, ResumenAgenda, ResumenInicio, TotalesPorMoneda,
+  CapaInicio, CanalPreferido, EntradaAgenda, Id, ISODate, MarcadorVisitas, Moneda,
+  PeriodoMensual, ProximoSeguimiento, Resultado, ResumenAgenda, ResumenInicio,
+  TotalesPorMoneda,
 } from '@labia/compartido';
 import { supabase } from './conexion';
 import { bien, fallo } from './errores';
 import { crearCapaAgenda } from './agenda';
-import { crearCapaDinero } from './dinero';
 
 /**
  * ⛔ Lista CORTA: el contrato lo dice con un candado. El detalle vive en
@@ -70,6 +79,83 @@ function estaVacia(totales: TotalesPorMoneda): boolean {
   return totales.every((t) => t.monto === 0);
 }
 
+/** ⛔ Una entrada por moneda. Nunca un total consolidado. */
+function sumarPorMoneda(filas: ReadonlyArray<{ moneda: Moneda; monto: number }>): TotalesPorMoneda {
+  const por = new Map<Moneda, number>();
+  for (const f of filas) por.set(f.moneda, (por.get(f.moneda) ?? 0) + f.monto);
+  return [...por].map(([moneda, monto]) => ({ moneda, monto }));
+}
+
+/** Suma varias cifras por moneda en una sola, sin mezclar monedas. */
+function juntar(...cifras: ReadonlyArray<TotalesPorMoneda>): TotalesPorMoneda {
+  return sumarPorMoneda(cifras.flat());
+}
+
+const ZONA = 'America/Asuncion';
+
+/**
+ * Cuántos milisegundos separan el reloj de Asunción del reloj universal.
+ *
+ * ⛔ NO se escribe "-3 horas" a mano. Hoy Paraguay está en UTC−3 todo el año,
+ *    pero eso es una ley, no una constante de la naturaleza: si vuelve el
+ *    horario de verano, una resta clavada empieza a contar la semana corrida
+ *    una hora y nadie se entera. Esto se lo pregunta al sistema.
+ */
+function desfaseDeAsuncion(momento: Date): number {
+  const alla = new Date(momento.toLocaleString('en-US', { timeZone: ZONA }));
+  const aca = new Date(momento.toLocaleString('en-US', { timeZone: 'UTC' }));
+  return alla.getTime() - aca.getTime();
+}
+
+const UN_DIA = 86_400_000;
+
+/**
+ * La semana en curso en Asunción: del lunes a las 00:00 al lunes siguiente.
+ *
+ * El marcador circular cuenta lo de ESTA semana. Si el corte se hiciera en
+ * hora universal, los lunes a la mañana temprano el vendedor vería todavía la
+ * semana pasada, y los domingos a la noche ya la que viene.
+ */
+function semanaEnCurso(): { readonly desde: ISODate; readonly hasta: ISODate } {
+  const ahora = new Date();
+  const desfase = desfaseDeAsuncion(ahora);
+  /* El reloj de Asunción, leído como si fuera universal: así `getUTCDay` da
+     el día que el vendedor tiene en la pared. */
+  const pared = new Date(ahora.getTime() + desfase);
+  const diasDesdeLunes = (pared.getUTCDay() + 6) % 7;
+  const lunesPared = Date.UTC(pared.getUTCFullYear(), pared.getUTCMonth(), pared.getUTCDate())
+    - diasDesdeLunes * UN_DIA;
+  return {
+    desde: new Date(lunesPared - desfase).toISOString(),
+    hasta: new Date(lunesPared + 7 * UN_DIA - desfase).toISOString(),
+  };
+}
+
+/** Objetivo de visitas por semana, por si el parámetro todavía no existe. */
+const OBJETIVO_DE_VISITAS_POR_OMISION = 6;
+
+interface FilaVenta {
+  readonly moneda: Moneda;
+  readonly setup_lista: number | null;
+  readonly setup_especial: number | null;
+}
+
+interface FilaCobro {
+  readonly moneda: Moneda;
+  readonly importe: number;
+  readonly estado: string;
+}
+
+/**
+ * Lo que se vendió de setup en una cotización aceptada.
+ *
+ * ⛔ Manda el precio especial cuando existe: es el que firmó el cliente. El de
+ *    lista es sólo el punto de partida de la negociación.
+ */
+function setupVendido(fila: FilaVenta): number {
+  return fila.setup_especial ?? fila.setup_lista ?? 0;
+}
+
 interface FilaSeguimiento {
   readonly id: string;
   readonly cliente_id: string | null;
@@ -88,30 +174,77 @@ interface FilaSeguimiento {
 
 export function crearCapaInicio(): CapaInicio {
   const sb = supabase();
-  const dinero = crearCapaDinero();
   const agenda = crearCapaAgenda();
 
   return {
     async resumenInicio() {
       const periodo = periodoDeHoy();
-      // ⛔ No se recalcula acá: se proyecta lo que ya calculó la capa de dinero.
-      const r = await dinero.resumenDinero(periodo);
-      if (!r.ok) return r as Resultado<ResumenInicio>;
-      const d = r.datos;
+      const semana = semanaEnCurso();
+
+      /* Cuatro preguntas a la base, todas al mismo tiempo. Las políticas de
+         acceso ya dejan afuera lo que no es del vendedor. */
+      const [ventas, cobros, investigaciones, parametros] = await Promise.all([
+        // ⛔ Vendido = cotización ACEPTADA. Una aprobada todavía no es una
+        //    venta: la firma el cliente, no Lab.IA.
+        sb.from('cotizacion')
+          .select('moneda, setup_lista, setup_especial')
+          .eq('estado', 'aceptada'),
+        // ⛔ Sin filtro de período: es "hasta hoy", no "este mes".
+        sb.from('cobro_mensualidad').select('moneda, importe, estado'),
+        sb.from('plan')
+          .select('id', { count: 'exact', head: true })
+          .gte('creado_en', semana.desde)
+          .lt('creado_en', semana.hasta),
+        sb.from('parametros_sistema').select('visitas_objetivo_semana').maybeSingle(),
+      ]);
+
+      if (ventas.error) return fallo<ResumenInicio>(ventas.error);
+      if (cobros.error) return fallo<ResumenInicio>(cobros.error);
+      if (investigaciones.error) return fallo<ResumenInicio>(investigaciones.error);
+      /* ⛔ El parámetro NO corta la pantalla. Si no se pudo leer, el círculo
+         usa el objetivo por omisión: que falle el tablero entero por el
+         denominador de un marcador sería desproporcionado. */
+
+      const vs = (ventas.data ?? []) as unknown as FilaVenta[];
+      const cs = (cobros.data ?? []) as unknown as FilaCobro[];
+
+      const ventasEnSetup = sumarPorMoneda(
+        vs.map((v) => ({ moneda: v.moneda, monto: setupVendido(v) })),
+      );
+      const mensualidadesCobradas = sumarPorMoneda(
+        cs.filter((c) => c.estado === 'cobrado')
+          .map((c) => ({ moneda: c.moneda, monto: c.importe })),
+      );
+      // ⛔ "Incobrable" no entra: no es plata que vaya a llegar, y ponerla en
+      //    "a cobrar" sería prometerle al vendedor algo que no va a pasar.
+      const mensualidadesACobrar = sumarPorMoneda(
+        cs.filter((c) => c.estado === 'pendiente' || c.estado === 'atrasado')
+          .map((c) => ({ moneda: c.moneda, monto: c.importe })),
+      );
+
+      const objetivoLeido = (parametros.data as { visitas_objetivo_semana?: number } | null)
+        ?.visitas_objetivo_semana;
+      const visitas: MarcadorVisitas = {
+        hechas: investigaciones.count ?? 0,
+        objetivo: typeof objetivoLeido === 'number' && objetivoLeido > 0
+          ? objetivoLeido
+          : OBJETIVO_DE_VISITAS_POR_OMISION,
+        desde: semana.desde,
+        hasta: semana.hasta,
+      };
+
+      const ventasAcumuladas = juntar(ventasEnSetup, mensualidadesCobradas, mensualidadesACobrar);
 
       return bien<ResumenInicio>({
         periodo,
-        dineroVendido: d.vendido,
-        dineroCobrado: d.cobrado,
-        // Lo acumulado es toda la parte del vendedor que sigue viva: lo que ya
-        // se le liquidó más lo que tiene devengado. Lo anulado no cuenta, y la
-        // capa de dinero ya lo dejó afuera.
-        comisionAcumulada: d.parteVendedor,
-        comisionPendiente: d.comisionPendiente,
+        ventasAcumuladas,
+        ventasEnSetup,
+        mensualidadesCobradas,
+        mensualidadesACobrar,
+        visitas,
         // ⛔ "Sin datos todavía" es literal: no registró NINGUNA venta. Con una
-        //    venta cobrada en cero seguiría siendo falso, porque hay actividad.
-        sinDatosTodavia:
-          estaVacia(d.vendido) && estaVacia(d.cobrado) && estaVacia(d.parteVendedor),
+        //    venta en cero seguiría siendo falso, porque hay actividad.
+        sinDatosTodavia: vs.length === 0 && cs.length === 0 && estaVacia(ventasAcumuladas),
       });
     },
 

@@ -635,3 +635,41 @@
 @media (max-width: 389px) {
   .propuestas-dato__etiqueta { min-width: 0; width: 100%; }
 }
+
+/* ---------------------------------------------------------------------------
+ * EL ENLACE PARA EL CLIENTE (reemplazó al PDF — CEO, 25-09-2026)
+ *
+ * La dirección va en un campo de sólo lectura: se puede seleccionar a mano si
+ * el botón de copiar falla, y en el celular no se parte en cinco renglones.
+ * ------------------------------------------------------------------------ */
+
+.propuestas-enlace {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--linea);
+}
+
+.propuestas-enlace-direccion {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--linea-2);
+  border-radius: var(--r-chico);
+  background: var(--glass-2);
+  color: var(--texto);
+  /* ⛔ 16px o más: por debajo de eso el navegador del celular hace zoom solo
+     al tocar el campo. */
+  font-size: 16px;
+  font-family: var(--fuente-mono);
+  text-overflow: ellipsis;
+}
+
+.propuestas-enlace-direccion:focus-visible {
+  outline: none;
+  border-color: var(--linea-acento);
+  box-shadow: 0 0 0 1px var(--linea-acento);
+}

@@ -1031,6 +1031,76 @@ el momento en que alguien se pregunta si debe ser una puerta.
   son de la capa de propuestas. Hasta que esa capa exista contra el servidor
   devuelve vacío. ⛔ Barras inventadas serían peores que ninguna.
 - ~~La presentación compartible~~ — **hecha** (`#/s/<token>`), probada en vivo.
-- El PDF de una presentación. `emitirPresentacion` existe y la función
-  `documento` arma el de la cotización; la de la presentación todavía no. ⛔ No
-  se anuncia como disponible: el enlace sí funciona, el PDF no.
+- ~~El PDF de una presentación~~ — **cancelado a pedido del CEO (25-09-2026).**
+  Se reemplazó por el enlace HTML, que es el que se manda por WhatsApp. Ver
+  abajo.
+
+## El tablero, la página de búsqueda y el enlace en vez del PDF (25-09-2026)
+
+Tres cambios pedidos por el CEO, y uno que apareció solo al probarlos.
+
+### 1 · Inicio es un tablero
+
+Cuatro cifras acumuladas, en el orden en que él las nombró, y un círculo:
+
+    Ventas acumuladas a hoy          = las tres de abajo, sumadas
+    Ventas en setup al día de hoy    ← cotizacion, estado 'aceptada'
+    Mensualidades cobradas hasta hoy ← cobro_mensualidad, estado 'cobrado'
+    Mensualidades a cobrar           ← cobro_mensualidad, 'pendiente'/'atrasado'
+
+⛔ Ninguna lleva filtro de período: él las pidió "a hoy" y "hasta hoy".
+⛔ `incobrable` no entra en "a cobrar": no es plata que vaya a llegar.
+⛔ Manda `setup_especial` sobre `setup_lista`: el especial es el que firmó el
+   cliente.
+⛔ Nadie filtra por vendedor en el navegador. Lo hace RLS. Probado
+   impersonando a un vendedor: las cuatro consultas corren y devuelven lo suyo.
+
+El círculo cuenta los `plan` de la semana en curso, de lunes a lunes en hora
+de Asunción — no en hora universal, porque si no el lunes temprano el vendedor
+vería todavía la semana pasada. El 100 % sale de
+`parametros_sistema.visitas_objetivo_semana`, nuevo, con CHECK entre 1 y 7 y
+por omisión **6** (lunes a sábado). ⛔ No está clavado en el programa: el CEO
+dudó entre 6 y 7, así que se cambia con un UPDATE, no con un despliegue.
+
+La cuenta vacía muestra **números de ejemplo en guaraníes, con un cartel que
+dice que son de ejemplo**. Él los pidió para poder ver el diseño; el cartel es
+la condición para que eso no sea mentirle al vendedor. Las tres cifras del
+ejemplo suman la primera, y hay una comprobación automática que lo exige.
+
+### 2 · La página de búsqueda
+
+`#/planificar` dejó de ser dos tarjetas + un formulario de cinco campos. Ahora
+son dos preguntas con su lupa, y nada más:
+
+    ¿A qué cliente querés investigar?   [ ... ] 🔍
+    ¿Qué rubro querés investigar?       [ ... ] 🔍
+
+Si el texto parece un RUC, viaja como RUC; si no, como nombre comercial. ⛔ No
+se le pregunta al vendedor cuál escribió. Ciudad, teléfono y "a qué se dedica"
+los sigue pidiendo el RESULTADO, que es donde ya hay algo delante que corregir.
+
+### 3 · El enlace reemplazó al PDF de la presentación
+
+El botón dice **"Generar el enlace para el cliente"** y muestra la dirección
+completa, un botón para copiarla y otro que abre WhatsApp con el mensaje
+escrito. ⛔ `https://wa.me/?text=…` **sin número**: el vendedor manda desde su
+WhatsApp y elige el contacto, así no hay que guardar el teléfono del cliente
+en ningún lado.
+
+Ya no se llama a `emitir_documento` para presentaciones: `crear_enlace` nunca
+lo necesitó — guarda la versión, que es lo que congela lo que ve el cliente.
+
+⛔ **La COTIZACIÓN sigue siendo un PDF firmado.** Es un documento contractual
+con folio, firma del CEO e inmutabilidad; eso no se toca sin que lo pidan.
+
+### 4 · Lo que apareció al probarlo
+
+`renderizarInvestigacion` **le pisa la clase** al contenedor que recibe: le
+pone `planificar-investigacion`. Antes daba igual porque ese nodo no tenía
+clase propia. Ahora sí la tiene, así que el resultado se dibuja dentro de un
+envoltorio propio (`marco` en `entrada.ts`).
+
+Lo encontró una comprobación automática, no mirando la pantalla: en el
+navegador no se ve, porque la investigación trae sus propios estilos encima.
+Es la misma lección del agujero de las firmas — **lo que dice la verdad es la
+verificación de después, no el código que parece correcto.**
