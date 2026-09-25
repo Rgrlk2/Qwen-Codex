@@ -482,7 +482,12 @@ p, h1, h2, h3, h4, span, div { overflow-wrap: anywhere; }
 .vista {
   flex: 1 1 auto;
   min-width: 0;
-  padding: 24px clamp(16px, 4vw, 32px) calc(40px + var(--inferior));
+  /* ⛔ El `env(safe-area-inset-bottom)` va acá TAMBIÉN, no sólo en la barra.
+     La barra de abajo ya se estira para pasar el indicador del iPhone; si el
+     contenido no reserva ese mismo alto, las últimas líneas de la pantalla
+     quedan tapadas por la barra y nadie entiende por qué. */
+  padding: 24px clamp(16px, 4vw, 32px)
+           calc(40px + var(--inferior) + env(safe-area-inset-bottom, 0px));
   max-width: var(--ancho-contenido);
   width: 100%;
   margin: 0 auto;
