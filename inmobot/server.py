@@ -325,7 +325,7 @@ def dashboard(tid: str):
     # --- HEADER: logo + contador compacto ---
     stats_html = f"""
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:16px">
-        <img src="/logo" alt="Century 21 EBA" style="height:56px;max-width:60%;object-fit:contain;border-radius:4px">
+        <img src="/logo" alt="LLAVE.IA" style="height:72px;width:72px;object-fit:cover;border-radius:8px">
         <div style="text-align:right;color:#fff">
             <div style="font-size:24px;font-weight:700;line-height:1">{st['total']}</div>
             <div style="font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.5px">Publicados {st['mes']}</div>
@@ -396,7 +396,8 @@ def dashboard(tid: str):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>InmoBot</title>
+    <title>InmoBot · LLAVE.IA</title>
+    <link rel="icon" href="/logo">
     <style>
         *{{box-sizing:border-box;margin:0;padding:0}}
         body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f7f7;color:#111}}
