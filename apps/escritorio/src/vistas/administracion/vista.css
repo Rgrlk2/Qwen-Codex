@@ -1,0 +1,157 @@
+/*
+ * Estilos propios de la vista Administración.
+ *
+ * ⛔ DUEÑO: Sesión 6. Sólo variantes con prefijo `.administracion-…`
+ * (DESIGN_SYSTEM.md §12 S4). Los componentes compartidos (.tarjeta, .cifra,
+ * .rejilla, .tabla, .btn, .pestanas/.pestana, .cargando, .vacio, .error,
+ * .dialogo…) los define `packages/ui/src/base.css`, de Sesión 2; acá no se
+ * redeclaran. `.dinero-selector-periodo` y `.dinero-periodo-actual` los
+ * define `../dinero/vista.css`, reutilizados tal cual.
+ *
+ * ⛔ Ningún color, fuente ni curva literal: sólo layout y espaciado propios.
+ * ⛔ Nada de overflow-x: hidden. El único overflow-x es el de .tabla-contenedor,
+ * y es overflow-x: auto (DESIGN_SYSTEM.md §7).
+ */
+
+.administracion-vista {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.administracion-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.administracion-selector-periodo {
+  min-width: 0;
+}
+
+.administracion-paneles {
+  min-width: 0;
+}
+
+.administracion-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.admin-subseccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.admin-moneda {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.admin-moneda-titulo {
+  margin: 0;
+}
+
+.admin-cifras,
+.admin-contadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.admin-cifras > *,
+.admin-contadores > * {
+  min-width: 0;
+}
+
+.admin-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 32rem;
+  min-width: 0;
+}
+
+.admin-ayuda {
+  max-width: 60ch;
+  overflow-wrap: anywhere;
+}
+
+.admin-lista-bloqueos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-dialogo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.admin-cotizacion,
+.admin-sugerencia,
+.admin-actividad {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.admin-precios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-recalculo {
+  min-width: 0;
+}
+
+.admin-alternativas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-casilla {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+}
+
+.admin-cotizacion-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-linea-tiempo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-linea-tiempo-fecha {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 389px) {
+  .admin-cifras,
+  .admin-contadores {
+    grid-template-columns: 1fr;
+  }
+}

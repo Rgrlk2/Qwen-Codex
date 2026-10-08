@@ -1,0 +1,72 @@
+/*
+ * Tokens del Escritorio Vendedores Lab.IA.
+ *
+ * ⛔ DUEÑO: SESIÓN 2. Ninguna otra sesión edita este archivo.
+ * ⛔ Ninguna vista escribe un color, una fuente ni una curva literal. Sólo tokens.
+ *
+ * IDENTIDAD LAB.IA — ocho colores oficiales + Inter. Ver marca-labia.css.
+ * ⛔ Se descarta la identidad dorada con serif de la referencia operativa.
+ *    De la referencia se reutiliza la ARQUITECTURA, no la identidad visual.
+ *
+ * Todo token de color deriva de los ocho oficiales: o es uno de ellos, o es
+ * uno de ellos con transparencia. ⛔ No se inventa ningún hex nuevo.
+ *
+ * Ver docs/DESIGN_SYSTEM.md §1 y §2.
+ */
+
+@import url('./marca-labia.css');
+
+:root {
+  /* --- Fondos --- */
+  --bg:           var(--labia-negro-azulado);              /* #020711 */
+  --bg-2:         var(--labia-navy);                       /* #06162F */
+  --superficie:   rgba(6, 22, 47, .72);                    /* navy translúcido */
+  --superficie-2: rgba(10, 85, 217, .10);                  /* azul al 10 %: tarjeta elevada */
+  --glass:        rgba(6, 22, 47, .56);
+
+  /* --- Líneas --- */
+  --linea:        rgba(174, 184, 200, .16);                /* texto-2 al 16 % */
+  --linea-2:      rgba(174, 184, 200, .28);
+  --linea-acento: rgba(0, 217, 255, .32);                  /* cian al 32 % */
+
+  /* --- Texto --- */
+  --texto:   var(--labia-texto);                           /* #F2F7FF */
+  --texto-2: var(--labia-texto-2);                         /* #AEB8C8 */
+  --texto-3: rgba(174, 184, 200, .72);
+  --mudo:    rgba(174, 184, 200, .52);
+
+  /* --- Acentos --- */
+  /* ⛔ --azul es RELLENO. Nunca texto ni borde fino: 3.18 contra el fondo. */
+  --azul:         var(--labia-azul);                       /* #0A55D9 */
+  --azul-suave:   rgba(10, 85, 217, .18);
+  /* Para texto y bordes de acento, éstos: */
+  --azul-texto:   var(--labia-azul-claro);                 /* #098CFF — 5.96 */
+  --cian:         var(--labia-cian);                       /* #00D9FF — 11.88 */
+  --cian-claro:   var(--labia-cian-claro);                 /* #12D9FF */
+  --cian-suave:   rgba(0, 217, 255, .14);
+
+  /* --- Estado --- */
+  /* Sin color oficial propio: se apoyan en los de marca y en los mínimos
+     imprescindibles para peligro. ⛔ No se agregan sin autorización. */
+  --ok:            var(--labia-cian);
+  --peligro:       #FF6B6B;
+  --peligro-suave: rgba(255, 107, 107, .14);
+
+  /* --- Tipografía: Inter. ⛔ Sin serif. --- */
+  --fuente: var(--labia-fuente);
+  --fuente-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- Estructura --- */
+  --lateral: 248px;
+  /* Lateral retráctil (docs/PARALLEL_SESSIONS.md pedido S2): sólo íconos. */
+  --lateral-compacta: 76px;
+  --inferior: 64px;
+  --ancho-contenido: 1240px;
+
+  /* --- Movimiento --- */
+  --suave: cubic-bezier(.16, .8, .24, 1);
+}
+
+@media (max-width: 899px) {
+  :root { --lateral: 0px; }
+}
