@@ -1,8 +1,8 @@
-import os, json, uuid, re, time, threading, calendar
+import os, json, uuid, re, time, threading, calendar, secrets, hmac
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse, Response, JSONResponse
 from pydantic import BaseModel
 import requests
@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, Column, String, Text, DateTime, Integer, i
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from copywriter import extraer_datos, generar_variantes, evaluar, normalizar_wa
+from seguridad import bot_key, firmar_state, state_valido
 
 load_dotenv()
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
@@ -48,6 +49,7 @@ class Profile(Base):
     whatsapp = Column(String, default="")
     username = Column(String, default="")
     created_at = Column(DateTime, default=ahora)
+    token = Column(String, default="")      # codigo secreto del enlace al tablero
 
 
 class FbUser(Base):
@@ -117,6 +119,50 @@ def migrar():
 
 migrar()
 
+
+# --- ACCESO ---
+def nuevo_token() -> str:
+    return secrets.token_urlsafe(12)
+
+
+def link_tablero(tid, token) -> str:
+    return f"{APP_URL}/dashboard?tid={tid}&k={token}"
+
+
+def link_conectar(tid, token) -> str:
+    return f"{APP_URL}/auth/login?telegram_id={tid}&k={token}"
+
+
+def asegurar_token(db, p):
+    if not p.token:
+        p.token = nuevo_token()
+        db.add(p)
+        db.commit()
+    return p.token
+
+
+def requiere_bot(x_bot_key: str = Header(default="")):
+    """Los endpoints que usa el bot exigen su clave interna (si el servidor tiene SECRET_KEY o token de bot)."""
+    esperada = bot_key()
+    if esperada and not hmac.compare_digest(x_bot_key, esperada):
+        raise HTTPException(403, "No autorizado")
+
+
+def verificar(db, tid, k):
+    p = db.query(Profile).filter_by(telegram_id=str(tid)).first()
+    if not p or not p.token or not hmac.compare_digest(p.token, k or ""):
+        raise HTTPException(403, "Enlace invalido o vencido. Escribile /start al bot para recibir uno nuevo.")
+    return p
+
+
+_db = SessionLocal()
+try:
+    for _p in _db.query(Profile).filter((Profile.token.is_(None)) | (Profile.token == "")).all():
+        _p.token = nuevo_token()
+    _db.commit()
+finally:
+    _db.close()
+
 # --- PERFILES PRECARGADOS ---
 # perfiles.json (o env PERFILES_JSON): [{"telegram_id": "123"|"PENDIENTE", "nombre": "...", "whatsapp": "..."}]
 # Con telegram_id numerico se fija el perfil. Sin ID, el nombre se asigna cuando la persona
@@ -143,6 +189,7 @@ def cargar_perfiles():
             if tid.isdigit():
                 p = db.query(Profile).filter_by(telegram_id=tid).first() or Profile(telegram_id=tid)
                 p.nombre, p.whatsapp = it.get("nombre", ""), wa
+                p.token = p.token or nuevo_token()
                 db.add(p)
             else:
                 NOMBRES_POR_WA[wa] = it.get("nombre", "")
@@ -168,6 +215,7 @@ class PublishReq(BaseModel):
     draft_id: str
     destination: str
     texto: Optional[str] = None
+    k: str = ""
 
 
 class PerfilReq(BaseModel):
@@ -184,6 +232,7 @@ class RegistroReq(BaseModel):
 
 class RefreshReq(BaseModel):
     telegram_id: int
+    k: str = ""
 
 
 # --- FECHAS ---
@@ -218,7 +267,7 @@ def _json(s, defecto):
 
 
 # --- REGISTRO / PERFIL ---
-@app.post("/api/registro")
+@app.post("/api/registro", dependencies=[Depends(requiere_bot)])
 def registro(req: RegistroReq):
     tid = str(req.telegram_id)
     if ALLOWED_IDS and tid not in ALLOWED_IDS:
@@ -231,12 +280,14 @@ def registro(req: RegistroReq):
             p = Profile(telegram_id=tid, nombre=req.first_name, whatsapp="", username=req.username)
             db.add(p)
             db.commit()
-        return {"nuevo": nuevo, "nombre": p.nombre, "whatsapp": p.whatsapp, "tiene_wa": bool(p.whatsapp)}
+        tk = asegurar_token(db, p)
+        return {"nuevo": nuevo, "nombre": p.nombre, "whatsapp": p.whatsapp, "tiene_wa": bool(p.whatsapp),
+                "dash": link_tablero(tid, tk), "login_url": link_conectar(tid, tk)}
     finally:
         db.close()
 
 
-@app.post("/api/perfil")
+@app.post("/api/perfil", dependencies=[Depends(requiere_bot)])
 def set_perfil(req: PerfilReq):
     wa = normalizar_wa(req.whatsapp)
     if not wa:
@@ -252,26 +303,33 @@ def set_perfil(req: PerfilReq):
         p.whatsapp = wa
         db.add(p)
         db.commit()
-        return {"ok": True, "nombre": p.nombre, "whatsapp": wa}
+        return {"ok": True, "nombre": p.nombre, "whatsapp": wa, "dash": link_tablero(tid, asegurar_token(db, p))}
     finally:
         db.close()
 
 
 # --- AUTH FACEBOOK ---
 @app.get("/auth/login")
-def fb_login(telegram_id: str):
+def fb_login(telegram_id: str, k: str = ""):
+    db = SessionLocal()
+    try:
+        verificar(db, telegram_id, k)
+    finally:
+        db.close()
     if not FB_APP_ID or FB_APP_ID == "placeholder":
         return HTMLResponse("<html><body style='font-family:sans-serif;padding:40px'><h2>App de Meta no configurada aun.</h2></body></html>")
     scopes = "pages_show_list,pages_read_engagement,pages_manage_posts,instagram_basic,instagram_content_publish,business_management"
     redirect_uri = f"{APP_URL}/auth/callback"
-    state = f"{telegram_id}|{uuid.uuid4()}"
+    state = firmar_state(telegram_id, uuid.uuid4().hex[:12])
     url = f"https://www.facebook.com/v19.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={redirect_uri}&scope={scopes}&state={state}&response_type=code"
     return RedirectResponse(url)
 
 
 @app.get("/auth/callback")
 def fb_callback(code: str, state: str):
-    telegram_id = state.split("|")[0]
+    telegram_id = state_valido(state)
+    if not telegram_id:
+        raise HTTPException(400, "Solicitud invalida. Volve a intentar desde el bot con /conectar.")
     redirect_uri = f"{APP_URL}/auth/callback"
     tok = requests.get(
         f"{GRAPH}/oauth/access_token"
@@ -296,7 +354,7 @@ def fb_callback(code: str, state: str):
 
 
 # --- DRAFTS ---
-@app.post("/api/drafts")
+@app.post("/api/drafts", dependencies=[Depends(requiere_bot)])
 def create_draft(payload: CreateDraft):
     raw = payload.raw_data
     tid = str(payload.telegram_id)
@@ -320,16 +378,18 @@ def create_draft(payload: CreateDraft):
             variantes_json=json.dumps(variantes, ensure_ascii=False),
         ))
         db.commit()
-        return {"draft_id": draft_id, "ai_copy": base["fb"], "score": score, "tips": tips[:3],
+        dash = link_tablero(tid, asegurar_token(db, perfil)) if perfil else ""
+        return {"draft_id": draft_id, "dash": dash, "ai_copy": base["fb"], "score": score, "tips": tips[:3],
                 "titulo": datos["titulo"], "n_fotos": len(imagenes)}
     finally:
         db.close()
 
 
 @app.delete("/api/drafts/{draft_id}")
-def delete_draft(draft_id: str, telegram_id: int):
+def delete_draft(draft_id: str, telegram_id: int, k: str = ""):
     db = SessionLocal()
     try:
+        verificar(db, telegram_id, k)
         db.query(Draft).filter_by(id=draft_id, telegram_id=str(telegram_id)).delete()
         db.commit()
         return {"ok": True}
@@ -346,6 +406,7 @@ def _error_graph(resp: dict, defecto: str) -> str:
 def publish(req: PublishReq):
     db = SessionLocal()
     try:
+        verificar(db, req.telegram_id, req.k)
         user = db.query(FbUser).filter_by(telegram_id=str(req.telegram_id)).first()
         draft = db.query(Draft).filter_by(id=req.draft_id, telegram_id=str(req.telegram_id)).first()
         if not draft:
@@ -455,6 +516,11 @@ def refrescar_metricas(tid: str, dias: int = 40) -> dict:
 
 @app.post("/api/metricas/refresh")
 def api_refresh(req: RefreshReq):
+    db = SessionLocal()
+    try:
+        verificar(db, req.telegram_id, req.k)
+    finally:
+        db.close()
     return refrescar_metricas(str(req.telegram_id))
 
 
@@ -485,13 +551,13 @@ def _interacciones(p: Publicacion) -> int:
 
 
 @app.get("/api/dashboard")
-def api_dashboard(tid: str, mes: Optional[str] = None):
+def api_dashboard(tid: str, k: str = "", mes: Optional[str] = None):
     actual = mes_key(ahora())
     if not (mes and re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", mes)):
         mes = actual
     db = SessionLocal()
     try:
-        perfil = db.query(Profile).filter_by(telegram_id=tid).first()
+        perfil = verificar(db, tid, k)
         fb_user = db.query(FbUser).filter_by(telegram_id=tid).first()
         drafts = db.query(Draft).filter_by(telegram_id=tid).order_by(Draft.created_at.desc()).limit(500).all()
         pubs = db.query(Publicacion).filter_by(telegram_id=tid).all()
@@ -567,7 +633,7 @@ def api_dashboard(tid: str, mes: Optional[str] = None):
 
     return {
         "perfil": {"nombre": nombre, "whatsapp": wa, "fb_conectado": bool(fb_user),
-                   "login_url": f"{APP_URL}/auth/login?telegram_id={tid}"},
+                   "login_url": link_conectar(tid, k)},
         "mes": mes, "mes_label": mes_label(mes), "mes_actual": actual, "meses": meses,
         "kpis": {**k, "pendientes": pendientes, "prev": k_prev},
         "semanal": semanal, "historico": historico, "top": top, "avisos": lista,
@@ -610,8 +676,8 @@ def favicon():
 
 
 @app.get("/manifest.json")
-def manifest(tid: str = ""):
-    inicio = f"/dashboard?tid={tid}" if tid.isdigit() else "/dashboard"
+def manifest(tid: str = "", k: str = ""):
+    inicio = f"/dashboard?tid={tid}&k={k}" if tid.isdigit() and re.fullmatch(r"[\w-]{1,40}", k) else "/dashboard"
     return JSONResponse({
         "name": "InmoBot · LLAVE.IA", "short_name": "InmoBot", "start_url": inicio, "display": "standalone",
         "background_color": "#06194a", "theme_color": "#06194a",

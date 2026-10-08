@@ -6,6 +6,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 _tmp = tempfile.mkdtemp()
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/t.db"
 os.environ["METRICAS_AUTO"] = "0"
+os.environ["TELEGRAM_BOT_TOKEN"] = "123:test"
 os.environ["PERFILES_JSON"] = json.dumps([{"telegram_id": "PENDIENTE", "nombre": "Elvio Brun", "whatsapp": "0985825989"}])
 sys.path.insert(0, HERE)
 
@@ -13,7 +14,13 @@ import copywriter as cw
 import server
 from fastapi.testclient import TestClient
 
-c = TestClient(server.app)
+from seguridad import bot_key
+c = TestClient(server.app, headers={"X-Bot-Key": bot_key()})   # como el bot
+web = TestClient(server.app)                                      # como un navegador (sin clave del bot)
+
+
+def tk(tid):
+    db = server.SessionLocal(); t = db.query(server.Profile).filter_by(telegram_id=str(tid)).first().token; db.close(); return t
 RAW = {"title": "Casa en Venta en Luque | Century 21 Paraguay",
        "description": "Hermosa casa, 3 dormitorios, 2 baños, 180 m2, piscina y quincho. Llamá a Juan Pérez 0981 123 456 o juan@c21.com www.c21.com.py",
        "price": "USD 120.000", "images": ["https://x.test/1.jpg", "https://x.test/2.jpg"]}
@@ -53,17 +60,17 @@ def test_flujo_publicar_y_metricas():
     db = server.SessionLocal(); db.add(server.FbUser(telegram_id="21", access_token="t", pages_json=json.dumps([{"id": "P", "access_token": "tok"}]))); db.commit(); db.close()
     fake = mock.Mock(); fake.json.return_value = {"id": "123", "post_id": "P_123"}
     with mock.patch.object(server.requests, "post", return_value=fake) as post:
-        r = c.post("/api/publish", json={"telegram_id": 21, "draft_id": d["draft_id"], "destination": "fb_feed", "texto": "texto editado"}).json()
+        r = web.post("/api/publish", json={"telegram_id": 21, "k": tk(21), "draft_id": d["draft_id"], "destination": "fb_feed", "texto": "texto editado"}).json()
         assert r["success"] and post.call_args.kwargs["data"]["caption"] == "texto editado"
     # Meta responde error -> no se marca publicado
     d2 = _draft(21); err = mock.Mock(); err.json.return_value = {"error": {"message": "token vencido"}}
     with mock.patch.object(server.requests, "post", return_value=err):
-        r = c.post("/api/publish", json={"telegram_id": 21, "draft_id": d2["draft_id"], "destination": "fb_feed"}).json()
+        r = web.post("/api/publish", json={"telegram_id": 21, "k": tk(21), "draft_id": d2["draft_id"], "destination": "fb_feed"}).json()
         assert not r["success"] and "token vencido" in r["error"]
     graph = mock.Mock(); graph.json.return_value = {"reactions": {"summary": {"total_count": 7}}, "comments": {"summary": {"total_count": 2}}, "shares": {"count": 1}}
     with mock.patch.object(server.requests, "get", return_value=graph):
-        assert c.post("/api/metricas/refresh", json={"telegram_id": 21}).json()["actualizadas"] == 1
-    j = c.get("/api/dashboard?tid=21").json()
+        assert web.post("/api/metricas/refresh", json={"telegram_id": 21, "k": tk(21)}).json()["actualizadas"] == 1
+    j = web.get(f"/api/dashboard?tid=21&k={tk(21)}").json()
     k = j["kpis"]
     assert k["publicados"] == 1 and k["fb"] == 1 and k["interacciones"] == 10 and k["pendientes"] == 1
     assert j["top"][0]["interacciones"] == 10 and sum(s["fb"] for s in j["semanal"]) == 1
@@ -78,18 +85,43 @@ def test_reinicio_mensual():
     mes_pasado = datetime.now(timezone.utc) - timedelta(days=40)
     db.add(server.Publicacion(draft_id=d, telegram_id="31", destino="ig_feed", published_at=mes_pasado, likes=5))
     db.commit(); db.close()
-    j = c.get("/api/dashboard?tid=31").json()
+    j = web.get(f"/api/dashboard?tid=31&k={tk(31)}").json()
     assert j["kpis"]["publicados"] == 0 and j["kpis"]["interacciones"] == 0      # mes actual en cero
-    antes = c.get(f"/api/dashboard?tid=31&mes={server.mes_key(mes_pasado)}").json()
+    antes = web.get(f"/api/dashboard?tid=31&k={tk(31)}&mes={server.mes_key(mes_pasado)}").json()
     assert antes["kpis"]["publicados"] == 1 and antes["kpis"]["ig"] == 1          # historial intacto
 
 
 def test_xss_y_validaciones():
-    j = c.get("/api/dashboard?tid=999&mes=basura").json()
+    c.post("/api/registro", json={"telegram_id": 999, "first_name": "Z"})
+    j = web.get(f"/api/dashboard?tid=999&k={tk(999)}&mes=basura").json()
     assert j["mes"] == j["mes_actual"] and j["avisos"] == []
     assert c.get("/dashboard?tid=1").status_code == 200
-    assert c.get("/manifest.json?tid=5").json()["start_url"] == "/dashboard?tid=5"
+    assert c.get("/manifest.json?tid=5&k=abc").json()["start_url"] == "/dashboard?tid=5&k=abc"
     assert c.get("/logo").status_code == 200 and c.get("/icon-32.png").status_code == 200
+
+
+def test_seguridad():
+    r = c.post("/api/registro", json={"telegram_id": 41, "first_name": "V"}).json()
+    assert f"tid=41&k={tk(41)}" in r["dash"]
+    # el bot (clave interna) es el unico que registra, cambia perfil o crea avisos
+    for ruta, cuerpo in [("/api/registro", {"telegram_id": 41}), ("/api/perfil", {"telegram_id": 41, "whatsapp": "0981000111"}),
+                         ("/api/drafts", {"telegram_id": 41, "source_url": "x", "raw_data": RAW})]:
+        assert web.post(ruta, json=cuerpo).status_code == 403
+        assert TestClient(server.app, headers={"X-Bot-Key": "mala"}).post(ruta, json=cuerpo).status_code == 403
+    # el tablero exige el codigo del agente
+    assert web.get("/api/dashboard?tid=41").status_code == 403
+    assert web.get("/api/dashboard?tid=41&k=mala").status_code == 403
+    assert web.get("/api/dashboard?tid=999999&k=x").status_code == 403
+    # el codigo de otro agente no sirve
+    assert web.get(f"/api/dashboard?tid=41&k={tk(21)}").status_code == 403
+    d = _draft(41)["draft_id"]
+    assert web.delete(f"/api/drafts/{d}?telegram_id=41&k=mala").status_code == 403
+    assert web.post("/api/publish", json={"telegram_id": 41, "k": "mala", "draft_id": d, "destination": "fb_feed"}).status_code == 403
+    assert web.post("/api/metricas/refresh", json={"telegram_id": 41, "k": ""}).status_code == 403
+    assert web.delete(f"/api/drafts/{d}?telegram_id=41&k={tk(41)}").status_code == 200
+    # OAuth: login exige codigo y el retorno exige estado firmado
+    assert web.get("/auth/login?telegram_id=41&k=mala", follow_redirects=False).status_code == 403
+    assert web.get("/auth/callback?code=x&state=41|abc|firmafalsa").status_code == 400
 
 
 def test_migracion_base_vieja():
@@ -105,7 +137,8 @@ def test_migracion_base_vieja():
     """); con.commit(); con.close()
     env = {**os.environ, "DATABASE_URL": f"sqlite:///{ruta}"}
     code = ("import sys; sys.path.insert(0, %r); import server; from fastapi.testclient import TestClient; "
-            "j = TestClient(server.app).get('/api/dashboard?tid=7&mes=2026-10').json(); "
+            "db = server.SessionLocal(); t = db.query(server.Profile).first().token; db.close(); "
+            "j = TestClient(server.app).get('/api/dashboard?tid=7&mes=2026-10&k=' + t).json(); "
             "print(j['kpis']['publicados'], j['perfil']['nombre'], j['avisos'][0]['estado'])" % HERE)
     out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True)
     assert out.stdout.strip() == "1 Elvio publicado", out.stderr

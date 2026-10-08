@@ -167,11 +167,12 @@ textarea{width:100%;min-height:210px;resize:vertical;border:1.5px solid var(--li
 "use strict";
 var params=new URLSearchParams(location.search);
 var TID=(params.get("tid")||"").replace(/\D/g,"");
+var K=(params.get("k")||"").replace(/[^\w-]/g,"");
 var S={data:null,mes:params.get("mes")||"",q:"",filtro:"todos",sel:-1,sugs:[],ed:{},vs:{}};
 var $=function(id){return document.getElementById(id)};
 
 if(!TID){document.body.innerHTML='<p style="padding:40px;font-family:sans-serif">Abrí este tablero desde el enlace que te manda el bot de Telegram.</p>';return;}
-$("manifest").href="/manifest.json?tid="+TID;
+$("manifest").href="/manifest.json?tid="+TID+"&k="+K;
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function norm(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")}
@@ -180,10 +181,10 @@ function urlOk(u){return /^https?:\/\//i.test(u||"")}
 
 /* ---------- carga ---------- */
 function cargar(mes){
-  var url="/api/dashboard?tid="+TID+(mes?"&mes="+encodeURIComponent(mes):"");
-  return fetch(url).then(function(r){return r.json()}).then(function(d){
+  var url="/api/dashboard?tid="+TID+"&k="+K+(mes?"&mes="+encodeURIComponent(mes):"");
+  return fetch(url).then(function(r){if(r.status===403){throw new Error("403")}return r.json()}).then(function(d){
     S.data=d;S.mes=d.mes;pintar();
-  }).catch(function(){$("agente").textContent="No se pudo cargar. Reintentá en unos segundos."});
+  }).catch(function(e){$("agente").textContent=(e&&e.message==="403")?"Enlace inválido o vencido. Escribile /start al bot para recibir uno nuevo.":"No se pudo cargar. Reintentá en unos segundos."});
 }
 
 /* ---------- pintar ---------- */
@@ -329,20 +330,20 @@ $("lista").addEventListener("click",function(e){
   var pub=e.target.closest("[data-pub]");
   if(pub){var dest=pub.dataset.pub,txt=card.querySelector("#"+(dest==="fb_feed"?"fb_":"ig_")+id).value;
     pub.disabled=true;msg.style.color="var(--muted)";msg.textContent="Publicando…";
-    fetch("/api/publish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({telegram_id:parseInt(TID,10),draft_id:id,destination:dest,texto:txt})})
+    fetch("/api/publish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({telegram_id:parseInt(TID,10),draft_id:id,destination:dest,texto:txt,k:K})})
      .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})})
      .then(function(x){if(x.j.success){msg.style.color="var(--ok)";msg.textContent="¡Publicado!";setTimeout(function(){cargar(S.mes)},1200)}
        else{pub.disabled=false;msg.style.color="var(--bad)";msg.textContent="No se pudo publicar: "+(x.j.error||x.j.detail||"error desconocido")}})
      .catch(function(){pub.disabled=false;msg.style.color="var(--bad)";msg.textContent="Sin conexión. Reintentá."});return}
   if(e.target.closest("[data-del]")){if(!confirm("¿Descartar este aviso? No se puede deshacer."))return;
-    fetch("/api/drafts/"+id+"?telegram_id="+TID,{method:"DELETE"}).then(function(){cargar(S.mes)})}
+    fetch("/api/drafts/"+id+"?telegram_id="+TID+"&k="+K,{method:"DELETE"}).then(function(){cargar(S.mes)})}
 });
 $("lista").addEventListener("input",function(e){if(e.target.tagName==="TEXTAREA")S.ed[e.target.id]=e.target.value});
 $("mesSel").addEventListener("change",function(){cargar(this.value)});
 $("prev").addEventListener("click",function(){var i=S.data.meses.indexOf(S.data.mes);if(i<S.data.meses.length-1)cargar(S.data.meses[i+1])});
 $("next").addEventListener("click",function(){var i=S.data.meses.indexOf(S.data.mes);if(i>0)cargar(S.data.meses[i-1])});
 $("refresh").addEventListener("click",function(){var b=this;b.disabled=true;b.textContent="Actualizando…";
-  fetch("/api/metricas/refresh",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({telegram_id:parseInt(TID,10)})})
+  fetch("/api/metricas/refresh",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({telegram_id:parseInt(TID,10),k:K})})
    .then(function(r){return r.json()}).then(function(j){return cargar(S.mes).then(function(){if(j.motivo)$("actualizado").textContent=j.motivo+": conectá tu Facebook para leer interacciones."})})
    .finally(function(){b.disabled=false;b.textContent="↻ Actualizar"})});
 $("q").addEventListener("input",function(){S.q=this.value;S.sel=-1;pintarSug();lista()});

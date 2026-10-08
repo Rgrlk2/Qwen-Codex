@@ -2,6 +2,7 @@ import os, re, asyncio, logging
 from dotenv import load_dotenv
 import requests
 from bs4 import BeautifulSoup
+from seguridad import bot_key
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
@@ -37,11 +38,8 @@ def scrape_property(url: str):
 
 
 def _post(path, payload, timeout=30):
-    return requests.post(f"{API_URL}{path}", json=payload, timeout=timeout)
-
-
-def dashboard_url(tid):
-    return f"{APP_URL}/dashboard?tid={tid}"
+    return requests.post(f"{API_URL}{path}", json=payload, timeout=timeout,
+                         headers={"X-Bot-Key": bot_key()})
 
 
 # --- HANDLERS ---
@@ -61,7 +59,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"Hola {data.get('nombre') or ''}! Ya estás registrado.\n\n"
             "Mandame uno o varios links de propiedades y te armo los avisos.\n\n"
-            f"Tu tablero: {dashboard_url(u.id)}\n\n"
+            f"Tu tablero (enlace personal, no lo compartas): {data.get('dash')}\n\n"
             "Comandos: /perfil para cambiar tu nombre o WhatsApp · /conectar para vincular Facebook e Instagram."
         )
         return
@@ -102,16 +100,22 @@ async def _guardar_wa(update: Update, nombre: str, whatsapp: str):
     await update.message.reply_text(
         f"Listo, {d.get('nombre') or 'perfil guardado'}.\nWhatsApp: {d['whatsapp']}\n\n"
         "Ahora mandame uno o varios links de propiedades.\n"
-        f"Tu tablero: {dashboard_url(u.id)}"
+        f"Tu tablero (enlace personal, no lo compartas): {d.get('dash')}"
     )
     return True
 
 
 async def conectar(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    tid = update.effective_user.id
+    u = update.effective_user
+    try:
+        r = await asyncio.to_thread(_post, "/registro", {"telegram_id": u.id, "first_name": u.first_name or "", "username": u.username or ""}, 10)
+        r.raise_for_status()
+    except Exception:
+        await update.message.reply_text("No pude generar tu enlace ahora. Probá de nuevo en un minuto.")
+        return
     await update.message.reply_text(
         "Para publicar en Facebook e Instagram, conectá tu cuenta:\n\n"
-        f"{APP_URL}/auth/login?telegram_id={tid}\n\n"
+        f"{r.json()['login_url']}\n\n"
         "Aceptá los permisos y volvé acá."
     )
 
@@ -139,10 +143,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"Procesando {len(urls)} propiedad(es)…")
     tid = update.effective_user.id
-    lineas = []
+    lineas, dash = [], ""
     for url in urls:
         try:
             d = await asyncio.to_thread(_procesar_link, tid, url)
+            dash = d.get("dash") or dash
             nota = f"{d['score']}/100 · {d['n_fotos']} foto(s)"
             consejo = f"\n   💡 {d['tips'][0]}" if d.get("tips") else ""
             lineas.append(f"✅ {d['titulo'][:60]} ({nota}){consejo}")
@@ -151,7 +156,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "Listo:\n\n" + "\n".join(lineas) +
-        f"\n\nRevisá, elegí el estilo del texto y publicá desde tu tablero:\n{dashboard_url(tid)}"
+        f"\n\nRevisá, elegí el estilo del texto y publicá desde tu tablero:\n{dash}"
     )
 
 
