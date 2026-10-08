@@ -1,0 +1,92 @@
+/*
+ * Estilos propios de la vista Dinero.
+ *
+ * ⛔ DUEÑO: Sesión 6. Sólo variantes con prefijo `.dinero-…`
+ * (DESIGN_SYSTEM.md §12 S4). Los componentes compartidos (.tarjeta, .cifra,
+ * .rejilla, .tabla, .btn, .cargando, .vacio, .error, .dialogo…) los define
+ * `packages/ui/src/base.css`, de Sesión 2; acá no se redeclaran.
+ *
+ * ⛔ Ningún color, fuente ni curva literal: sólo layout y espaciado propios,
+ * que no dependen de ningún token (DESIGN_SYSTEM.md §2.2 CO1).
+ * ⛔ Nada de overflow-x: hidden. El único overflow-x es el de .tabla-contenedor,
+ * y es overflow-x: auto (DESIGN_SYSTEM.md §7).
+ */
+
+.dinero-vista {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.dinero-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dinero-selector-periodo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.dinero-periodo-actual {
+  min-width: 0;
+  text-transform: capitalize;
+}
+
+.dinero-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.dinero-moneda {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.dinero-moneda-titulo {
+  margin: 0;
+}
+
+.dinero-cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.dinero-cifras > * {
+  min-width: 0;
+}
+
+.dinero-numero {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dinero-dialogo-ayuda {
+  max-width: 48ch;
+  overflow-wrap: anywhere;
+}
+
+.dinero-dialogo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 389px) {
+  .dinero-cifras {
+    grid-template-columns: 1fr;
+  }
+}

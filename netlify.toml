@@ -1,0 +1,37 @@
+# Publicación del Escritorio de Vendedores Lab.IA.
+#
+# ⛔ `VITE_CAPA_DATOS=supabase` es obligatorio acá: el proveedor de datos se
+#    niega a construir para producción con los datos de ejemplo, así que si
+#    esta línea faltara el despliegue falla en vez de publicar un Escritorio
+#    con clientes inventados.
+#
+# ⛔ Las claves NO se escriben en este archivo. `VITE_SUPABASE_URL` y
+#    `VITE_SUPABASE_ANON_KEY` se cargan en el panel de Netlify, que es el
+#    único lugar donde viven. La clave publicable de Supabase es pública por
+#    diseño —viaja en el navegador de cualquiera— y lo que protege los datos
+#    son las políticas de la base, no el secreto de esa clave.
+
+[build]
+  command = "npm run build"
+  publish = "apps/escritorio/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_CAPA_DATOS = "supabase"
+
+# La aplicación resuelve sus pantallas con `#/...`, así que alcanza con que
+# cualquier dirección devuelva la página principal.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ⛔ Que ninguna otra página pueda meter el Escritorio dentro de un marco
+#    invisible para robar clics, y que el navegador no adivine tipos de
+#    archivo.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

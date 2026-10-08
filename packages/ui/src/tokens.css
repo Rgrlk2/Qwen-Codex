@@ -1,0 +1,147 @@
+/*
+ * Tokens del Escritorio Vendedores Lab.IA.
+ *
+ * ⛔ DUEÑO: SESIÓN 2. Ninguna otra sesión edita este archivo.
+ * ⛔ Ninguna vista escribe un color, una fuente ni una curva literal. Sólo tokens.
+ *
+ * IDENTIDAD LAB.IA — ocho colores oficiales + Inter. Ver marca-labia.css.
+ * ⛔ Se descarta la identidad dorada con serif de la referencia operativa.
+ *    De la referencia se reutiliza la ARQUITECTURA, no la identidad visual.
+ *
+ * Todo token de color sale de marca-labia.css: o es uno de los ocho oficiales
+ * Lab.IA, o uno del campo azul RGrlk Group, con o sin transparencia.
+ * ⛔ No se inventa ningún hex acá.
+ *
+ * ---------------------------------------------------------------------------
+ * DISEÑO APLICADO — "Escritorio Lab.IA", Claude Design, 2026-09-19.
+ *
+ * El aspecto vidrio sobre campo azul viene de ese diseño, que a su vez se
+ * apoya en el sistema RGrlk Group. Lo que cambió es el VALOR de los tokens,
+ * no su nombre: las vistas siguen consumiendo --superficie, --linea y
+ * --cian como antes, y se ven distintas sin tocar una línea de su código.
+ * Esa es la razón de que los tokens existan.
+ *
+ * Ver docs/DESIGN_SYSTEM.md §1 y §2.
+ */
+
+@import url('./marca-labia.css');
+
+:root {
+  /* --- Fondos ---
+     El campo azul es el fondo de la aplicación entera; las superficies son
+     vidrio encima de él. ⛔ --superficie y --superficie-2 son degradados:
+     se consumen SÓLO en `background`, nunca en `border-color`. */
+  --bg:           var(--rg-abismo);                        /* #01021C */
+  --bg-2:         var(--rg-campo-hondo);                   /* #030535 */
+
+  /*
+   * El campo de marca.
+   *
+   * El sistema RGrlk sirve el campo como imagen (brand-field.png, sacada del
+   * logo maestro) con estos degradados debajo, de respaldo. Acá sólo están
+   * los degradados: la imagen todavía no está incorporada al repositorio.
+   *
+   * ⛔ Los tonos son los del ramp oficial, en el orden oficial. Lo que se
+   *    ajustó es la OPACIDAD del cuerpo central y el viñeteado del borde:
+   *    sin la imagen, que trae su propio viñeteado, el azul medio sube
+   *    demasiado y se come el vidrio de las tarjetas.
+   */
+  --campo:
+    radial-gradient(circle at 82% 26%, rgba(51, 168, 255, .20), transparent 48%),
+    radial-gradient(ellipse 140% 110% at 50% 18%,
+      rgba(0, 51, 160, .50) 0%, rgba(0, 31, 110, .62) 36%,
+      rgba(3, 5, 53, .88) 70%, var(--rg-abismo) 100%);
+  /* Retícula técnica, apenas visible, sobre el campo. */
+  --campo-reticula:
+    linear-gradient(rgba(242, 247, 255, .026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242, 247, 255, .026) 1px, transparent 1px);
+  --campo-paso: 44px;
+
+  --superficie:   linear-gradient(145deg, rgba(0, 51, 160, .52), rgba(3, 5, 53, .62));
+  --superficie-2: linear-gradient(145deg, rgba(0, 74, 215, .60), rgba(0, 31, 110, .66));
+  /* Hundido: campos de texto y cajas dentro de una tarjeta. */
+  --glass:        rgba(1, 2, 28, .62);
+  --glass-2:      rgba(1, 2, 28, .48);
+  /* Barras fijas: lateral y encabezado, translúcidas sobre el campo. */
+  --barra:        rgba(1, 2, 28, .52);
+  --barra-2:      rgba(1, 2, 28, .62);
+
+  /* --- Líneas --- */
+  --linea:        rgba(242, 247, 255, .10);                /* filete */
+  --linea-2:      rgba(120, 180, 255, .22);                /* borde de vidrio */
+  --linea-acento: rgba(0, 217, 255, .42);                  /* cian al 42 % */
+
+  /* --- Vidrio, sombra y halo --- */
+  --difuminado:      blur(12px);
+  --difuminado-barra: blur(18px);
+  --sombra-tarjeta:  0 18px 44px rgba(1, 2, 28, .42);
+  --sombra-alzada:   0 22px 60px rgba(1, 2, 28, .55), 0 0 34px rgba(0, 217, 255, .14);
+  --sombra-cta:      0 12px 34px rgba(0, 145, 255, .34), 0 0 26px rgba(18, 217, 255, .28);
+  --sombra-cta-alta: 0 18px 44px rgba(0, 145, 255, .42), 0 0 34px rgba(18, 217, 255, .36);
+  --luz-interior:    inset 0 1px 0 rgba(242, 247, 255, .08);
+  --halo:            0 0 22px rgba(18, 217, 255, .28);
+  --halo-suave:      0 0 22px rgba(18, 217, 255, .20);
+
+  /* --- Degradados de marca --- */
+  --grad-cta:   linear-gradient(135deg, var(--labia-cian-claro) 0%, #087CFF 62%, #0A4CD8 100%);
+  --grad-suave: linear-gradient(135deg, rgba(0, 167, 255, .16), rgba(0, 16, 86, .55));
+  /* Titular degradado: sólo para el slogan de la ficha. */
+  --grad-texto: linear-gradient(90deg, #FFF 0%, #C8F8FF 36%, #39E6FF 66%, #8FA2FF 100%);
+
+  /* --- Radios --- */
+  --r-chico:  10px;
+  --r-medio:  14px;
+  --r-caja:   18px;
+  --r-carta:  24px;
+  --r-pilula: 999px;
+
+  /* --- Micro-etiqueta: el recurso tipográfico del diseño --- */
+  --etiqueta-tamano: 11px;
+  --etiqueta-peso: 700;
+  --etiqueta-track: .14em;
+
+  /* --- Texto --- */
+  --texto:   var(--labia-texto);                           /* #F2F7FF */
+  --texto-2: var(--labia-texto-2);                         /* #AEB8C8 */
+  --texto-3: rgba(174, 184, 200, .72);
+  --mudo:    rgba(174, 184, 200, .52);
+
+  /* --- Acentos --- */
+  /* ⛔ --azul es RELLENO. Nunca texto ni borde fino: 3.18 contra el fondo. */
+  --azul:         var(--labia-azul);                       /* #0A55D9 */
+  --azul-suave:   rgba(10, 85, 217, .18);
+  /* Para texto y bordes de acento, éstos: */
+  --azul-texto:   var(--labia-azul-claro);                 /* #098CFF — 5.96 */
+  --cian:         var(--labia-cian);                       /* #00D9FF — 11.88 */
+  --cian-claro:   var(--labia-cian-claro);                 /* #12D9FF */
+  --cian-suave:   rgba(0, 217, 255, .14);
+
+  /* --- Estado --- */
+  /* Sin color oficial propio: se apoyan en los de marca y en los mínimos
+     imprescindibles para peligro. ⛔ No se agregan sin autorización. */
+  --ok:            var(--labia-cian);
+  --peligro:       #FF6B6B;
+  --peligro-suave: rgba(255, 107, 107, .14);
+
+  /* --- Tipografía: Inter. ⛔ Sin serif. --- */
+  --fuente: var(--labia-fuente);
+  --fuente-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- Estructura --- */
+  --lateral: 248px;
+  /* Lateral retráctil (docs/PARALLEL_SESSIONS.md pedido S2): sólo íconos. */
+  --lateral-compacta: 76px;
+  --inferior: 64px;
+  --ancho-contenido: 1360px;
+
+  /* --- Movimiento --- */
+  --suave: cubic-bezier(.22, .61, .36, 1);
+  --rapido: 140ms;
+  --normal: 220ms;
+  --alzar: translateY(-3px);
+  --apretar: scale(.985);
+}
+
+@media (max-width: 899px) {
+  :root { --lateral: 0px; }
+}
