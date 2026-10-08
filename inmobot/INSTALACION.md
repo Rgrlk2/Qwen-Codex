@@ -1,26 +1,24 @@
-# InmoBot EBA — Alta de un agente nuevo (5 minutos)
+# InmoBot · LLAVE.IA — Alta de agentes
 
-El bot y el servidor son **uno solo para todos**. Cada agente solo necesita ser registrado; no instala nada.
+El bot y el servidor son **uno solo para todos**. Un agente nuevo no instala nada.
 
-## Para el administrador (por cada agente nuevo)
-1. El agente abre Telegram, busca `@eba_inmobot_elvio_989_bot` y envía `/start`. El bot le muestra su enlace de Dashboard, que contiene su ID (`tid=123456789`).
-2. Agregá una línea en `perfiles.json` con ese ID:
-   ```json
-   {"telegram_id": "123456789", "nombre": "Nombre Apellido", "whatsapp": "+595981234567"}
-   ```
-3. Guardá, `git push` (Railway redespliega solo). Alternativa sin código: en Railway > Variables, pegar el JSON completo en `PERFILES_JSON`.
-4. Listo: todos los copies del agente llevan **su** nombre y WhatsApp. Los teléfonos, mails, links y firmas del portal original se eliminan automáticamente.
+## Para el agente (1 minuto)
+1. Abrir el bot en Telegram y escribir `/start`.
+2. El bot pide su WhatsApp: escribirlo (ej. `0981 123 456`). Listo, queda registrado.
+3. Mandar uno o varios links de propiedades. El bot responde con la calidad de cada aviso y el link a su tablero.
+4. En el tablero: elegir el estilo del texto (Emocional o Directa), revisar los consejos, editar si quiere y publicar.
+5. Opcional: `/conectar` para vincular Facebook e Instagram. `/perfil Nombre | 0981 123 456` cambia sus datos.
 
-## Para el agente
-1. `/start` en el bot.
-2. Enviar uno o varios links de propiedades.
-3. Abrir el Dashboard, revisar/editar los copies y publicar.
-4. (Opcional) `/conectar` para vincular su Facebook/Instagram.
-
-> El agente también puede cambiar su CTA con `/perfil Nombre | +595981234567`, pero lo fijado en `perfiles.json` prevalece en cada redeploy.
-
-## Logo del Dashboard
-Copiar el archivo oficial como `static/logo.png` (o `.svg`/`.jpg`/`.webp`). Si no existe, se muestra un placeholder.
+## Para el administrador
+- **No hay que cargar a nadie a mano.** Cada agente se registra solo con `/start`.
+- Para que un nombre salga ya cargado (ej. "Elvio Brun"), agregarlo en `perfiles.json` con su WhatsApp; cuando esa persona escriba ese número, el bot usa ese nombre.
+- Para cerrar el acceso solo a personas autorizadas: en Railway > Variables, `ALLOWED_IDS=123456,789012` (IDs de Telegram separados por coma). Vacío = abierto.
+- **Logo:** reemplazar `static/logo.png` (y los `icon-*.png`).
+- Interacciones (me gusta, comentarios, compartidos): se leen de Meta cada 3 horas y con el botón "Actualizar". Requieren que el agente haya conectado su Facebook.
 
 ## Despliegue (una sola vez)
-Railway: repo conectado, variables `TELEGRAM_BOT_TOKEN`, `APP_URL` (y opcional `DATABASE_URL` de PostgreSQL para no perder datos al redeployar). Start command: `uvicorn server:app --host 0.0.0.0 --port $PORT & python bot.py`.
+Railway con el repo conectado. Variables: `TELEGRAM_BOT_TOKEN`, `APP_URL`, `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` y `DATABASE_URL` (PostgreSQL). Start command: `uvicorn server:app --host 0.0.0.0 --port $PORT & python bot.py`.
+Las tablas nuevas se crean solas al arrancar; los datos anteriores se conservan.
+
+## Probar
+`pip install pytest && python -m pytest inmobot/test_inmobot.py`
