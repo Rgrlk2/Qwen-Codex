@@ -89,7 +89,18 @@ svg{display:block;width:100%;height:auto}
 /* avisos */
 .lista{display:grid;gap:12px;margin-bottom:40px}
 .aviso{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column}
-.aviso img{width:100%;height:190px;object-fit:cover;background:var(--bg)}
+.aviso .portada{width:100%;height:190px;object-fit:cover;background:var(--bg);display:block}
+.tira{display:flex;gap:6px;overflow-x:auto;padding:10px 14px 0;scrollbar-width:none}
+.tira::-webkit-scrollbar{display:none}
+.th{flex:none;position:relative;width:58px;height:58px;border-radius:10px;border:2px solid transparent;padding:0;background:var(--bg);overflow:hidden}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.th[aria-pressed=true]{border-color:var(--brand)}
+.th[aria-pressed=false] img{opacity:.35;filter:grayscale(1)}
+.th .n{position:absolute;top:3px;right:3px;min-width:19px;height:19px;border-radius:99px;background:var(--brand);color:#fff;font-size:11px;font-weight:700;line-height:19px;text-align:center;padding:0 4px}
+.th[aria-pressed=false] .n{background:rgba(255,255,255,.92);color:var(--muted)}
+.th.rota img{visibility:hidden}
+.th.rota::after{content:"📷";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:.5}
+.fsel{font-size:12.5px;color:var(--muted);padding:6px 14px 0}
 .sinimg{height:64px;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--muted);font-size:13px}
 .ab{padding:14px;display:flex;flex-direction:column;gap:12px}
 .ah{display:flex;justify-content:space-between;gap:10px}
@@ -113,6 +124,7 @@ textarea{width:100%;min-height:210px;resize:vertical;border:1.5px solid var(--li
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .acts button{min-height:48px;border-radius:12px;border:0;color:#fff;font-weight:700;font-size:15px}
 .acts .fb{background:var(--fb)} .acts .ig{background:var(--ig)}
+.acts .am{grid-column:1/-1;background:linear-gradient(90deg,var(--fb),var(--ig))}
 .acts .del{grid-column:1/-1;background:#fff;color:var(--muted);border:1px solid var(--silver);font-weight:600;min-height:44px}
 .acts button:disabled{opacity:.5}
 .msg{font-size:13.5px;min-height:18px}
@@ -168,7 +180,7 @@ textarea{width:100%;min-height:210px;resize:vertical;border:1.5px solid var(--li
 var params=new URLSearchParams(location.search);
 var TID=(params.get("tid")||"").replace(/\D/g,"");
 var K=(params.get("k")||"").replace(/[^\w-]/g,"");
-var S={data:null,mes:params.get("mes")||"",q:"",filtro:"todos",sel:-1,sugs:[],ed:{},vs:{}};
+var S={data:null,mes:params.get("mes")||"",q:"",filtro:"todos",sel:-1,sugs:[],ed:{},vs:{},fs:{}};
 var $=function(id){return document.getElementById(id)};
 
 if(!TID){document.body.innerHTML='<p style="padding:40px;font-family:sans-serif">Abrí este tablero desde el enlace que te manda el bot de Telegram.</p>';return;}
@@ -191,7 +203,7 @@ function cargar(mes){
 function pintar(){
   var d=S.data,p=d.perfil;
   $("agente").textContent=p.nombre?(p.nombre+(p.whatsapp?" · "+p.whatsapp:"")):"Falta tu WhatsApp: escribile /start al bot";
-  $("fbstat").innerHTML=p.fb_conectado?'<span class="pill ok">FB conectado</span>':'<a class="pill go" href="'+esc(p.login_url)+'">Conectar FB + IG</a>';
+  $("fbstat").innerHTML=p.fb_conectado?'<a class="pill ok" href="'+esc(p.login_url)+'" title="'+esc((p.pagina||"")+(p.ig?" · @"+p.ig:"")+" · tocá para volver a conectar")+'">'+(p.ig?"FB + IG conectados":"FB conectado")+'</a>':'<a class="pill go" href="'+esc(p.login_url)+'">Conectar FB + IG</a>';
   // mes
   var sel=$("mesSel");sel.innerHTML=d.meses.map(function(m){return '<option value="'+m+'"'+(m===d.mes?" selected":"")+'>'+esc(etiquetaMes(m))+'</option>'}).join("");
   var i=d.meses.indexOf(d.mes);$("next").disabled=i<=0;$("prev").disabled=i>=d.meses.length-1;
@@ -301,10 +313,20 @@ function lista(){
   if(!v.length){$("lista").innerHTML='<div class="card vacio" style="grid-column:1/-1">'+(q?"Sin resultados. Probá con otra palabra.":"Sin avisos aquí. Mandale un link de propiedad al bot de Telegram para empezar.")+'</div>';return}
   $("lista").innerHTML=v.map(tarjeta).join("");
 }
+function fotos(a){return a.fotos||(a.img?[a.img]:[])}
+function elegidas(a){return S.fs[a.id]||fotos(a).map(function(_,i){return i})}
+function textoSel(n,t){return n+" de "+t+" fotos elegidas · tocá una foto para quitarla o sumarla"}
 function tarjeta(a){
   var pub=a.estado==="publicado",sc=a.score,vsel=S.vs[a.id]||"emocional";
   var tIg=S.ed["ig_"+a.id]!==undefined?S.ed["ig_"+a.id]:a.copy_ig,tFb=S.ed["fb_"+a.id]!==undefined?S.ed["fb_"+a.id]:a.copy_fb;
-  var img=urlOk(a.img)?'<img src="'+esc(a.img)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<div class="sinimg">Sin imagen</div>';
+  var fs=fotos(a),sel=elegidas(a),port=fs[sel.length?sel[0]:0];
+  var img=urlOk(port)?'<img class="portada" src="'+esc(port)+'" alt="" loading="lazy" referrerpolicy="no-referrer"'+(sel.length?"":' style="opacity:.3"')+'>':'<div class="sinimg">Sin imagen</div>';
+  if(fs.length>1){
+    img+='<div class="tira" role="group" aria-label="Fotos a publicar">'+fs.map(function(u,i){var p=sel.indexOf(i);
+      return '<button type="button" class="th" data-foto="'+i+'" aria-pressed="'+(p>-1)+'" aria-label="Foto '+(i+1)+'">'+(urlOk(u)?'<img src="'+esc(u)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':"")+'<span class="n">'+(p>-1?p+1:"+")+'</span></button>'}).join("")+
+     '</div><div class="fsel">'+textoSel(sel.length,fs.length)+'</div>';
+  }
+  var sinFotos=!sel.length;
   var meta=[a.zona,a.price,a.n_fotos+" foto"+(a.n_fotos===1?"":"s")].filter(Boolean).join(" · ");
   var tips=a.tips.length?'<details class="tips"><summary>💡 '+a.tips.length+' consejo'+(a.tips.length>1?"s":"")+' para mejorar</summary><ul>'+a.tips.map(function(t){return "<li>"+esc(t)+"</li>"}).join("")+'</ul></details>':'<div class="meta">✅ Aviso completo, sin consejos pendientes.</div>';
   var ints=a.pubs.length?'<div class="int">'+a.pubs.map(function(p){return '<span>'+(p.destino==="fb_feed"?"FB":"IG")+' · ❤ '+p.likes+' · 💬 '+p.comments+(p.destino==="fb_feed"?' · ↗ '+p.shares:"")+'</span>'}).join("")+'</div>':"";
@@ -314,12 +336,19 @@ function tarjeta(a){
    '<div class="seg" role="group" aria-label="Estilo del texto"><button type="button" data-v="emocional" aria-pressed="'+(vsel!=="directa")+'">Emocional</button><button type="button" data-v="directa" aria-pressed="'+(vsel==="directa")+'">Directa</button></div>'+
    '<div><label class="cp" for="ig_'+esc(a.id)+'">Texto Instagram</label><textarea id="ig_'+esc(a.id)+'">'+esc(tIg)+'</textarea></div>'+
    '<div><label class="cp" for="fb_'+esc(a.id)+'">Texto Facebook</label><textarea id="fb_'+esc(a.id)+'">'+esc(tFb)+'</textarea></div>'+
-   '<div class="acts"><button type="button" class="fb" data-pub="fb_feed">Publicar en Facebook</button><button type="button" class="ig" data-pub="ig_feed"'+(a.n_fotos?"":" disabled title=\"Instagram necesita una foto\"")+'>Publicar en Instagram</button><button type="button" class="del" data-del="1">Descartar</button></div>'+
+   '<div class="acts"><button type="button" class="fb" data-pub="fb_feed">Publicar en Facebook</button><button type="button" class="ig" data-pub="ig_feed"'+(sinFotos?" disabled title=\"Instagram necesita una foto\"":"")+'>Publicar en Instagram</button><button type="button" class="am" data-pub="ambas"'+(sinFotos?" disabled title=\"Instagram necesita una foto\"":"")+'>Publicar en ambas</button><button type="button" class="del" data-del="1">Descartar</button></div>'+
    '<div class="msg" role="status" aria-live="polite"></div>'+
    (urlOk(a.source_url)?'<a class="fuente" href="'+esc(a.source_url)+'" target="_blank" rel="noopener noreferrer">Ver aviso de origen →</a>':"")+
    '<div class="fuente">Cargado '+esc(a.creado)+'</div></div></article>';
 }
 function buscarAviso(id){return S.data.avisos.filter(function(a){return a.id===id})[0]}
+function pintarFotos(card,a){
+  var fs=fotos(a),sel=elegidas(a);
+  card.querySelectorAll(".th").forEach(function(b){var p=sel.indexOf(parseInt(b.dataset.foto,10));b.setAttribute("aria-pressed",p>-1);b.querySelector(".n").textContent=p>-1?p+1:"+"});
+  var f=card.querySelector(".fsel");if(f)f.textContent=textoSel(sel.length,fs.length);
+  var por=card.querySelector(".portada");if(por){if(sel.length&&urlOk(fs[sel[0]]))por.src=fs[sel[0]];por.style.opacity=sel.length?"":".3"}
+  card.querySelectorAll('[data-pub="ig_feed"],[data-pub="ambas"]').forEach(function(b){b.disabled=!sel.length;b.title=sel.length?"":"Instagram necesita una foto"});
+}
 
 /* ---------- eventos ---------- */
 $("lista").addEventListener("click",function(e){
@@ -327,18 +356,30 @@ $("lista").addEventListener("click",function(e){
   var seg=e.target.closest("[data-v]");
   if(seg){var v=a.variantes[seg.dataset.v];card.querySelectorAll("[data-v]").forEach(function(b){b.setAttribute("aria-pressed",b===seg)});
     S.vs[id]=seg.dataset.v;S.ed["ig_"+id]=v.ig;S.ed["fb_"+id]=v.fb;card.querySelector("#ig_"+id).value=v.ig;card.querySelector("#fb_"+id).value=v.fb;return}
+  var th=e.target.closest("[data-foto]");
+  if(th){var i=parseInt(th.dataset.foto,10),sel=elegidas(a).slice(),p=sel.indexOf(i);
+    if(p>-1)sel.splice(p,1);else{sel.push(i);sel.sort(function(x,y){return x-y})}
+    S.fs[id]=sel;pintarFotos(card,a);return}
   var pub=e.target.closest("[data-pub]");
-  if(pub){var dest=pub.dataset.pub,txt=card.querySelector("#"+(dest==="fb_feed"?"fb_":"ig_")+id).value;
-    pub.disabled=true;msg.style.color="var(--muted)";msg.textContent="Publicando…";
-    fetch("/api/publish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({telegram_id:parseInt(TID,10),draft_id:id,destination:dest,texto:txt,k:K})})
+  if(pub){var dest=pub.dataset.pub,sel=elegidas(a),tFb=card.querySelector("#fb_"+id).value,tIg=card.querySelector("#ig_"+id).value;
+    if(dest!=="fb_feed"&&!sel.length){msg.style.color="var(--bad)";msg.textContent="Instagram necesita al menos una foto: elegí una o más.";return}
+    var botones=card.querySelectorAll("[data-pub]"),soltar=function(){botones.forEach(function(b){b.disabled=false});pintarFotos(card,a)};
+    botones.forEach(function(b){b.disabled=true});msg.style.color="var(--muted)";
+    msg.textContent=(dest==="ambas"?"Publicando en Facebook e Instagram":"Publicando")+(sel.length>1?" con "+sel.length+" fotos":"")+"… puede tardar hasta un minuto.";
+    fetch("/api/publish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({telegram_id:parseInt(TID,10),draft_id:id,destination:dest,texto:dest==="ig_feed"?tIg:tFb,texto_fb:tFb,texto_ig:tIg,fotos:sel,k:K})})
      .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})})
-     .then(function(x){if(x.j.success){msg.style.color="var(--ok)";msg.textContent="¡Publicado!";setTimeout(function(){cargar(S.mes)},1200)}
-       else{pub.disabled=false;msg.style.color="var(--bad)";msg.textContent="No se pudo publicar: "+(x.j.error||x.j.detail||"error desconocido")}})
-     .catch(function(){pub.disabled=false;msg.style.color="var(--bad)";msg.textContent="Sin conexión. Reintentá."});return}
+     .then(function(x){var j=x.j;
+       if(j.resultados){var partes=["fb_feed","ig_feed"].map(function(d){var v=j.resultados[d];return (d==="fb_feed"?"Facebook":"Instagram")+(v.success?" ✓":" ✗ "+(v.error||""))});
+         msg.style.color=!j.success?"var(--bad)":j.parcial?"var(--warn)":"var(--ok)";msg.textContent=(j.success&&!j.parcial?"¡Publicado! ":"")+partes.join(" · ");
+         if(j.success)setTimeout(function(){cargar(S.mes)},j.parcial?6000:1500);else soltar();return}
+       if(j.success){msg.style.color="var(--ok)";msg.textContent="¡Publicado!";setTimeout(function(){cargar(S.mes)},1200)}
+       else{soltar();msg.style.color="var(--bad)";msg.textContent="No se pudo publicar: "+(j.error||j.detail||"error desconocido")}})
+     .catch(function(){soltar();msg.style.color="var(--bad)";msg.textContent="Sin conexión. Reintentá."});return}
   if(e.target.closest("[data-del]")){if(!confirm("¿Descartar este aviso? No se puede deshacer."))return;
     fetch("/api/drafts/"+id+"?telegram_id="+TID+"&k="+K,{method:"DELETE"}).then(function(){cargar(S.mes)})}
 });
 $("lista").addEventListener("input",function(e){if(e.target.tagName==="TEXTAREA")S.ed[e.target.id]=e.target.value});
+$("lista").addEventListener("error",function(e){var t=e.target;if(t.tagName==="IMG"&&t.parentNode.classList.contains("th"))t.parentNode.classList.add("rota")},true);
 $("mesSel").addEventListener("change",function(){cargar(this.value)});
 $("prev").addEventListener("click",function(){var i=S.data.meses.indexOf(S.data.mes);if(i<S.data.meses.length-1)cargar(S.data.meses[i+1])});
 $("next").addEventListener("click",function(){var i=S.data.meses.indexOf(S.data.mes);if(i>0)cargar(S.data.meses[i-1])});

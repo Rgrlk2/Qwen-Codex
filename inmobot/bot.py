@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import requests
 from bs4 import BeautifulSoup
 from seguridad import bot_key
+from scraper import extraer_imagenes, CABECERAS
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
@@ -17,10 +18,10 @@ logging.basicConfig(level=logging.INFO)
 # --- SCRAPER ---
 # Solo se leen datos del aviso original (titulo, descripcion, precio, fotos).
 # El servidor extrae unicamente hechos (tipo, zona, dormitorios...) y descarta el resto.
+# Las fotos (hasta 10) las busca scraper.py en toda la pagina, no solo en la vista previa.
 def scrape_property(url: str):
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        r = requests.get(url, headers=headers, timeout=15)
+        r = requests.get(url, headers=CABECERAS, timeout=20)
         soup = BeautifulSoup(r.text, "html.parser")
 
         def og(prop):
@@ -29,7 +30,10 @@ def scrape_property(url: str):
 
         title = og("og:title") or (soup.title.string if soup.title and soup.title.string else "Propiedad")
         desc = og("og:description") or ""
-        images = [m["content"] for m in soup.find_all("meta", property="og:image") if m.get("content")]
+        try:
+            images = extraer_imagenes(soup, r.url or url, r.text)
+        except Exception:
+            images = [m["content"] for m in soup.find_all("meta", property="og:image") if m.get("content")]
         price_match = re.search(r"(USD|U\$S|US\$|\$|Gs\.)\s?[\d\.,]+", r.text)
         price = price_match.group(0) if price_match else ""
         return {"url": url, "title": title[:200], "description": desc[:1000], "images": images[:10], "price": price}

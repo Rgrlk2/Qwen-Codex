@@ -17,6 +17,11 @@ def firmar_state(tid: str, nonce: str) -> str:
     return f"{tid}|{nonce}|{sig}"
 
 
+def firmar(texto: str) -> str:
+    """Firma corta para enlaces publicos (por ejemplo, las fotos que descarga Meta)."""
+    return hmac.new((_secreto() or "dev").encode(), texto.encode(), hashlib.sha256).hexdigest()[:24]
+
+
 def state_valido(state: str):
     """Devuelve el telegram_id si la firma es correcta, si no None."""
     try:
