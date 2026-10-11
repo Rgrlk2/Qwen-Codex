@@ -1,0 +1,93 @@
+{
+  "_nota": "Valores null = PENDIENTE de confirmar con la Dra. El script se niega a crear calendarios con datos faltantes y los agentes responden 'Secretaría lo confirma' en lugar de inventar.",
+  "clinica": {
+    "nombre_comercial": "Consultorio Pediátrico Dra. Claudia Leguizamón",
+    "profesional": "Dra. Claudia Leguizamón",
+    "especialidad": "Pediatría",
+    "ciudad": "Ciudad del Este, Paraguay",
+    "direccion": null,
+    "zona_horaria": "America/Asuncion",
+    "telefono_secretaria_transferencia": null,
+    "whatsapp_publico": null,
+    "email_notificaciones": null,
+    "centro_urgencias_derivacion": null,
+    "idiomas": ["es", "pt", "gn-yopara"],
+    "moneda": "PYG",
+    "medios_pago": ["transferencia bancaria"],
+    "sena_preconsulta_gs": null
+  },
+  "reglas_agenda": {
+    "ventana_reserva_dias": 2,
+    "_ventana": "Regla de la Dra.: la agenda se habilita con 48 h de antelación.",
+    "aviso_minimo_horas": 2,
+    "turnos_por_horario": 1,
+    "confirmacion_automatica": false,
+    "_confirmacion": "false = el turno queda pendiente hasta que Secretaría valide (preconsulta/comprobante)."
+  },
+  "servicios": [
+    {
+      "clave": "consulta_pediatrica",
+      "nombre": "Consulta pediátrica",
+      "activo": true,
+      "duracion_min": 20,
+      "modalidad": "presencial",
+      "acepta_seguro": true,
+      "precio_particular_gs": null,
+      "horarios": null
+    },
+    {
+      "clave": "pediatria_integrativa",
+      "nombre": "Pediatría integrativa",
+      "activo": true,
+      "duracion_min": 45,
+      "modalidad": "presencial",
+      "acepta_seguro": false,
+      "precio_particular_gs": null,
+      "horarios": null,
+      "_horarios": "Relevado: solo jueves. Falta franja horaria."
+    },
+    {
+      "clave": "consulta_nutricional",
+      "nombre": "Consulta nutricional",
+      "activo": true,
+      "duracion_min": 40,
+      "modalidad": "presencial",
+      "acepta_seguro": null,
+      "precio_particular_gs": null,
+      "horarios": null
+    },
+    {
+      "clave": "vacunacion",
+      "nombre": "Vacunación",
+      "activo": true,
+      "duracion_min": null,
+      "modalidad": "presencial",
+      "acepta_seguro": null,
+      "precio_particular_gs": null,
+      "horarios": null
+    },
+    {
+      "clave": "teleconsulta",
+      "nombre": "Teleconsulta pediátrica",
+      "activo": true,
+      "duracion_min": null,
+      "modalidad": "teleconsulta",
+      "acepta_seguro": null,
+      "precio_particular_gs": null,
+      "horarios": null
+    },
+    {
+      "clave": "electroencefalografia",
+      "nombre": "Electroencefalografía",
+      "activo": false,
+      "duracion_min": null,
+      "modalidad": "presencial",
+      "acepta_seguro": null,
+      "precio_particular_gs": null,
+      "horarios": null,
+      "_estado": "Servicio futuro. No se crea calendario ni se agenda."
+    }
+  ],
+  "seguros_aceptados": null,
+  "_formato_horarios": "Lista de bloques: [{\"dias\": [1,2,3,4,5], \"desde\": \"08:00\", \"hasta\": \"12:00\"}]. Días: 0=domingo ... 6=sábado."
+}
