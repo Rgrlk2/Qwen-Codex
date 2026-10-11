@@ -14,7 +14,7 @@ Usa la API v2 de GHL con un Private Integration Token. Solo librería estándar.
                                         # carga pacientes y turnos ficticios de data/demo/
 
 Scopes del token: locations.readonly, locations/customFields.readonly/.write,
-locations/tags.readonly/.write, calendars.readonly/.write, calendars/events.write,
+locations/tags.readonly/.write, calendars.readonly/.write, calendars/events.readonly/.write,
 contacts.readonly/.write, users.readonly.
 """
 import csv
@@ -52,6 +52,11 @@ CUSTOM_FIELDS = [
     ("idioma_preferido", "Idioma preferido", "SINGLE_OPTIONS", ["Español", "Portugués", "Yopará"]),
     ("motivo_administrativo", "Motivo (administrativo)", "LARGE_TEXT", None),
     ("canal_origen", "Canal de origen", "SINGLE_OPTIONS", ["Llamada", "WhatsApp", "Web", "Administración"]),
+    # Código Rojo: los completa codigo-rojo/ y los usa el workflow de reprogramación.
+    ("cr_turno_original", "Código Rojo · turno original", "TEXT", None),
+    ("cr_propuesta_1", "Código Rojo · propuesta 1", "TEXT", None),
+    ("cr_propuesta_2", "Código Rojo · propuesta 2", "TEXT", None),
+    ("cr_propuesta_3", "Código Rojo · propuesta 3", "TEXT", None),
 ]
 
 TAGS = [
@@ -63,6 +68,7 @@ TAGS = [
     "agendaria-pendiente-confirmacion",
     "agendaria-comprobante-recibido",
     "agendaria-handoff-secretaria",
+    "codigo-rojo-afectado",
     DEMO_TAG,
 ]
 
