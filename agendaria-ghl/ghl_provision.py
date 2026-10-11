@@ -418,6 +418,9 @@ class GHLClient:
     def location(self):
         return self.request("GET", f"/locations/{self.location_id}")["location"]
 
+    def users(self):
+        return self.request("GET", f"/users/?locationId={self.location_id}").get("users", [])
+
     def custom_fields(self):
         return self.request("GET", f"/locations/{self.location_id}/customFields?model=contact").get("customFields", [])
 
@@ -468,11 +471,29 @@ def build_plan(config, location_id, existing_fields=(), existing_tags=(), existi
 
 
 def client_from_env():
+    # Sin respaldo en el config: un ID equivocado aplicaría los cambios en otra sub-cuenta.
     token = os.environ.get("GHL_TOKEN")
-    location_id = os.environ.get("GHL_LOCATION_ID") or load_config().get("ghl", {}).get("location_id")
+    location_id = os.environ.get("GHL_LOCATION_ID")
     if not token or not location_id:
-        sys.exit("Falta GHL_TOKEN (y GHL_LOCATION_ID si no está en config.ghl.location_id).")
+        sys.exit("Faltan las variables de entorno GHL_TOKEN y GHL_LOCATION_ID.")
     return GHLClient(token, location_id)
+
+
+def admin_email(config):
+    return next((r["email"] for r in config.get("roles", []) if r.get("ghl") == "Account Admin"), None)
+
+
+def find_user_id(users, email):
+    email = (email or "").lower()
+    return next((u.get("id") for u in users if email and (u.get("email") or "").lower() == email), None)
+
+
+def resolve_dra_user(config, client):
+    """Completa clinica.ghl_user_id con GHL_USER_ID o buscando a la Dra. por mail en la sub-cuenta."""
+    clinica = config["clinica"]
+    if not clinica.get("ghl_user_id"):
+        clinica["ghl_user_id"] = os.environ.get("GHL_USER_ID") or find_user_id(client.users(), admin_email(config))
+    return clinica.get("ghl_user_id")
 
 
 def ensure_valid_schedule(config):
@@ -501,6 +522,8 @@ def cmd_check(config, _args):
     print(f"Sub-cuenta OK: {location.get('name')} ({client.location_id}) · zona {location.get('timezone')}")
     if location.get("timezone") and location["timezone"] != config["clinica"]["zona_horaria"]:
         print(f"  ATENCIÓN: la zona horaria debería ser {config['clinica']['zona_horaria']}.")
+    user_id = resolve_dra_user(config, client)
+    print(f"Usuario de la Dra. ({admin_email(config)}): {user_id or 'NO ENCONTRADO: invitarla en My Staff'}")
     print(f"Campos personalizados: {len(client.custom_fields())} · Tags: {len(client.tags())} · "
           f"Calendarios: {len(client.calendars())}")
     print_gaps(config)
@@ -508,6 +531,8 @@ def cmd_check(config, _args):
 
 def live_plan(config, client):
     ensure_valid_schedule(config)
+    if not resolve_dra_user(config, client):
+        sys.exit(f"No encontré el usuario de la Dra. ({admin_email(config)}). Invitala en My Staff o definí GHL_USER_ID.")
     return build_plan(config, client.location_id, client.custom_fields(), client.tags(), client.calendars())
 
 

@@ -16,8 +16,8 @@ Decisiones para la demo: apretar el botón es la aprobación humana; el paciente
 ## Despliegue (Netlify)
 
 1. Nuevo sitio con base `agendaria-ghl/codigo-rojo` (o arrastrar la carpeta).
-2. Variables de entorno: `GHL_TOKEN`, `GHL_LOCATION_ID=krXZA2jf7PzcNfbcJO9g`,
-   `GHL_USER_ID=szEt5JMJQiTra12QG6q4`, `CODIGO_ROJO_PIN` (4–6 dígitos que elige la Dra.).
+2. Variables de entorno: `GHL_TOKEN`, `GHL_LOCATION_ID`, `GHL_USER_ID`
+   (ID de usuario de la Dra.; `ghl_provision.py check` lo muestra), `CODIGO_ROJO_PIN` (4–6 dígitos que elige la Dra.).
 3. Abrir el sitio en el celular de la Dra. → "Agregar a pantalla de inicio".
 
 ## Plantilla de WhatsApp `propuesta_reprogramacion` (aprobar en Meta)

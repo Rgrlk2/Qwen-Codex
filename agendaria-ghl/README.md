@@ -1,7 +1,7 @@
 # Agendar.IA × GoHighLevel — Dra. Claudia Leguizamón
 
 Asistente de **voz (llamadas)** y **texto (WhatsApp)** en una sub-cuenta GHL exclusiva de la Dra.
-(provisoriamente LabIA `krXZA2jf7PzcNfbcJO9g`, usuario `szEt5JMJQiTra12QG6q4`).
+Los IDs de la sub-cuenta y del usuario van en variables de entorno (`GHL_LOCATION_ID`, `GHL_USER_ID`), nunca en el repo.
 Los turnos viven en **calendarios personales de la Dra.**, uno por servicio y sede.
 
 > **Modo DEMO:** `config/leguizamon.json` y `data/demo/` contienen datos ficticios.

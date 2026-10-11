@@ -1,5 +1,6 @@
 import copy
 import unittest
+from unittest import mock
 from datetime import date
 
 import generar_demo
@@ -54,23 +55,34 @@ class ProvisionTests(unittest.TestCase):
         self.assertFalse(any("Electroencefalografía" in n for n in names))
 
     def test_calendar_enforces_48h_window_and_personal_user(self):
-        config = gp.load_config()
+        config = copy.deepcopy(gp.load_config())
+        config["clinica"]["ghl_user_id"] = "DRA_TEST"
         service, sede, blocks = gp.calendar_specs(config)[0]
         payload = gp.calendar_payload(config, service, sede, blocks, "LOC")
         self.assertEqual((payload["allowBookingFor"], payload["allowBookingForUnit"]), (2, "days"))
         self.assertFalse(payload["autoConfirm"])
         self.assertEqual(payload["calendarType"], "personal")
-        self.assertEqual(payload["teamMembers"][0]["userId"], "szEt5JMJQiTra12QG6q4")
+        self.assertEqual(payload["teamMembers"][0]["userId"], "DRA_TEST")
         self.assertEqual(payload["teamMembers"][0]["meetingLocation"], sede["direccion"])
 
     def test_licenciada_calendar_assigned_to_her_user(self):
         config = copy.deepcopy(gp.load_config())
+        config["clinica"]["ghl_user_id"] = "DRA_TEST"
         next(p for p in config["clinica"]["profesionales"] if p["clave"] == "lic")["ghl_user_id"] = "LIC1"
         specs = {(s["clave"], sede["clave"]): (s, sede, b) for s, sede, b in gp.calendar_specs(config)}
         lic = gp.calendar_payload(config, *specs[("vacunacion", "hernandarias")], "LOC")
         dra = gp.calendar_payload(config, *specs[("vacunacion", "cde_centro")], "LOC")
         self.assertEqual(lic["teamMembers"][0]["userId"], "LIC1")
-        self.assertEqual(dra["teamMembers"][0]["userId"], "szEt5JMJQiTra12QG6q4")
+        self.assertEqual(dra["teamMembers"][0]["userId"], "DRA_TEST")
+
+    def test_find_user_id_by_email_case_insensitive(self):
+        users = [{"id": "U1", "email": "otra@rgrlk.com"}, {"id": "U2", "email": "draleguizamon.agendaria@rgrlk.com"}]
+        self.assertEqual(gp.find_user_id(users, gp.admin_email(gp.load_config())), "U2")
+        self.assertIsNone(gp.find_user_id(users, "nadie@rgrlk.com"))
+
+    def test_client_requires_location_env(self):
+        with mock.patch.dict(gp.os.environ, {"GHL_TOKEN": "t"}, clear=True), self.assertRaises(SystemExit):
+            gp.client_from_env()
 
     def test_event_calendar_without_user(self):
         config = copy.deepcopy(gp.load_config())
