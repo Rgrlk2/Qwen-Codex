@@ -211,6 +211,11 @@ def calendar_payload(config, service, sede, blocks, location_id):
         "isActive": True,
     }
     user_id = clinica.get("ghl_user_id")
+    # Un calendario atendido solo por otra profesional (ej. vacunación de la Licenciada) se asigna a su usuario.
+    owners = {block.get("profesional", "dra") for block in blocks}
+    if owners != {"dra"} and len(owners) == 1:
+        prof = next((p for p in clinica.get("profesionales", []) if p["clave"] in owners), {})
+        user_id = prof.get("ghl_user_id") or user_id
     if user_id:
         # Calendario personal: GHL bloquea choques entre todos los calendarios del mismo usuario.
         payload["calendarType"] = "personal"

@@ -63,6 +63,15 @@ class ProvisionTests(unittest.TestCase):
         self.assertEqual(payload["teamMembers"][0]["userId"], "szEt5JMJQiTra12QG6q4")
         self.assertEqual(payload["teamMembers"][0]["meetingLocation"], sede["direccion"])
 
+    def test_licenciada_calendar_assigned_to_her_user(self):
+        config = copy.deepcopy(gp.load_config())
+        next(p for p in config["clinica"]["profesionales"] if p["clave"] == "lic")["ghl_user_id"] = "LIC1"
+        specs = {(s["clave"], sede["clave"]): (s, sede, b) for s, sede, b in gp.calendar_specs(config)}
+        lic = gp.calendar_payload(config, *specs[("vacunacion", "hernandarias")], "LOC")
+        dra = gp.calendar_payload(config, *specs[("vacunacion", "cde_centro")], "LOC")
+        self.assertEqual(lic["teamMembers"][0]["userId"], "LIC1")
+        self.assertEqual(dra["teamMembers"][0]["userId"], "szEt5JMJQiTra12QG6q4")
+
     def test_event_calendar_without_user(self):
         config = copy.deepcopy(gp.load_config())
         config["clinica"]["ghl_user_id"] = None

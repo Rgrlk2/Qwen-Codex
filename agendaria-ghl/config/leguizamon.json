@@ -65,12 +65,14 @@
       {
         "clave": "dra",
         "nombre": "Dra. Claudia Leguizamón",
-        "rol": "Pediatra"
+        "rol": "Pediatra",
+        "ghl_user_id": null
       },
       {
         "clave": "lic",
         "nombre": "Lic. Demo Benítez",
-        "rol": "Licenciada en Enfermería (vacunación)"
+        "rol": "Licenciada en Enfermería (vacunación)",
+        "ghl_user_id": null
       }
     ]
   },
@@ -513,14 +515,17 @@
     {
       "rol": "Administradora",
       "usuario": "Dra. Claudia Leguizamón",
+      "email": "DraLeguizamon.AgendarIA@rgrlk.com",
       "ghl": "Account Admin",
       "permisos": "Acceso total. Única con el PIN del Código Rojo."
     },
     {
       "rol": "Secretaría",
       "usuario": "Secretaría",
+      "email": "SecretariaLeguizamon.AgendarIA@rgrlk.com",
       "ghl": "Account User",
-      "permisos": "Solo turnos (ver, crear, mover, confirmar) y autorización manual de pagos; conversaciones solo asignadas (comprobantes)."
+      "permisos": "Aprueba el flujo de agenda: solo turnos (ver, crear, mover, confirmar) y autorización manual de pagos. Conversaciones solo asignadas (comprobantes)."
     }
-  ]
+  ],
+  "roles_capa_2": "Licenciada (vacunación, con su propio usuario y calendario)."
 }

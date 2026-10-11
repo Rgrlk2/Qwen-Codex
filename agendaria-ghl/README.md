@@ -20,7 +20,9 @@ Dra. ── botón 🔴 ──> codigo-rojo (Netlify) ──> bloqueo + propuest
 | Rol | GHL | Puede |
 |---|---|---|
 | Dra. Claudia Leguizamón | Admin | Todo. Única con el PIN del Código Rojo. |
-| Secretaría | User | Solo turnos (ver, crear, mover, confirmar) y autorización manual de pagos. Conversaciones solo asignadas (comprobantes). |
+| Secretaría | User | Aprueba el flujo de agenda: solo turnos (ver, crear, mover, confirmar) y autorización manual de pagos. Conversaciones solo asignadas (comprobantes). |
+
+Capa 2: Licenciada con su propio usuario; su calendario de vacunación se le asigna cargando su `ghl_user_id`.
 
 Pasos para crear la sub-cuenta, usuarios y token: **`GUIA_ACCESO_GHL.md`**.
 
@@ -76,12 +78,12 @@ cancelado / reprogramado, feriados, vacaciones (19/01–01/02 y 20/07–02/08), 
 Código Rojo el 18/08. Contactos con tag `agendaria-demo` y **DND activo**; turnos con `toNotify: false`:
 nadie recibe mensajes. Teléfonos `+595900…`, correos `@example.com`. La importación es reanudable.
 
-### 4. Telefonía (Twilio con número paraguayo)
+### 4. Telefonía (Twilio, solo para llamadas de voz)
 1. Cuenta Twilio con número de Paraguay con voz (verificar disponibilidad y requisitos regulatorios).
 2. GHL: **Settings → Phone System → Twilio → Connect** y asignar el número al Voice AI.
 3. Alternativa si no hay número PY en Twilio: desvío desde la línea actual a un número Twilio.
 
-### 5. WhatsApp
+### 5. WhatsApp (Meta directo desde GHL; Twilio no interviene)
 1. **Settings → WhatsApp** → alta con Meta Business. Número de agendamiento, **no** el celular personal de la Dra.
 2. Plantillas a aprobar en Meta: `datos_sena`, `confirmacion_turno`, `recordatorio_turno`, `propuesta_reprogramacion`
    (texto en `codigo-rojo/README.md`).
