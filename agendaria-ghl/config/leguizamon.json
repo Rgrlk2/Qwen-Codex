@@ -20,7 +20,7 @@
     "medios_pago": [
       "transferencia bancaria"
     ],
-    "ghl_user_id": "szEt5JMJQiTra12QG6q4",
+    "ghl_user_id": null,
     "horario_atencion": [
       {
         "dias": [
@@ -490,8 +490,8 @@
   ],
   "_formato_horarios": "Bloques: {\"sede\": clave, \"dias\": [0-6], \"desde\": \"HH:MM\", \"hasta\": \"HH:MM\"}. 0=domingo ... 6=sábado. Un calendario por servicio y sede. Los bloques deben caer dentro de clinica.horario_atencion y no superponerse entre servicios (una sola doctora).",
   "ghl": {
-    "subcuenta": "LabIA (provisoria — se reemplaza por la sub-cuenta exclusiva de la Dra.)",
-    "location_id": "krXZA2jf7PzcNfbcJO9g"
+    "subcuenta": "Sub-cuenta exclusiva de la Dra. Los IDs van en variables de entorno (GHL_LOCATION_ID, GHL_USER_ID), nunca en el repo.",
+    "location_id": null
   },
   "sena": {
     "monto_gs": 100000,

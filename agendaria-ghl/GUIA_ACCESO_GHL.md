@@ -31,6 +31,11 @@ El agente de voz, el bot de WhatsApp y los mensajes se descuentan de la billeter
 2. Cargar **USD 25–50** para la demo.
 3. Activar **recarga automática** con tope (ej.: si baja de USD 10, recargar USD 25).
 
+**Quién paga.** Para la prueba alcanza con una tarjeta personal: cargar USD 25 y dejar la recarga
+automática **apagada**, así el gasto máximo queda acotado. Antes de atender pacientes, pasar a una de estas:
+- **Tarjeta de la agencia + rebilling** con margen hacia la Dra. (recomendado).
+- **Modo SaaS**: la Dra. carga su propia tarjeta en la sub-cuenta.
+
 ## Paso 4 · Usuarios y roles (Settings → My Staff → + Add Employee)
 
 | Usuario | Tipo / Rol GHL | Permisos |
@@ -58,6 +63,8 @@ servir para ambos: se usa el número de Twilio para llamadas y se lo registra ta
    (si no hay disponibilidad, Twilio pide documentación regulatoria o se usa desvío desde la línea actual).
 2. Copiar **Account SID** y **Auth Token** (Console → Account Info).
 3. GHL sub-cuenta → **Settings → Phone System → Twilio → Connect** → pegar SID y Token → asignar el número.
+4. Twilio factura **aparte** de GHL: el número y los minutos se pagan con saldo de la cuenta de Twilio
+   (cargar USD 20 para la prueba). Los minutos del agente de IA, en cambio, salen de la billetera de GHL.
 
 **5b · WhatsApp con Meta**
 1. GHL sub-cuenta → **Settings → WhatsApp → Connect** (alta con Meta Business; requiere login de administrador
@@ -79,7 +86,9 @@ servir para ambos: se usa el número de Twilio para llamadas y se lo registra ta
 1. Menú del entorno (barra de título de la sesión) → **Edit**:
    - **Network access → Allowed domains**: agregar `services.leadconnectorhq.com` (dejar "Allow package managers").
    - **Environment variables**: `GHL_TOKEN=pit-…` y `GHL_LOCATION_ID=<Location ID>`.
-2. Abrir una sesión nueva (las variables se cargan al iniciar) y escribirme **"listo"** con el Location ID.
+     (`GHL_USER_ID` es opcional: si falta, lo busco por el mail de la Dra., que ya debe estar invitada en el Paso 4.)
+2. Abrir una sesión nueva (las variables se cargan al iniciar) y escribirme **"listo"**.
+   Los IDs y el token nunca van en el chat ni en el repo.
 
 ## Paso 8 · Lo que hago yo
 1. `check` → verifico sub-cuenta, zona horaria y usuarios (obtengo el ID de la Dra. por mail).
@@ -91,4 +100,5 @@ servir para ambos: se usa el número de Twilio para llamadas y se lo registra ta
 - Crear los dos agentes de IA copiando `prompts/agente_voz.md` y `prompts/agente_whatsapp.md`
   (lo automatizo si la API lo permite).
 - Armar los workflows de la tabla del README (la API de GHL no permite crearlos).
-- Cargar el PIN del Código Rojo en Netlify (lo elige la Dra.; no pasa por el chat).
+- Cargar en Netlify las variables del Código Rojo: `GHL_TOKEN`, `GHL_LOCATION_ID`, `GHL_USER_ID`
+  (te lo da `check`) y `CODIGO_ROJO_PIN` (lo elige la Dra.; no pasa por el chat).
