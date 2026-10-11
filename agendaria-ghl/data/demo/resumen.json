@@ -1,0 +1,59 @@
+{
+  "_modo": "DEMO — datos ficticios",
+  "periodo": [
+    "2026-01-01",
+    "2026-10-10"
+  ],
+  "responsables": 521,
+  "pacientes": 774,
+  "familias_con_varios_hijos": 181,
+  "turnos": 3547,
+  "lista_espera": 70,
+  "facturado_atendidos_gs": 425840000,
+  "turnos_por_mes": {
+    "2026-01": 154,
+    "2026-02": 314,
+    "2026-03": 435,
+    "2026-04": 381,
+    "2026-05": 431,
+    "2026-06": 496,
+    "2026-07": 312,
+    "2026-08": 482,
+    "2026-09": 414,
+    "2026-10": 128
+  },
+  "por_estado": {
+    "atendido": 2851,
+    "reprogramado": 230,
+    "cancelado": 266,
+    "inasistencia": 200
+  },
+  "por_servicio": {
+    "primera_consulta": 213,
+    "consulta_enfermedad": 1707,
+    "vacunacion": 221,
+    "control_nino_sano": 750,
+    "consulta_nutricional": 156,
+    "teleconsulta": 114,
+    "control_recien_nacido": 110,
+    "certificado_escolar": 114,
+    "pediatria_integrativa": 162
+  },
+  "por_sede": {
+    "cde_centro": 2430,
+    "santa_rita": 288,
+    "hernandarias": 715,
+    "virtual": 114
+  },
+  "por_canal": {
+    "Web": 412,
+    "Llamada": 800,
+    "WhatsApp": 2009,
+    "Administración": 326
+  },
+  "por_idioma": {
+    "Español": 2389,
+    "Yopará": 658,
+    "Portugués": 500
+  }
+}

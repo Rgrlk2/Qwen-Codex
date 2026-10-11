@@ -1,21 +1,116 @@
 {
-  "_nota": "Valores null = PENDIENTE de confirmar con la Dra. El script se niega a crear calendarios con datos faltantes y los agentes responden 'Secretaría lo confirma' en lugar de inventar.",
+  "_modo": "DEMO",
+  "_nota": "DATOS DE MUESTRA FICTICIOS para demostración. Reemplazar por los datos reales de la Dra. antes de atender pacientes. Valores null = pendiente: el script no crea calendarios incompletos y los agentes derivan a Secretaría.",
   "clinica": {
     "nombre_comercial": "Consultorio Pediátrico Dra. Claudia Leguizamón",
     "profesional": "Dra. Claudia Leguizamón",
     "especialidad": "Pediatría",
     "ciudad": "Ciudad del Este, Paraguay",
-    "direccion": null,
     "zona_horaria": "America/Asuncion",
-    "telefono_secretaria_transferencia": null,
-    "whatsapp_publico": null,
-    "email_notificaciones": null,
-    "centro_urgencias_derivacion": null,
-    "idiomas": ["es", "pt", "gn-yopara"],
+    "telefono_secretaria_transferencia": "+595 61 000 0101",
+    "whatsapp_publico": "+595 981 000 102",
+    "email_notificaciones": "secretaria.demo@example.com",
+    "centro_urgencias_derivacion": "Urgencias del Sanatorio Le Blanc",
+    "idiomas": [
+      "es",
+      "pt",
+      "gn-yopara"
+    ],
     "moneda": "PYG",
-    "medios_pago": ["transferencia bancaria"],
-    "sena_preconsulta_gs": null
+    "medios_pago": [
+      "transferencia bancaria",
+      "efectivo en consultorio",
+      "QR bancario"
+    ],
+    "sena_preconsulta_gs": 50000,
+    "ghl_user_id": "szEt5JMJQiTra12QG6q4",
+    "horario_atencion": [
+      {
+        "dias": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "desde": "08:00",
+        "hasta": "12:00"
+      },
+      {
+        "dias": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "desde": "14:00",
+        "hasta": "19:00"
+      },
+      {
+        "dias": [
+          6
+        ],
+        "desde": "08:00",
+        "hasta": "12:00"
+      }
+    ],
+    "mensaje_urgencia": "Si es una urgencia, acuda al centro de salud o centro médico más cercano o a la urgencia del Sanatorio Le Blanc.",
+    "enlace_reserva_web": null,
+    "_enlace": "Se completa con el enlace del widget de calendarios de GHL una vez creado. El paciente elige: seguir por WhatsApp o reservar en el enlace.",
+    "ausencia": {
+      "activa": false,
+      "desde": "2026-07-20",
+      "hasta": "2026-08-02",
+      "mensaje": "En este momento la Dra. Claudia Leguizamón se encuentra de vacaciones y vuelve el 3 de agosto. Podemos dejar agendado su turno desde esa fecha."
+    },
+    "profesionales": [
+      {
+        "clave": "dra",
+        "nombre": "Dra. Claudia Leguizamón",
+        "rol": "Pediatra"
+      },
+      {
+        "clave": "lic",
+        "nombre": "Lic. Demo Benítez",
+        "rol": "Licenciada en Enfermería (vacunación)"
+      }
+    ]
   },
+  "sedes": [
+    {
+      "clave": "cde_centro",
+      "nombre": "Ciudad del Este — Centro",
+      "direccion": "Av. San Blas km 3, Edificio Médico Demo, piso 2, consultorio 4, Ciudad del Este",
+      "referencia": "Frente a la plaza Demo, estacionamiento en subsuelo",
+      "telefono": "+595 61 000 0101",
+      "corto": "CDE Centro"
+    },
+    {
+      "clave": "hernandarias",
+      "nombre": "Hernandarias — Policlínica Demo",
+      "direccion": "Calle Supercarretera Demo 245, Hernandarias",
+      "referencia": "Planta baja, consultorio 2; martes y viernes por la tarde",
+      "telefono": "+595 631 000 202",
+      "corto": "Hernandarias"
+    },
+    {
+      "clave": "santa_rita",
+      "nombre": "Santa Rita — Centro Médico Demo",
+      "direccion": "Av. Gaúcha Demo 980, Santa Rita, Alto Paraná",
+      "referencia": "Atención en español y portugués; sábados de 8 a 12",
+      "telefono": "+595 673 000 303",
+      "corto": "Santa Rita"
+    },
+    {
+      "clave": "virtual",
+      "nombre": "Teleconsulta (Google Meet)",
+      "direccion": "Enlace de Google Meet enviado por WhatsApp tras confirmar el turno",
+      "referencia": "Requiere conexión estable y el niño presente",
+      "telefono": null,
+      "corto": "Virtual"
+    }
+  ],
   "reglas_agenda": {
     "ventana_reserva_dias": 2,
     "_ventana": "Regla de la Dra.: la agenda se habilita con 48 h de antelación.",
@@ -26,14 +121,173 @@
   },
   "servicios": [
     {
-      "clave": "consulta_pediatrica",
-      "nombre": "Consulta pediátrica",
+      "clave": "primera_consulta",
+      "nombre": "Primera consulta",
+      "activo": true,
+      "duracion_min": 30,
+      "modalidad": "presencial",
+      "acepta_seguro": true,
+      "precio_particular_gs": 250000,
+      "nota": "Paciente nuevo: se completa la Ficha pediátrica. Traer libreta de vacunas y estudios previos.",
+      "horarios": [
+        {
+          "sede": "cde_centro",
+          "dias": [
+            1
+          ],
+          "desde": "14:00",
+          "hasta": "16:00"
+        },
+        {
+          "sede": "cde_centro",
+          "dias": [
+            5
+          ],
+          "desde": "08:00",
+          "hasta": "10:00"
+        }
+      ]
+    },
+    {
+      "clave": "control_nino_sano",
+      "nombre": "Control de niño sano",
       "activo": true,
       "duracion_min": 20,
       "modalidad": "presencial",
       "acepta_seguro": true,
-      "precio_particular_gs": null,
-      "horarios": null
+      "precio_particular_gs": 200000,
+      "nota": "Seguimiento de crecimiento y desarrollo. Traer libreta de vacunas.",
+      "horarios": [
+        {
+          "sede": "cde_centro",
+          "dias": [
+            1
+          ],
+          "desde": "08:00",
+          "hasta": "10:00"
+        },
+        {
+          "sede": "cde_centro",
+          "dias": [
+            3
+          ],
+          "desde": "10:00",
+          "hasta": "12:00"
+        },
+        {
+          "sede": "hernandarias",
+          "dias": [
+            2
+          ],
+          "desde": "16:40",
+          "hasta": "19:00"
+        },
+        {
+          "sede": "hernandarias",
+          "dias": [
+            5
+          ],
+          "desde": "17:00",
+          "hasta": "19:00"
+        },
+        {
+          "sede": "santa_rita",
+          "dias": [
+            6
+          ],
+          "desde": "11:20",
+          "hasta": "12:00"
+        }
+      ]
+    },
+    {
+      "clave": "consulta_enfermedad",
+      "nombre": "Consulta por enfermedad",
+      "activo": true,
+      "duracion_min": 20,
+      "modalidad": "presencial",
+      "acepta_seguro": true,
+      "precio_particular_gs": 200000,
+      "nota": "Cuadros no urgentes. Si es urgente, acudir a guardia: el asistente no evalúa síntomas.",
+      "horarios": [
+        {
+          "sede": "cde_centro",
+          "dias": [
+            1
+          ],
+          "desde": "10:00",
+          "hasta": "12:00"
+        },
+        {
+          "sede": "cde_centro",
+          "dias": [
+            1
+          ],
+          "desde": "16:00",
+          "hasta": "18:00"
+        },
+        {
+          "sede": "cde_centro",
+          "dias": [
+            2,
+            4
+          ],
+          "desde": "08:30",
+          "hasta": "12:00"
+        },
+        {
+          "sede": "cde_centro",
+          "dias": [
+            3
+          ],
+          "desde": "15:00",
+          "hasta": "18:00"
+        },
+        {
+          "sede": "cde_centro",
+          "dias": [
+            5
+          ],
+          "desde": "10:00",
+          "hasta": "12:00"
+        },
+        {
+          "sede": "hernandarias",
+          "dias": [
+            5
+          ],
+          "desde": "14:00",
+          "hasta": "16:00"
+        },
+        {
+          "sede": "santa_rita",
+          "dias": [
+            6
+          ],
+          "desde": "08:00",
+          "hasta": "10:00"
+        }
+      ]
+    },
+    {
+      "clave": "control_recien_nacido",
+      "nombre": "Control de recién nacido",
+      "activo": true,
+      "duracion_min": 30,
+      "modalidad": "presencial",
+      "acepta_seguro": true,
+      "precio_particular_gs": 220000,
+      "nota": "Primer control tras el alta de maternidad. Traer resumen de alta y pruebas de pesquisa.",
+      "horarios": [
+        {
+          "sede": "cde_centro",
+          "dias": [
+            3
+          ],
+          "desde": "08:00",
+          "hasta": "10:00"
+        }
+      ]
     },
     {
       "clave": "pediatria_integrativa",
@@ -42,9 +296,18 @@
       "duracion_min": 45,
       "modalidad": "presencial",
       "acepta_seguro": false,
-      "precio_particular_gs": null,
-      "horarios": null,
-      "_horarios": "Relevado: solo jueves. Falta franja horaria."
+      "precio_particular_gs": 350000,
+      "nota": "Abordaje integral: alimentación, sueño, hábitos y entorno familiar. Solo particular.",
+      "horarios": [
+        {
+          "sede": "cde_centro",
+          "dias": [
+            4
+          ],
+          "desde": "14:00",
+          "hasta": "18:30"
+        }
+      ]
     },
     {
       "clave": "consulta_nutricional",
@@ -52,42 +315,183 @@
       "activo": true,
       "duracion_min": 40,
       "modalidad": "presencial",
-      "acepta_seguro": null,
-      "precio_particular_gs": null,
-      "horarios": null
+      "acepta_seguro": true,
+      "precio_particular_gs": 250000,
+      "nota": "Evaluación de crecimiento y plan alimentario.",
+      "horarios": [
+        {
+          "sede": "hernandarias",
+          "dias": [
+            2
+          ],
+          "desde": "14:00",
+          "hasta": "16:40"
+        },
+        {
+          "sede": "santa_rita",
+          "dias": [
+            6
+          ],
+          "desde": "10:00",
+          "hasta": "11:20"
+        }
+      ]
+    },
+    {
+      "clave": "certificado_escolar",
+      "nombre": "Certificado escolar / apto físico",
+      "activo": true,
+      "duracion_min": 15,
+      "modalidad": "presencial",
+      "acepta_seguro": false,
+      "precio_particular_gs": 120000,
+      "nota": "Requiere control de niño sano vigente (últimos 6 meses).",
+      "horarios": [
+        {
+          "sede": "cde_centro",
+          "dias": [
+            3
+          ],
+          "desde": "14:00",
+          "hasta": "15:00"
+        }
+      ]
     },
     {
       "clave": "vacunacion",
       "nombre": "Vacunación",
       "activo": true,
-      "duracion_min": null,
+      "duracion_min": 15,
       "modalidad": "presencial",
-      "acepta_seguro": null,
-      "precio_particular_gs": null,
-      "horarios": null
+      "acepta_seguro": false,
+      "precio_particular_gs": 60000,
+      "nota": "Precio = aplicación; la vacuna se cobra aparte según catálogo. Los viernes en Hernandarias aplica la Licenciada.",
+      "horarios": [
+        {
+          "sede": "cde_centro",
+          "dias": [
+            2,
+            4
+          ],
+          "desde": "08:00",
+          "hasta": "08:30",
+          "profesional": "dra"
+        },
+        {
+          "sede": "hernandarias",
+          "dias": [
+            5
+          ],
+          "desde": "16:00",
+          "hasta": "17:00",
+          "profesional": "lic"
+        }
+      ]
     },
     {
       "clave": "teleconsulta",
       "nombre": "Teleconsulta pediátrica",
       "activo": true,
-      "duracion_min": null,
+      "duracion_min": 25,
       "modalidad": "teleconsulta",
-      "acepta_seguro": null,
-      "precio_particular_gs": null,
-      "horarios": null
+      "acepta_seguro": false,
+      "precio_particular_gs": 180000,
+      "nota": "Seguimiento y dudas no urgentes. No reemplaza la consulta presencial.",
+      "horarios": [
+        {
+          "sede": "virtual",
+          "dias": [
+            1,
+            3
+          ],
+          "desde": "18:00",
+          "hasta": "19:00"
+        }
+      ]
     },
     {
       "clave": "electroencefalografia",
       "nombre": "Electroencefalografía",
       "activo": false,
-      "duracion_min": null,
+      "duracion_min": 60,
       "modalidad": "presencial",
       "acepta_seguro": null,
       "precio_particular_gs": null,
-      "horarios": null,
-      "_estado": "Servicio futuro. No se crea calendario ni se agenda."
+      "nota": "Servicio futuro en Ciudad del Este. Se toma el interés como mensaje.",
+      "horarios": null
     }
   ],
-  "seguros_aceptados": null,
-  "_formato_horarios": "Lista de bloques: [{\"dias\": [1,2,3,4,5], \"desde\": \"08:00\", \"hasta\": \"12:00\"}]. Días: 0=domingo ... 6=sábado."
+  "seguros_aceptados": [
+    {
+      "nombre": "Prepaga Demo Salud",
+      "servicios": [
+        "primera_consulta",
+        "control_nino_sano",
+        "consulta_enfermedad",
+        "consulta_nutricional"
+      ],
+      "copago_gs": 40000
+    },
+    {
+      "nombre": "Seguro Demo Familiar",
+      "servicios": [
+        "control_nino_sano",
+        "consulta_enfermedad",
+        "control_recien_nacido"
+      ],
+      "copago_gs": 60000
+    },
+    {
+      "nombre": "Convenio Demo Cooperativa",
+      "servicios": [
+        "consulta_enfermedad",
+        "consulta_nutricional"
+      ],
+      "copago_gs": 0
+    },
+    {
+      "nombre": "Plano Demo Brasil (fronterizo)",
+      "servicios": [
+        "consulta_enfermedad"
+      ],
+      "copago_gs": 80000
+    }
+  ],
+  "catalogo_vacunas": [
+    {
+      "nombre": "Antigripal pediátrica (demo)",
+      "precio_gs": 180000,
+      "stock": "disponible"
+    },
+    {
+      "nombre": "Neumococo 20-valente (demo)",
+      "precio_gs": 750000,
+      "stock": "disponible"
+    },
+    {
+      "nombre": "Meningococo ACWY (demo)",
+      "precio_gs": 520000,
+      "stock": "pocas unidades"
+    },
+    {
+      "nombre": "Meningococo B (demo)",
+      "precio_gs": 890000,
+      "stock": "agotada"
+    },
+    {
+      "nombre": "Varicela (demo)",
+      "precio_gs": 310000,
+      "stock": "disponible"
+    },
+    {
+      "nombre": "Nirsevimab — VSR (demo)",
+      "precio_gs": null,
+      "stock": "consultar temporada"
+    }
+  ],
+  "_formato_horarios": "Bloques: {\"sede\": clave, \"dias\": [0-6], \"desde\": \"HH:MM\", \"hasta\": \"HH:MM\"}. 0=domingo ... 6=sábado. Un calendario por servicio y sede. Los bloques deben caer dentro de clinica.horario_atencion y no superponerse entre servicios (una sola doctora).",
+  "ghl": {
+    "subcuenta": "LabIA",
+    "location_id": "krXZA2jf7PzcNfbcJO9g"
+  }
 }

@@ -1,0 +1,71 @@
+id,paciente_id,responsable_id,servicio,sede_preferida,dias_preferidos,solicitado_en,estado,motivo
+E018,P0222,R0145,pediatria_integrativa,cde_centro,"lunes, martes, sábado",2026-01-01,agendado,Pidió turno fuera de la ventana de 48 h
+E024,P0130,R0081,vacunacion,cde_centro,"viernes, sábado",2026-01-01,agendado,Pidió turno fuera de la ventana de 48 h
+E069,P0012,R0008,consulta_nutricional,hernandarias,"miércoles, sábado",2026-01-03,agendado,Pidió turno fuera de la ventana de 48 h
+E042,P0356,R0233,consulta_nutricional,santa_rita,martes,2026-01-05,desistió,Pidió turno fuera de la ventana de 48 h
+E001,P0041,R0024,control_nino_sano,hernandarias,martes,2026-01-06,desistió,Pidió turno fuera de la ventana de 48 h
+E028,P0732,R0488,certificado_escolar,cde_centro,sábado,2026-01-12,agendado,Pidió turno fuera de la ventana de 48 h
+E023,P0723,R0480,control_nino_sano,hernandarias,"martes, miércoles, jueves",2026-01-30,notificado,Pidió turno fuera de la ventana de 48 h
+E034,P0396,R0259,pediatria_integrativa,cde_centro,"miércoles, viernes, sábado",2026-01-31,agendado,Pidió turno fuera de la ventana de 48 h
+E008,P0434,R0283,consulta_nutricional,santa_rita,"lunes, miércoles, viernes",2026-02-04,agendado,Pidió turno fuera de la ventana de 48 h
+E020,P0250,R0164,control_recien_nacido,santa_rita,"miércoles, viernes, sábado",2026-02-04,agendado,Pidió turno fuera de la ventana de 48 h
+E056,P0198,R0129,vacunacion,hernandarias,"lunes, sábado",2026-02-05,agendado,Pidió turno fuera de la ventana de 48 h
+E013,P0078,R0048,control_nino_sano,cde_centro,"miércoles, viernes",2026-02-07,esperando,Pidió turno fuera de la ventana de 48 h
+E057,P0008,R0005,consulta_enfermedad,hernandarias,"martes, miércoles, jueves",2026-02-08,agendado,Pidió turno fuera de la ventana de 48 h
+E007,P0641,R0420,vacunacion,santa_rita,"martes, viernes, sábado",2026-02-09,notificado,Pidió turno fuera de la ventana de 48 h
+E009,P0546,R0143,control_nino_sano,cde_centro,lunes,2026-02-11,notificado,Pidió turno fuera de la ventana de 48 h
+E070,P0193,R0126,vacunacion,cde_centro,viernes,2026-02-13,agendado,Pidió turno fuera de la ventana de 48 h
+E003,P0482,R0100,certificado_escolar,santa_rita,viernes,2026-02-20,agendado,Pidió turno fuera de la ventana de 48 h
+E067,P0181,R0116,certificado_escolar,cde_centro,lunes,2026-02-23,agendado,Pidió turno fuera de la ventana de 48 h
+E039,P0430,R0281,consulta_enfermedad,hernandarias,lunes,2026-02-28,notificado,Pidió turno fuera de la ventana de 48 h
+E068,P0301,R0195,consulta_nutricional,hernandarias,"miércoles, jueves, viernes",2026-03-11,notificado,Pidió turno fuera de la ventana de 48 h
+E054,P0156,R0099,control_nino_sano,santa_rita,"lunes, martes, miércoles",2026-03-18,agendado,Pidió turno fuera de la ventana de 48 h
+E051,P0154,R0097,teleconsulta,cde_centro,"lunes, martes, sábado",2026-03-21,desistió,Pidió turno fuera de la ventana de 48 h
+E026,P0245,R0162,control_recien_nacido,santa_rita,"martes, miércoles, sábado",2026-03-25,agendado,Pidió turno fuera de la ventana de 48 h
+E043,P0271,R0176,teleconsulta,cde_centro,"miércoles, sábado",2026-03-25,agendado,Pidió turno fuera de la ventana de 48 h
+E019,P0184,R0119,control_recien_nacido,santa_rita,miércoles,2026-03-29,agendado,Pidió turno fuera de la ventana de 48 h
+E004,P0561,R0363,control_recien_nacido,hernandarias,jueves,2026-04-01,agendado,Pidió turno fuera de la ventana de 48 h
+E044,P0610,R0398,control_recien_nacido,cde_centro,"martes, jueves, viernes",2026-04-01,notificado,Pidió turno fuera de la ventana de 48 h
+E058,P0144,R0089,control_nino_sano,cde_centro,sábado,2026-04-07,desistió,Pidió turno fuera de la ventana de 48 h
+E062,P0353,R0230,pediatria_integrativa,santa_rita,lunes,2026-04-17,agendado,Pidió turno fuera de la ventana de 48 h
+E030,P0649,R0019,control_nino_sano,santa_rita,"lunes, miércoles, sábado",2026-04-26,desistió,Pidió turno fuera de la ventana de 48 h
+E027,P0664,R0437,vacunacion,santa_rita,"jueves, viernes, sábado",2026-05-16,agendado,Pidió turno fuera de la ventana de 48 h
+E015,P0612,R0400,consulta_nutricional,cde_centro,"lunes, miércoles, jueves",2026-05-17,notificado,Pidió turno fuera de la ventana de 48 h
+E033,P0125,R0078,teleconsulta,hernandarias,"lunes, miércoles, viernes",2026-05-17,agendado,Pidió turno fuera de la ventana de 48 h
+E010,P0660,R0433,consulta_enfermedad,cde_centro,"martes, jueves, sábado",2026-05-22,desistió,Pidió turno fuera de la ventana de 48 h
+E063,P0755,R0506,control_recien_nacido,cde_centro,jueves,2026-05-22,agendado,Pidió turno fuera de la ventana de 48 h
+E055,P0698,R0463,pediatria_integrativa,hernandarias,"miércoles, sábado",2026-05-24,desistió,Pidió turno fuera de la ventana de 48 h
+E046,P0342,R0222,teleconsulta,santa_rita,sábado,2026-06-01,agendado,Pidió turno fuera de la ventana de 48 h
+E059,P0661,R0434,consulta_nutricional,cde_centro,"miércoles, viernes",2026-06-06,desistió,Pidió turno fuera de la ventana de 48 h
+E041,P0523,R0167,control_nino_sano,cde_centro,martes,2026-06-07,agendado,Pidió turno fuera de la ventana de 48 h
+E053,P0097,R0060,consulta_nutricional,cde_centro,"lunes, viernes",2026-06-07,agendado,Pidió turno fuera de la ventana de 48 h
+E032,P0279,R0181,vacunacion,cde_centro,"miércoles, viernes",2026-06-10,esperando,Pidió turno fuera de la ventana de 48 h
+E066,P0483,R0179,control_nino_sano,santa_rita,viernes,2026-06-15,agendado,Pidió turno fuera de la ventana de 48 h
+E029,P0473,R0310,control_recien_nacido,cde_centro,"lunes, miércoles",2026-06-17,notificado,Pidió turno fuera de la ventana de 48 h
+E002,P0135,R0083,vacunacion,cde_centro,"lunes, miércoles, jueves",2026-06-23,notificado,Pidió turno fuera de la ventana de 48 h
+E038,P0304,R0197,certificado_escolar,hernandarias,"martes, miércoles, sábado",2026-07-01,notificado,Pidió turno fuera de la ventana de 48 h
+E061,P0396,R0259,consulta_enfermedad,cde_centro,"jueves, viernes",2026-07-08,agendado,Pidió turno fuera de la ventana de 48 h
+E031,P0591,R0383,pediatria_integrativa,cde_centro,jueves,2026-07-13,agendado,Pidió turno fuera de la ventana de 48 h
+E045,P0167,R0105,pediatria_integrativa,santa_rita,martes,2026-07-14,agendado,Pidió turno fuera de la ventana de 48 h
+E048,P0734,R0490,pediatria_integrativa,santa_rita,jueves,2026-07-14,agendado,Pidió turno fuera de la ventana de 48 h
+E065,P0457,R0296,control_nino_sano,hernandarias,viernes,2026-07-15,notificado,Pidió turno fuera de la ventana de 48 h
+E049,P0141,R0086,teleconsulta,cde_centro,"lunes, miércoles, viernes",2026-07-18,agendado,Pidió turno fuera de la ventana de 48 h
+E036,P0229,R0149,control_recien_nacido,cde_centro,martes,2026-07-29,notificado,Pidió turno fuera de la ventana de 48 h
+E050,P0230,R0150,control_nino_sano,hernandarias,"martes, miércoles, sábado",2026-07-29,notificado,Pidió turno fuera de la ventana de 48 h
+E017,P0002,R0001,control_recien_nacido,hernandarias,"lunes, jueves, viernes",2026-07-31,desistió,Pidió turno fuera de la ventana de 48 h
+E060,P0201,R0131,vacunacion,hernandarias,"lunes, viernes",2026-08-06,agendado,Pidió turno fuera de la ventana de 48 h
+E012,P0350,R0227,control_nino_sano,santa_rita,"martes, miércoles",2026-08-13,notificado,Pidió turno fuera de la ventana de 48 h
+E035,P0262,R0170,pediatria_integrativa,cde_centro,viernes,2026-08-20,notificado,Pidió turno fuera de la ventana de 48 h
+E025,P0040,R0023,control_recien_nacido,hernandarias,"miércoles, viernes, sábado",2026-08-22,esperando,Pidió turno fuera de la ventana de 48 h
+E021,P0014,R0008,pediatria_integrativa,santa_rita,lunes,2026-08-23,desistió,Pidió turno fuera de la ventana de 48 h
+E011,P0372,R0244,teleconsulta,cde_centro,"lunes, miércoles, jueves",2026-08-25,esperando,Pidió turno fuera de la ventana de 48 h
+E052,P0318,R0208,consulta_nutricional,cde_centro,"lunes, miércoles, jueves",2026-08-29,agendado,Pidió turno fuera de la ventana de 48 h
+E047,P0586,R0379,control_recien_nacido,cde_centro,"miércoles, jueves, viernes",2026-08-31,notificado,Pidió turno fuera de la ventana de 48 h
+E014,P0560,R0362,teleconsulta,santa_rita,miércoles,2026-09-06,notificado,Pidió turno fuera de la ventana de 48 h
+E037,P0672,R0444,consulta_nutricional,santa_rita,"miércoles, jueves, viernes",2026-09-08,esperando,Pidió turno fuera de la ventana de 48 h
+E040,P0619,R0044,pediatria_integrativa,hernandarias,"miércoles, jueves, sábado",2026-09-08,notificado,Pidió turno fuera de la ventana de 48 h
+E005,P0501,R0083,vacunacion,hernandarias,"lunes, martes, sábado",2026-09-13,agendado,Pidió turno fuera de la ventana de 48 h
+E016,P0306,R0198,consulta_nutricional,hernandarias,"martes, viernes",2026-09-13,notificado,Pidió turno fuera de la ventana de 48 h
+E006,P0330,R0215,certificado_escolar,hernandarias,"martes, viernes, sábado",2026-09-14,agendado,Pidió turno fuera de la ventana de 48 h
+E022,P0270,R0176,consulta_enfermedad,santa_rita,"martes, miércoles, viernes",2026-09-28,agendado,Pidió turno fuera de la ventana de 48 h
+E064,P0243,R0161,control_recien_nacido,hernandarias,"lunes, miércoles, sábado",2026-10-06,desistió,Pidió turno fuera de la ventana de 48 h
