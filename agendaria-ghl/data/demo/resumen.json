@@ -4,56 +4,56 @@
     "2026-01-01",
     "2026-10-10"
   ],
-  "responsables": 521,
-  "pacientes": 774,
-  "familias_con_varios_hijos": 181,
-  "turnos": 3547,
+  "responsables": 540,
+  "pacientes": 792,
+  "familias_con_varios_hijos": 177,
+  "turnos": 3562,
   "lista_espera": 70,
-  "facturado_atendidos_gs": 425840000,
+  "facturado_atendidos_gs": 428400000,
   "turnos_por_mes": {
-    "2026-01": 154,
-    "2026-02": 314,
-    "2026-03": 435,
-    "2026-04": 381,
-    "2026-05": 431,
-    "2026-06": 496,
-    "2026-07": 312,
-    "2026-08": 482,
-    "2026-09": 414,
-    "2026-10": 128
+    "2026-01": 156,
+    "2026-02": 320,
+    "2026-03": 438,
+    "2026-04": 379,
+    "2026-05": 420,
+    "2026-06": 503,
+    "2026-07": 309,
+    "2026-08": 489,
+    "2026-09": 418,
+    "2026-10": 130
   },
   "por_estado": {
-    "atendido": 2851,
-    "reprogramado": 230,
-    "cancelado": 266,
-    "inasistencia": 200
+    "atendido": 2847,
+    "cancelado": 273,
+    "inasistencia": 240,
+    "reprogramado": 202
   },
   "por_servicio": {
-    "primera_consulta": 213,
-    "consulta_enfermedad": 1707,
-    "vacunacion": 221,
-    "control_nino_sano": 750,
-    "consulta_nutricional": 156,
-    "teleconsulta": 114,
-    "control_recien_nacido": 110,
-    "certificado_escolar": 114,
-    "pediatria_integrativa": 162
+    "primera_consulta": 226,
+    "consulta_enfermedad": 1677,
+    "vacunacion": 232,
+    "control_nino_sano": 756,
+    "teleconsulta": 113,
+    "consulta_nutricional": 174,
+    "control_recien_nacido": 115,
+    "certificado_escolar": 113,
+    "pediatria_integrativa": 156
   },
   "por_sede": {
-    "cde_centro": 2430,
-    "santa_rita": 288,
-    "hernandarias": 715,
-    "virtual": 114
+    "cde_centro": 2407,
+    "hernandarias": 748,
+    "santa_rita": 294,
+    "virtual": 113
   },
   "por_canal": {
-    "Web": 412,
-    "Llamada": 800,
-    "WhatsApp": 2009,
-    "Administración": 326
+    "Web": 409,
+    "Llamada": 807,
+    "WhatsApp": 1988,
+    "Administración": 358
   },
   "por_idioma": {
-    "Español": 2389,
-    "Yopará": 658,
-    "Portugués": 500
+    "Español": 2363,
+    "Yopará": 655,
+    "Portugués": 544
   }
 }

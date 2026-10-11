@@ -20,8 +20,8 @@ export function formatLocal(ms) {
 }
 
 export function parseRequest(body, now = Date.now()) {
-  const horas = Number(body.horas ?? 3);
-  if (!Number.isInteger(horas) || horas < 1 || horas > 4) throw new Error("La duración debe ser de 1 a 4 horas.");
+  const horas = Number(body.horas ?? 2);
+  if (!Number.isInteger(horas) || horas < 2 || horas > 5) throw new Error("La duración debe ser de 2 a 5 horas.");
   if (!MOTIVOS.includes(body.motivo)) throw new Error("Motivo inválido.");
   return { start: now, end: now + horas * 3600 * 1000, motivo: body.motivo, confirmar: body.confirmar === true };
 }

@@ -66,6 +66,7 @@ TAGS = [
     "agendaria-lista-espera",
     "agendaria-urgencia",
     "agendaria-pendiente-confirmacion",
+    "agendaria-pendiente-pago",
     "agendaria-comprobante-recibido",
     "agendaria-handoff-secretaria",
     "codigo-rojo-afectado",
@@ -294,7 +295,6 @@ def render_kb(config):
         f"- Profesional: {clinica['profesional']} ({clinica['especialidad']}).",
         f"- Zona: {clinica['ciudad']} y alrededores.",
         f"- Medios de pago: {', '.join(clinica['medios_pago'])}.",
-        f"- Seña / preconsulta: {gs(clinica.get('sena_preconsulta_gs'))}.",
         "- Idiomas de atención: español (por defecto), portugués y yopará.",
         f"- Reserva por enlace web: {value(clinica.get('enlace_reserva_web'))}.",
         "- Este número es el canal propio de agendamiento de la Dra. (ya no se agenda por la plataforma del sanatorio).",
@@ -314,9 +314,30 @@ def render_kb(config):
         f"- La agenda se habilita con {rules['ventana_reserva_dias'] * 24} horas de antelación. "
         "Para fechas posteriores se ofrece lista de espera.",
         "- El turno se registra a nombre del niño o niña; un responsable puede tener varios hijos.",
-        "- Todo turno queda pendiente hasta que Secretaría lo confirma por WhatsApp.",
-        "- Enviar un comprobante no confirma el pago: Secretaría verifica que el dinero ingresó.",
+        "- Todo turno queda pendiente (preturno) hasta que Secretaría lo confirma por WhatsApp.",
         "- El paciente elige: seguir por WhatsApp o reservar en el enlace web. Nunca se lo obliga a usar la plataforma.",
+    ]
+    sena = config.get("sena")
+    lines += ["", "## Seña, preturno y confirmación"]
+    if not sena:
+        lines.append(f"- {pending}.")
+    else:
+        cuenta = sena["cuenta"]
+        discount = "y se descuenta del valor de la consulta" if sena["se_descuenta_del_valor"] else "y no se descuenta"
+        lines += [
+            f"- Los turnos **particulares** requieren una seña de {format_gs(sena['monto_gs'])}, {discount}.",
+            "- Los turnos **por seguro no pagan seña**; Secretaría confirma la cobertura.",
+            "- Mientras no se valide, el turno es un **preturno**: el horario queda reservado pero no confirmado.",
+            f"- El comprobante se envía por este WhatsApp dentro de las {sena['plazo_horas']} horas de la reserva "
+            f"(o hasta {sena['limite_antes_del_turno_horas']} horas antes del turno si falta poco). "
+            "Si no llega, el preturno se cancela y el horario se libera.",
+            "- Recibir el comprobante no confirma el turno: **Secretaría verifica que el dinero ingresó** y recién "
+            "entonces el turno queda confirmado y se avisa por WhatsApp.",
+            f"- Datos para la transferencia: {cuenta['banco']} · {cuenta['tipo']} · N.º {cuenta['numero']} · "
+            f"Titular: {cuenta['titular']} · {cuenta['documento']} · Alias: {cuenta['alias']}.",
+            "- Si la Dra. reprograma por un imprevisto (Código Rojo), la seña pagada se mantiene para el nuevo turno.",
+        ]
+    lines += [
         "",
         "## Servicios",
     ]

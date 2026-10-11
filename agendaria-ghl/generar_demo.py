@@ -90,6 +90,7 @@ class Generator:
         self.services = {s["clave"]: s for s in gp.active_services(config)}
         self.sedes = gp.sedes_by_key(config)
         self.seguros = config.get("seguros_aceptados") or []
+        self.sena_gs = (config.get("sena") or {}).get("monto_gs", 0)
         self.responsables, self.pacientes, self.turnos, self.espera = [], [], [], []
         self.ocupados = set()
         self.ultima_visita = {}
@@ -227,6 +228,10 @@ class Generator:
         if estado == "reprogramado" and not motivo:
             motivo = rng.choice(MOTIVOS_REPROGRAMACION)
         cobertura, seguro, monto = self.coverage(responsable, service["clave"])
+        # Particulares: sin comprobante validado no hay turno; parte de las cancelaciones son preturnos vencidos.
+        if cobertura == "Particular" and estado == "cancelado" and rng.random() < .4:
+            motivo = "Preturno vencido: no envió comprobante de seña"
+        sena_pagada = cobertura == "Particular" and motivo != "Preturno vencido: no envió comprobante de seña"
         turno = {
             "id": f"T{len(self.turnos) + 1:05d}", "paciente_id": patient["id"], "responsable_id": responsable["id"],
             "servicio": service["clave"], "servicio_nombre": service["nombre"],
@@ -234,7 +239,7 @@ class Generator:
             "inicio": start.strftime("%Y-%m-%dT%H:%M"), "fin": end.strftime("%Y-%m-%dT%H:%M"),
             "estado": estado, "canal": canal, "idioma": responsable["idioma"],
             "cobertura": cobertura, "seguro": seguro, "monto_gs": monto,
-            "sena_pagada": "si" if cobertura == "Particular" and rng.random() < .72 else "no",
+            "sena_gs": self.sena_gs if sena_pagada else 0,
             "recordatorio_enviado": "si" if canal != "Administración" or rng.random() < .5 else "no",
             "creado_en": (start - timedelta(hours=lead_hours)).strftime("%Y-%m-%dT%H:%M"),
             "reprogramado_de": reprogramado_de, "motivo_estado": motivo,

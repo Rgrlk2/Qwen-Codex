@@ -48,10 +48,10 @@
     </select>
     <label>Desde ahora, durante</label>
     <div class="seg" id="horas">
-      <button type="button" data-h="1" aria-pressed="false">1 h</button>
-      <button type="button" data-h="2" aria-pressed="false">2 h</button>
-      <button type="button" data-h="3" aria-pressed="true">3 h</button>
+      <button type="button" data-h="2" aria-pressed="true">2 h</button>
+      <button type="button" data-h="3" aria-pressed="false">3 h</button>
       <button type="button" data-h="4" aria-pressed="false">4 h</button>
+      <button type="button" data-h="5" aria-pressed="false">5 h</button>
     </div>
     <label for="pin">PIN</label>
     <input id="pin" type="password" inputmode="numeric" autocomplete="current-password">
@@ -65,11 +65,11 @@
   </section>
 
   <p class="msg" id="msg" role="status"></p>
-  <small>Los turnos no se borran: quedan cancelados con motivo. Cada familia recibe por WhatsApp hasta 3 horarios dentro de las próximas 48 h y elige.</small>
+  <small>Los turnos no se borran: quedan cancelados con motivo. Cada familia recibe por WhatsApp hasta 3 horarios dentro de las próximas 48 h y elige. La seña pagada se mantiene.</small>
 </main>
 <script>
   const $ = (id) => document.getElementById(id);
-  let horas = 3;
+  let horas = 2;
   document.querySelectorAll("#horas button").forEach((b) => b.addEventListener("click", () => {
     horas = Number(b.dataset.h);
     document.querySelectorAll("#horas button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));

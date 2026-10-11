@@ -98,6 +98,13 @@ class ProvisionTests(unittest.TestCase):
         self.assertIn("todavía no disponible", kb)
         self.assertIn("Sanatorio Le Blanc", kb)
 
+    def test_kb_explains_sena_only_for_particulares(self):
+        kb = gp.render_kb(gp.load_config())
+        self.assertIn("seña de Gs. 100.000", kb)
+        self.assertIn("por seguro no pagan seña", kb)
+        self.assertIn("Banco Itaú Paraguay", kb)
+        self.assertIn("Secretaría verifica que el dinero ingresó", kb)
+
     def test_gaps_reported(self):
         gaps = gp.config_gaps(blank_config())
         self.assertIn("seguros_aceptados", gaps)
@@ -171,6 +178,16 @@ class DemoDataTests(unittest.TestCase):
             self.assertTrue(r["telefono"].startswith("+595900"))
             self.assertTrue(r["email"].endswith("@example.com"))
         self.assertTrue(all(p["documento"].startswith(("DEMO-", "PROV-")) for p in self.gen.pacientes))
+
+    def test_sena_only_on_particular_turnos(self):
+        for t in self.gen.turnos:
+            if t["cobertura"] == "Seguro":
+                self.assertEqual(t["sena_gs"], 0)
+            elif t["estado"] in ("atendido", "inasistencia", "reprogramado"):
+                self.assertEqual(t["sena_gs"], 100000)
+        expired = [t for t in self.gen.turnos if t["motivo_estado"].startswith("Preturno vencido")]
+        self.assertTrue(expired)
+        self.assertTrue(all(t["sena_gs"] == 0 and t["cobertura"] == "Particular" for t in expired))
 
     def test_families_with_several_children(self):
         self.assertGreater(self.gen.summary()["familias_con_varios_hijos"], 50)

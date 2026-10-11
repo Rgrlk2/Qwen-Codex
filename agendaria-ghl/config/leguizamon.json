@@ -18,11 +18,8 @@
     ],
     "moneda": "PYG",
     "medios_pago": [
-      "transferencia bancaria",
-      "efectivo en consultorio",
-      "QR bancario"
+      "transferencia bancaria"
     ],
-    "sena_preconsulta_gs": 50000,
     "ghl_user_id": "szEt5JMJQiTra12QG6q4",
     "horario_atencion": [
       {
@@ -491,7 +488,39 @@
   ],
   "_formato_horarios": "Bloques: {\"sede\": clave, \"dias\": [0-6], \"desde\": \"HH:MM\", \"hasta\": \"HH:MM\"}. 0=domingo ... 6=sábado. Un calendario por servicio y sede. Los bloques deben caer dentro de clinica.horario_atencion y no superponerse entre servicios (una sola doctora).",
   "ghl": {
-    "subcuenta": "LabIA",
+    "subcuenta": "LabIA (provisoria — se reemplaza por la sub-cuenta exclusiva de la Dra.)",
     "location_id": "krXZA2jf7PzcNfbcJO9g"
-  }
+  },
+  "sena": {
+    "monto_gs": 100000,
+    "aplica_a": "particular",
+    "_aplica": "Solo turnos particulares. Turnos por seguro no pagan seña (Secretaría confirma la cobertura).",
+    "se_descuenta_del_valor": true,
+    "plazo_horas": 2,
+    "limite_antes_del_turno_horas": 3,
+    "_plazo": "El comprobante debe llegar dentro de 2 h desde la reserva, o hasta 3 h antes del turno si se reservó con poco margen. Si no llega, el preturno se cancela y el horario se libera.",
+    "cuenta": {
+      "banco": "Banco Itaú Paraguay",
+      "tipo": "Cuenta corriente en guaraníes",
+      "numero": "7200418395",
+      "titular": "Claudia Leguizamón",
+      "documento": "CI 3.418.276 (DEMO)",
+      "alias": "CLAUDIA.LEGUIZAMON.PED",
+      "_demo": "Datos bancarios ficticios para la demo."
+    }
+  },
+  "roles": [
+    {
+      "rol": "Administradora",
+      "usuario": "Dra. Claudia Leguizamón",
+      "ghl": "Account Admin",
+      "permisos": "Acceso total. Única con el PIN del Código Rojo."
+    },
+    {
+      "rol": "Secretaría",
+      "usuario": "Secretaría",
+      "ghl": "Account User",
+      "permisos": "Solo turnos (ver, crear, mover, confirmar) y autorización manual de pagos; conversaciones solo asignadas (comprobantes)."
+    }
+  ]
 }

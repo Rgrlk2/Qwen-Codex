@@ -1,7 +1,7 @@
 # Agendar.IA × GoHighLevel — Dra. Claudia Leguizamón
 
-Asistente de **voz (llamadas)** y **texto (WhatsApp)** en la sub-cuenta GHL **LabIA**
-(`krXZA2jf7PzcNfbcJO9g`), usuario de la Dra. `szEt5JMJQiTra12QG6q4`.
+Asistente de **voz (llamadas)** y **texto (WhatsApp)** en una sub-cuenta GHL exclusiva de la Dra.
+(provisoriamente LabIA `krXZA2jf7PzcNfbcJO9g`, usuario `szEt5JMJQiTra12QG6q4`).
 Los turnos viven en **calendarios personales de la Dra.**, uno por servicio y sede.
 
 > **Modo DEMO:** `config/leguizamon.json` y `data/demo/` contienen datos ficticios.
@@ -14,6 +14,15 @@ Paciente ── WhatsApp ─> WhatsApp GHL (Meta) ─> Conversation AI ───
 Dra. ── botón 🔴 ──> codigo-rojo (Netlify) ──> bloqueo + propuestas ─┤
                                                                      └─> Workflows: confirmación, recordatorio, Código Rojo, urgencia
 ```
+
+## Roles (Capa 1)
+
+| Rol | GHL | Puede |
+|---|---|---|
+| Dra. Claudia Leguizamón | Admin | Todo. Única con el PIN del Código Rojo. |
+| Secretaría | User | Solo turnos (ver, crear, mover, confirmar) y autorización manual de pagos. Conversaciones solo asignadas (comprobantes). |
+
+Pasos para crear la sub-cuenta, usuarios y token: **`GUIA_ACCESO_GHL.md`**.
 
 ## Contenido
 
@@ -62,7 +71,7 @@ Calendarios: ventana de reserva de **2 días** (48 h), aviso mínimo 2 h, 1 turn
 python3 generar_demo.py                          # regenera data/demo/ (determinista)
 python3 ghl_provision.py import-demo             # o --desde 2026-09-01 para cargar menos
 ```
-521 responsables, 774 niños (181 familias con varios hijos), 3.547 turnos con estados atendido / inasistencia /
+540 responsables, 792 niños (177 familias con varios hijos), 3.562 turnos con estados atendido / inasistencia /
 cancelado / reprogramado, feriados, vacaciones (19/01–01/02 y 20/07–02/08), estacionalidad invernal y un
 Código Rojo el 18/08. Contactos con tag `agendaria-demo` y **DND activo**; turnos con `toNotify: false`:
 nadie recibe mensajes. Teléfonos `+595900…`, correos `@example.com`. La importación es reanudable.
@@ -74,7 +83,7 @@ nadie recibe mensajes. Teléfonos `+595900…`, correos `@example.com`. La impor
 
 ### 5. WhatsApp
 1. **Settings → WhatsApp** → alta con Meta Business. Número de agendamiento, **no** el celular personal de la Dra.
-2. Plantillas a aprobar en Meta: `confirmacion_turno`, `recordatorio_turno`, `propuesta_reprogramacion`
+2. Plantillas a aprobar en Meta: `datos_sena`, `confirmacion_turno`, `recordatorio_turno`, `propuesta_reprogramacion`
    (texto en `codigo-rojo/README.md`).
 
 ### 6. Agentes de IA
@@ -89,20 +98,28 @@ Ver `codigo-rojo/README.md`: despliegue en Netlify, PIN y workflow `AgendarIA ·
 
 | Workflow | Disparador | Acciones |
 |---|---|---|
-| `AgendarIA · Turno solicitado` | Appointment status = new | Tag `agendaria-pendiente-confirmacion`; WhatsApp "solicitud recibida"; tarea a Secretaría |
-| `AgendarIA · Turno confirmado` | Appointment status = confirmed | Plantilla `confirmacion_turno`; quitar tag pendiente |
+| `AgendarIA · Preturno particular` | Appointment status = new **y** campo `cobertura` = Particular | Tag `agendaria-pendiente-pago`; WhatsApp con datos de transferencia (plantilla `datos_sena`). Si el turno empieza en menos de 5 h → esperar hasta 3 h antes del turno; si no → esperar 2 h. Si sigue con tag `agendaria-pendiente-pago` y sin `agendaria-comprobante-recibido` → **Update appointment status = cancelled**, WhatsApp "liberamos el horario", ofrecer lista de espera |
+| `AgendarIA · Preturno con seguro` | Appointment status = new **y** `cobertura` = Seguro | Tag `agendaria-pendiente-confirmacion`; tarea a Secretaría "verificar cobertura" |
+| `AgendarIA · Comprobante` | WhatsApp entrante con adjunto de contacto con tag `agendaria-pendiente-pago` | Tag `agendaria-comprobante-recibido`; **asignar la conversación a Secretaría**; tarea "verificar ingreso de Gs. 100.000"; notificación interna |
+| `AgendarIA · Turno confirmado` | Appointment status = confirmed (lo cambia Secretaría) | Quitar tags pendientes; plantilla `confirmacion_turno` |
 | `AgendarIA · Recordatorio` | Appointment confirmado | 24 h antes → `recordatorio_turno`; 2 h antes → recordatorio corto |
 | `AgendarIA · Código Rojo` | Tag añadido `codigo-rojo-afectado` | Plantilla `propuesta_reprogramacion`; esperar respuesta 30 min; sin respuesta → tarea "llamar" a Secretaría |
 | `AgendarIA · Lista de espera` | Disparado por agentes | Tag `agendaria-lista-espera`; tarea a Secretaría |
 | `AgendarIA · Alerta urgencia` | Disparado por agentes | Tag `agendaria-urgencia`; notificación interna inmediata a Secretaría y Dra. |
-| `AgendarIA · Comprobante` | WhatsApp entrante con adjunto | Tag `agendaria-comprobante-recibido`; pausar bot; asignar a Secretaría |
 
 Filtro en todos: **excluir contactos con tag `agendaria-demo`**.
+
+### Preturno y seña
+Solo particulares: seña de **Gs. 100.000** que se descuenta de la consulta (cuenta Itaú demo en la base de
+conocimiento). Plazo 2 h desde la reserva (o hasta 3 h antes del turno). El bot pide el comprobante pero
+**solo Secretaría confirma** el turno, cambiando su estado a *Confirmed* en la app de GHL. Turnos por seguro:
+sin seña, Secretaría verifica la cobertura. En un Código Rojo la seña pagada se mantiene.
 
 ### 9. Pruebas antes de pacientes reales
 Con datos ficticios: reservar, reprogramar, cancelar, dos hijos del mismo responsable, pedido fuera de 48 h,
 seguro que no cubre la consulta, portugués, "hello", urgencia, "¿le hago lavado nasal?" (debe negarse),
-receta con error (handoff), modo ausencia y un Código Rojo completo.
+receta con error (handoff), modo ausencia, preturno particular que vence sin comprobante, preturno con
+comprobante confirmado por Secretaría y un Código Rojo completo.
 
 ## Tests
 ```bash

@@ -1,6 +1,6 @@
 # Código Rojo — botón de la Dra.
 
-Página con PIN y una función Netlify. La Dra. elige motivo y duración (1–4 h desde ahora), ve los turnos
+Página con PIN y una función Netlify. La Dra. elige motivo y duración (2 h por defecto; 3, 4 o 5 h desde ahora), ve los turnos
 afectados y confirma. Entonces:
 
 1. Se bloquea su agenda en GHL en ese rango (título `Código Rojo — <motivo>`, sirve de registro del recibimiento).

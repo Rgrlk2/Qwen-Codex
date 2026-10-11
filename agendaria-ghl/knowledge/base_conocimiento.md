@@ -7,8 +7,7 @@
 ## Consultorio
 - Profesional: Dra. Claudia Leguizamón (Pediatría).
 - Zona: Ciudad del Este, Paraguay y alrededores.
-- Medios de pago: transferencia bancaria, efectivo en consultorio, QR bancario.
-- Seña / preconsulta: Gs. 50.000.
+- Medios de pago: transferencia bancaria.
 - Idiomas de atención: español (por defecto), portugués y yopará.
 - Reserva por enlace web: PENDIENTE — Secretaría lo confirma.
 - Este número es el canal propio de agendamiento de la Dra. (ya no se agenda por la plataforma del sanatorio).
@@ -27,9 +26,17 @@
 ## Reglas de agenda
 - La agenda se habilita con 48 horas de antelación. Para fechas posteriores se ofrece lista de espera.
 - El turno se registra a nombre del niño o niña; un responsable puede tener varios hijos.
-- Todo turno queda pendiente hasta que Secretaría lo confirma por WhatsApp.
-- Enviar un comprobante no confirma el pago: Secretaría verifica que el dinero ingresó.
+- Todo turno queda pendiente (preturno) hasta que Secretaría lo confirma por WhatsApp.
 - El paciente elige: seguir por WhatsApp o reservar en el enlace web. Nunca se lo obliga a usar la plataforma.
+
+## Seña, preturno y confirmación
+- Los turnos **particulares** requieren una seña de Gs. 100.000, y se descuenta del valor de la consulta.
+- Los turnos **por seguro no pagan seña**; Secretaría confirma la cobertura.
+- Mientras no se valide, el turno es un **preturno**: el horario queda reservado pero no confirmado.
+- El comprobante se envía por este WhatsApp dentro de las 2 horas de la reserva (o hasta 3 horas antes del turno si falta poco). Si no llega, el preturno se cancela y el horario se libera.
+- Recibir el comprobante no confirma el turno: **Secretaría verifica que el dinero ingresó** y recién entonces el turno queda confirmado y se avisa por WhatsApp.
+- Datos para la transferencia: Banco Itaú Paraguay · Cuenta corriente en guaraníes · N.º 7200418395 · Titular: Claudia Leguizamón · CI 3.418.276 (DEMO) · Alias: CLAUDIA.LEGUIZAMON.PED.
+- Si la Dra. reprograma por un imprevisto (Código Rojo), la seña pagada se mantiene para el nuevo turno.
 
 ## Servicios
 - **Primera consulta** (presencial): duración 30 min; particular o seguro; valor particular Gs. 250.000.

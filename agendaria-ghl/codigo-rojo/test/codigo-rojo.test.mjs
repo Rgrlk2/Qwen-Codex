@@ -22,7 +22,9 @@ test("formatLocal usa hora de Paraguay", () => {
 });
 
 test("parseRequest valida horas y motivo", () => {
-  assert.equal(parseRequest({ motivo: "Parto" }, NOW).end - NOW, 3 * 3600e3);
+  assert.equal(parseRequest({ motivo: "Parto" }, NOW).end - NOW, 2 * 3600e3);
+  assert.equal(parseRequest({ motivo: "Parto", horas: 5 }, NOW).end - NOW, 5 * 3600e3);
+  assert.throws(() => parseRequest({ motivo: "Parto", horas: 1 }, NOW));
   assert.throws(() => parseRequest({ motivo: "Parto", horas: 6 }, NOW));
   assert.throws(() => parseRequest({ motivo: "otro" }, NOW));
   assert.equal(parseRequest({ motivo: "Parto", confirmar: "true" }, NOW).confirmar, false);
@@ -80,7 +82,7 @@ test("ejecución bloquea, cancela sin borrar, propone y etiqueta", async () => {
       { id: "F0", fieldKey: "contact.cr_turno_original" }, { id: "F1", fieldKey: "contact.cr_propuesta_1" },
       { id: "F2", fieldKey: "contact.cr_propuesta_2" }, { id: "F3", fieldKey: "contact.cr_propuesta_3" }] })],
   ], calls) });
-  const out = await runCodigoRojo(ghl, "U", parseRequest({ motivo: "Cesárea de urgencia", confirmar: true }, NOW));
+  const out = await runCodigoRojo(ghl, "U", parseRequest({ motivo: "Cesárea de urgencia", horas: 3, confirmar: true }, NOW));
 
   assert.equal(out.modo, "ejecutado");
   assert.ok(!calls.some((c) => c.method === "DELETE"));
