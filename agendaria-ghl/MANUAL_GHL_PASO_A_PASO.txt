@@ -1,0 +1,1213 @@
+==============================================================================
+AGENDAR.IA · DRA. CLAUDIA LEGUIZAMÓN
+MANUAL DE CONFIGURACIÓN DE GOHIGHLEVEL (GHL) — PASO A PASO, CLICK POR CLICK
+Capa 1 · Versión DEMO (datos ficticios)
+==============================================================================
+
+CÓMO USAR ESTE MANUAL
+- Seguí las partes en orden. Cada parte termina con un CONTROL: no avances si el control falla.
+- Lo que está entre comillas "así" es texto exacto para copiar y pegar.
+- Los nombres de botones están en inglés y español porque GHL los muestra según el idioma de tu
+  usuario. Pueden variar levemente según la versión o la marca blanca de tu agencia: buscá el más parecido.
+- Tiempo total estimado: 4 a 6 horas de trabajo + 24 a 48 h de espera de aprobación de Meta.
+- Nada de este manual requiere token ni programación.
+
+ÍNDICE
+  PARTE 0  · Antes de empezar (qué tener a mano)
+  PARTE 1  · Mails en Google Workspace
+  PARTE 2  · Crear la sub-cuenta de la Dra.
+  PARTE 3  · Cargar saldo en la billetera
+  PARTE 4  · Perfil del negocio y zona horaria
+  PARTE 5  · Usuarios y permisos (Dra. + Secretaría)
+  PARTE 6  · Campos personalizados (custom fields)
+  PARTE 7  · Etiquetas (tags)
+  PARTE 8  · Calendarios (15)
+  PARTE 9  · Teléfono para llamadas (Twilio)
+  PARTE 10 · WhatsApp (Meta)
+  PARTE 11 · Plantillas de WhatsApp
+  PARTE 12 · Base de conocimiento de la IA
+  PARTE 13 · Bot de WhatsApp (Conversation AI)
+  PARTE 14 · Agente de voz (Voice AI)
+  PARTE 15 · Workflows (automatizaciones)
+  PARTE 16 · Código Rojo (procedimiento manual)
+  PARTE 17 · Pacientes demo (importar CSV)
+  PARTE 18 · Pruebas finales
+  PARTE 19 · Errores frecuentes
+  ANEXO A  · Base de conocimiento (texto completo)
+  ANEXO B  · Prompt del bot de WhatsApp
+  ANEXO C  · Prompt del agente de voz
+
+
+==============================================================================
+PARTE 0 · ANTES DE EMPEZAR
+==============================================================================
+Tené a mano:
+  [ ] Acceso de administrador a la agencia de GHL donde vas a crear la sub-cuenta.
+  [ ] Tarjeta de crédito para la billetera de GHL (USD 25–50) y para Twilio (USD 20).
+  [ ] Acceso de administrador a la Consola de Google Workspace de rgrlk.com.
+  [ ] Acceso de administrador a un Meta Business (Facebook Business Manager) para WhatsApp.
+  [ ] Un celular a mano para recibir códigos de verificación.
+  [ ] Este manual y el archivo ghl_contactos_import.csv (Parte 17).
+
+
+==============================================================================
+PARTE 1 · MAILS EN GOOGLE WORKSPACE (rgrlk.com)
+==============================================================================
+1. Abrí https://admin.google.com e ingresá con tu usuario administrador.
+2. Menú de la izquierda → "Directorio" (Directory) → "Usuarios" (Users).
+3. Click en "Agregar un usuario nuevo" (Add new user).
+4. Completá:
+     Nombre: "Claudia"   Apellido: "Leguizamón"
+     Correo principal: "DraLeguizamon.AgendarIA"  @rgrlk.com
+5. Contraseña: dejá "Generar automáticamente" o poné una propia. Click "Agregar usuario nuevo".
+6. Guardá la contraseña en tu gestor de contraseñas.
+7. Repetí del paso 3 al 6 para Secretaría:
+     Nombre: "Secretaría"   Apellido: "Leguizamón"
+     Correo principal: "SecretariaLeguizamon.AgendarIA"  @rgrlk.com
+   ALTERNATIVA SIN LICENCIA EXTRA: en tu propio usuario → "Información del usuario" →
+   "Direcciones de correo electrónico alternativas" → agregar el alias "SecretariaLeguizamon.AgendarIA".
+   Los mails de GHL a Secretaría te llegarán a vos.
+8. Entrá una vez a cada casilla nueva (https://mail.google.com) para activarla.
+CONTROL: podés abrir la bandeja de DraLeguizamon.AgendarIA@rgrlk.com.
+
+
+==============================================================================
+PARTE 2 · CREAR LA SUB-CUENTA DE LA DRA.
+==============================================================================
+1. Entrá a GHL con tu usuario de agencia.
+2. Arriba a la izquierda, si estás dentro de una sub-cuenta, click en su nombre → "Switch to Agency
+   View" / "Cambiar a vista de agencia".
+3. Menú izquierdo → "Sub-Accounts" (Sub-cuentas).
+4. Arriba a la derecha → botón "+ Create Sub-Account" / "+ Crear sub-cuenta".
+5. Elegí "Blank" / "Regular Account" (cuenta en blanco, sin snapshot). Click "Next"/"Siguiente".
+6. Si pregunta por plantilla de negocio, elegí la opción manual ("I'll add details manually").
+7. Completá:
+     Business Name ........ "Agendar.IA – Dra. Claudia Leguizamón"
+     Email ................ "DraLeguizamon.AgendarIA@rgrlk.com"
+     Phone ................ el teléfono de la Secretaría (o el tuyo para la demo)
+     Address .............. "Av. San Blas km 3" · City "Ciudad del Este" · Country "Paraguay"
+     Time Zone ............ "(GMT-03:00) America/Asuncion"
+     Language ............. "Español"
+8. Click "Save" / "Guardar".
+9. Volvé a "Sub-Accounts" y abrí la nueva (click en "Switch to sub-account" o en su nombre).
+CONTROL: arriba a la izquierda se ve "Agendar.IA – Dra. Claudia Leguizamón".
+
+
+==============================================================================
+PARTE 3 · CARGAR SALDO EN LA BILLETERA
+==============================================================================
+IMPORTANTE: GHL no transfiere saldo entre billeteras. Esta sub-cuenta se recarga con tarjeta.
+El agente de voz, el bot de WhatsApp y los mensajes se descuentan de esta billetera.
+Con saldo cero NO funcionan.
+1. Dentro de la sub-cuenta → abajo a la izquierda "Settings" / "Configuración" (engranaje).
+2. Menú de configuración → "Billing" / "Facturación".
+3. Pestaña "Wallet & Transactions" / "Billetera y transacciones".
+4. Botón "Add Balance" / "Agregar fondos".
+5. Monto: "25" (demo) o "50" (si van a probar mucho la voz). Elegí la tarjeta de la agencia o
+   "Add new card". Click "Add"/"Confirm".
+6. En la misma pantalla buscá "Auto Recharge" / "Recarga automática" → activar:
+     "When balance falls below" / "Cuando el saldo baje de": "10"
+     "Recharge amount" / "Monto a recargar": "25"
+   Click "Save".
+CONTROL: el saldo aparece arriba y en la lista figura la transacción.
+
+
+==============================================================================
+PARTE 4 · PERFIL DEL NEGOCIO Y ZONA HORARIA
+==============================================================================
+1. Settings → "Business Profile" / "Perfil de la empresa".
+2. Verificá: nombre, mail, teléfono, dirección y "Time Zone: America/Asuncion".
+3. Más abajo, "Location ID": copialo y guardalo (sirve si después querés automatizar).
+4. Click "Update Information" / "Actualizar".
+CONTROL: la zona horaria dice America/Asuncion (UTC-3).
+
+
+==============================================================================
+PARTE 5 · USUARIOS Y PERMISOS
+==============================================================================
+5.1 DRA. CLAUDIA LEGUIZAMÓN (Administradora — acceso total)
+1. Settings → "My Staff" / "Mi personal" (en algunas versiones "Team").
+2. Botón "+ Add Employee" / "+ Agregar empleado".
+3. Pestaña "User Info": First Name "Claudia" · Last Name "Leguizamón" ·
+   Email "DraLeguizamon.AgendarIA@rgrlk.com" · Phone (opcional) · Password (temporal).
+4. Pestaña "User Roles": User Type "Account" · User Role "Admin".
+5. Pestaña "Call & Voicemail Settings": dejar por defecto.
+6. Pestaña "User Availability": "Ciudad del Este" / zona America/Asuncion.
+7. Click "Save".
+
+5.2 SECRETARÍA (solo turnos y autorización manual de pagos)
+1. "+ Add Employee".
+2. User Info: First Name "Secretaría" · Last Name "Leguizamón" ·
+   Email "SecretariaLeguizamon.AgendarIA@rgrlk.com".
+3. User Roles: User Type "Account" · User Role "User".
+4. Pestaña "User Permissions" / "Permisos": DESACTIVAR TODO y activar SOLO:
+     [x] Calendars / Calendarios (y "Appointments" si aparece separado)
+     [x] Conversations / Conversaciones
+     [x] Contacts / Contactos
+   y abajo activar "Only Assigned Data" / "Solo datos asignados" (así ve únicamente los chats y
+   contactos que el sistema le asigna cuando llega un comprobante).
+   Todo lo demás apagado: Dashboard, Opportunities, Marketing, Automation/Workflows, Payments,
+   Reporting, Settings, AI Agents, Sites, Memberships, Reputation.
+5. Click "Save".
+6. Cada usuaria recibe un mail de GHL: que entre, cree su contraseña y descargue la app
+   "LeadConnector" en el celular (iOS/Android) para confirmar turnos desde ahí.
+CONTROL: ambas aparecen en My Staff; Secretaría, al entrar, solo ve Calendarios, Conversaciones y Contactos.
+
+QUÉ HACE SECRETARÍA EN EL DÍA A DÍA (para explicárselo):
+  - Llega un comprobante → GHL le asigna la conversación y le crea una tarea.
+  - Verifica en el banco que entraron Gs. 100.000 → abre el turno en Calendarios → cambia el
+    estado de "Unconfirmed" a "Confirmed". Eso es la autorización manual: el sistema avisa al paciente.
+  - Turnos por seguro: verifica la cobertura y confirma igual.
+
+
+==============================================================================
+PARTE 6 · CAMPOS PERSONALIZADOS
+==============================================================================
+Para qué: el contacto en GHL es el responsable (mamá/papá); el niño/a va en estos campos.
+1. Settings → "Custom Fields" / "Campos personalizados".
+2. Pestaña "Contact" (no "Opportunity").
+3. Opcional: "+ Add Folder" → nombre "Agendar.IA" para agruparlos.
+4. Por cada campo de la lista: "+ Add Field" → elegir el tipo → "Next" → escribir el nombre
+   EXACTO → si es lista, agregar las opciones → "Save".
+   Revisá que la "clave" (Unique Key) quede igual a la indicada; si GHL propone otra, editala.
+
+   1. Nombre: Nombre del hijo/a
+      Tipo:   Single Line (Texto de una línea)
+      Clave interna esperada: contact.nombre_hijo
+
+   2. Nombre: Fecha de nacimiento del hijo/a
+      Tipo:   Single Line (Texto de una línea)
+      Clave interna esperada: contact.fecha_nacimiento_hijo
+
+   3. Nombre: Otros hijos/as registrados
+      Tipo:   Multi Line (Texto de varias líneas)
+      Clave interna esperada: contact.hijos_adicionales
+
+   4. Nombre: Parentesco del responsable
+      Tipo:   Single Line (Texto de una línea)
+      Clave interna esperada: contact.parentesco_responsable
+
+   5. Nombre: Servicio solicitado
+      Tipo:   Dropdown (Single) / Lista desplegable
+      Opciones (una por renglón, en este orden):
+        - Primera consulta
+        - Control de niño sano
+        - Consulta por enfermedad
+        - Control de recién nacido
+        - Pediatría integrativa
+        - Consulta nutricional
+        - Certificado escolar / apto físico
+        - Vacunación
+        - Teleconsulta pediátrica
+      Clave interna esperada: contact.servicio_solicitado
+
+   6. Nombre: Sede preferida
+      Tipo:   Dropdown (Single) / Lista desplegable
+      Opciones (una por renglón, en este orden):
+        - Ciudad del Este — Centro
+        - Hernandarias — Policlínica Demo
+        - Santa Rita — Centro Médico Demo
+        - Teleconsulta (Google Meet)
+      Clave interna esperada: contact.sede_preferida
+
+   7. Nombre: Cobertura
+      Tipo:   Dropdown (Single) / Lista desplegable
+      Opciones (una por renglón, en este orden):
+        - Particular
+        - Seguro
+      Clave interna esperada: contact.cobertura
+
+   8. Nombre: Seguro médico
+      Tipo:   Single Line (Texto de una línea)
+      Clave interna esperada: contact.seguro_nombre
+
+   9. Nombre: Idioma preferido
+      Tipo:   Dropdown (Single) / Lista desplegable
+      Opciones (una por renglón, en este orden):
+        - Español
+        - Portugués
+        - Yopará
+      Clave interna esperada: contact.idioma_preferido
+
+  10. Nombre: Motivo (administrativo)
+      Tipo:   Multi Line (Texto de varias líneas)
+      Clave interna esperada: contact.motivo_administrativo
+
+  11. Nombre: Canal de origen
+      Tipo:   Dropdown (Single) / Lista desplegable
+      Opciones (una por renglón, en este orden):
+        - Llamada
+        - WhatsApp
+        - Web
+        - Administración
+      Clave interna esperada: contact.canal_origen
+
+  12. Nombre: Código Rojo · turno original
+      Tipo:   Single Line (Texto de una línea)
+      Clave interna esperada: contact.cr_turno_original
+
+  13. Nombre: Código Rojo · propuesta 1
+      Tipo:   Single Line (Texto de una línea)
+      Clave interna esperada: contact.cr_propuesta_1
+
+  14. Nombre: Código Rojo · propuesta 2
+      Tipo:   Single Line (Texto de una línea)
+      Clave interna esperada: contact.cr_propuesta_2
+
+  15. Nombre: Código Rojo · propuesta 3
+      Tipo:   Single Line (Texto de una línea)
+      Clave interna esperada: contact.cr_propuesta_3
+
+CONTROL: hay 15 campos nuevos en la carpeta Agendar.IA.
+
+
+==============================================================================
+PARTE 7 · ETIQUETAS (TAGS)
+==============================================================================
+1. Settings → "Tags" / "Etiquetas" (o Contacts → Tags, según versión).
+2. "+ New Tag" / "+ Nueva etiqueta" → escribir el nombre exacto → "Save". Repetir para cada una:
+
+   1. agendaria
+   2. agendaria-voz
+   3. agendaria-whatsapp
+   4. agendaria-lista-espera
+   5. agendaria-urgencia
+   6. agendaria-pendiente-confirmacion
+   7. agendaria-pendiente-pago
+   8. agendaria-comprobante-recibido
+   9. agendaria-handoff-secretaria
+  10. codigo-rojo-afectado
+  11. agendaria-demo
+
+Para qué sirve cada una:
+  agendaria ......................... todo contacto que entra por Agendar.IA
+  agendaria-voz / -whatsapp ......... canal por el que llegó
+  agendaria-lista-espera ............ pidió turno fuera de las 48 h
+  agendaria-urgencia ................ el bot detectó posible urgencia
+  agendaria-pendiente-confirmacion .. turno con seguro esperando a Secretaría
+  agendaria-pendiente-pago .......... preturno particular esperando comprobante
+  agendaria-comprobante-recibido .... mandó el comprobante, Secretaría debe verificar
+  agendaria-handoff-secretaria ...... el bot pasó la conversación a una persona
+  codigo-rojo-afectado .............. turno movido por Código Rojo
+  agendaria-demo ..................... pacientes ficticios (excluir de todos los workflows)
+CONTROL: las 11 etiquetas existen.
+
+
+==============================================================================
+PARTE 8 · CALENDARIOS (15)
+==============================================================================
+Un calendario por servicio y sede. Todos asignados a la Dra., así GHL impide que se superpongan
+turnos de distintas sedes o servicios.
+
+CÓMO CREAR CADA UNO (repetir 15 veces con los datos de abajo):
+1. Menú izquierdo → "Calendars" / "Calendarios" → arriba a la derecha "Calendar Settings" /
+   "Configuración de calendarios" (ícono engranaje).
+2. Botón "+ Create Calendar" / "+ Crear calendario".
+3. Tipo: "Personal Booking" / "Reserva personal" (para un solo profesional). Si solo ves
+   "Simple Calendar" o "Event", elegí ese. Click "Get Started"/"Next".
+4. Sección "Meeting Details" / "Detalles":
+     - Calendar name: el NOMBRE exacto de abajo.
+     - Description: la DESCRIPCIÓN de abajo.
+     - Team member / Usuario: "Claudia Leguizamón".
+     - Meeting location: "Custom" / "Personalizada" → pegar la UBICACIÓN.
+     - Duración: la DURACIÓN.
+     - Color: uno distinto por sede (CDE azul, Hernandarias verde, Santa Rita naranja, Virtual violeta).
+   Click "Next"/"Save and continue".
+5. Sección "Availability" / "Disponibilidad":
+     - "Office Hours" / "Horario": por cada día, encender o apagar y cargar las franjas.
+       Para dos franjas el mismo día: "+ Add hours" / "+".
+     - "Slot Interval" / "Intervalo": el INTERVALO.
+     - "Minimum Scheduling Notice" / "Aviso mínimo": el AVISO MÍNIMO.
+     - "Date Range" / "Rango de fechas": "2 days into the future" / "2 días a futuro".
+     - "Maximum bookings per slot" / "Reservas por horario": 1.
+     - Buffer antes/después: 0.
+   Click "Next"/"Save".
+6. Sección "Confirmation" / "Confirmación" o "Additional options":
+     - "Auto Confirm" / "Confirmar automáticamente": APAGADO.
+     - "Allow Google Calendar sync": opcional.
+   Click "Save".
+7. En la lista, copiá el link público del calendario (ícono de cadena): lo vas a necesitar en
+   la Parte 12 para el "enlace de reserva web".
+
+------------------------------------------------------------------------------
+CALENDARIO 01 de 15: AgendarIA · Primera consulta · CDE Centro
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Primera consulta · CDE Centro
+  Descripción ................ Primera consulta en Ciudad del Este — Centro. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. San Blas km 3, Edificio Médico Demo, piso 2, consultorio 4, Ciudad del Este
+  Duración del turno ......... 30 minutos
+  Intervalo entre turnos ..... 30 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      14:00 a 16:00
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    08:00 a 10:00
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 02 de 15: AgendarIA · Control de niño sano · CDE Centro
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Control de niño sano · CDE Centro
+  Descripción ................ Control de niño sano en Ciudad del Este — Centro. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. San Blas km 3, Edificio Médico Demo, piso 2, consultorio 4, Ciudad del Este
+  Duración del turno ......... 20 minutos
+  Intervalo entre turnos ..... 20 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      08:00 a 10:00
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  10:00 a 12:00
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 03 de 15: AgendarIA · Control de niño sano · Hernandarias
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Control de niño sano · Hernandarias
+  Descripción ................ Control de niño sano en Hernandarias — Policlínica Demo. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Calle Supercarretera Demo 245, Hernandarias
+  Duración del turno ......... 20 minutos
+  Intervalo entre turnos ..... 20 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     16:40 a 19:00
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    17:00 a 19:00
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 04 de 15: AgendarIA · Control de niño sano · Santa Rita
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Control de niño sano · Santa Rita
+  Descripción ................ Control de niño sano en Santa Rita — Centro Médico Demo. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. Gaúcha Demo 980, Santa Rita, Alto Paraná
+  Duración del turno ......... 20 minutos
+  Intervalo entre turnos ..... 20 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     11:20 a 12:00
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 05 de 15: AgendarIA · Consulta por enfermedad · CDE Centro
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Consulta por enfermedad · CDE Centro
+  Descripción ................ Consulta por enfermedad en Ciudad del Este — Centro. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. San Blas km 3, Edificio Médico Demo, piso 2, consultorio 4, Ciudad del Este
+  Duración del turno ......... 20 minutos
+  Intervalo entre turnos ..... 20 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      10:00 a 12:00 y 16:00 a 18:00
+      Martes     08:30 a 12:00
+      Miércoles  15:00 a 18:00
+      Jueves     08:30 a 12:00
+      Viernes    10:00 a 12:00
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 06 de 15: AgendarIA · Consulta por enfermedad · Hernandarias
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Consulta por enfermedad · Hernandarias
+  Descripción ................ Consulta por enfermedad en Hernandarias — Policlínica Demo. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Calle Supercarretera Demo 245, Hernandarias
+  Duración del turno ......... 20 minutos
+  Intervalo entre turnos ..... 20 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    14:00 a 16:00
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 07 de 15: AgendarIA · Consulta por enfermedad · Santa Rita
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Consulta por enfermedad · Santa Rita
+  Descripción ................ Consulta por enfermedad en Santa Rita — Centro Médico Demo. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. Gaúcha Demo 980, Santa Rita, Alto Paraná
+  Duración del turno ......... 20 minutos
+  Intervalo entre turnos ..... 20 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     08:00 a 10:00
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 08 de 15: AgendarIA · Control de recién nacido · CDE Centro
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Control de recién nacido · CDE Centro
+  Descripción ................ Control de recién nacido en Ciudad del Este — Centro. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. San Blas km 3, Edificio Médico Demo, piso 2, consultorio 4, Ciudad del Este
+  Duración del turno ......... 30 minutos
+  Intervalo entre turnos ..... 30 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  08:00 a 10:00
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 09 de 15: AgendarIA · Pediatría integrativa · CDE Centro
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Pediatría integrativa · CDE Centro
+  Descripción ................ Pediatría integrativa en Ciudad del Este — Centro. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. San Blas km 3, Edificio Médico Demo, piso 2, consultorio 4, Ciudad del Este
+  Duración del turno ......... 45 minutos
+  Intervalo entre turnos ..... 45 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     14:00 a 18:30
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 10 de 15: AgendarIA · Consulta nutricional · Hernandarias
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Consulta nutricional · Hernandarias
+  Descripción ................ Consulta nutricional en Hernandarias — Policlínica Demo. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Calle Supercarretera Demo 245, Hernandarias
+  Duración del turno ......... 40 minutos
+  Intervalo entre turnos ..... 40 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     14:00 a 16:40
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 11 de 15: AgendarIA · Consulta nutricional · Santa Rita
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Consulta nutricional · Santa Rita
+  Descripción ................ Consulta nutricional en Santa Rita — Centro Médico Demo. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. Gaúcha Demo 980, Santa Rita, Alto Paraná
+  Duración del turno ......... 40 minutos
+  Intervalo entre turnos ..... 40 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     10:00 a 11:20
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 12 de 15: AgendarIA · Certificado escolar / apto físico · CDE Centro
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Certificado escolar / apto físico · CDE Centro
+  Descripción ................ Certificado escolar / apto físico en Ciudad del Este — Centro. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. San Blas km 3, Edificio Médico Demo, piso 2, consultorio 4, Ciudad del Este
+  Duración del turno ......... 15 minutos
+  Intervalo entre turnos ..... 15 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  14:00 a 15:00
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 13 de 15: AgendarIA · Vacunación · CDE Centro
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Vacunación · CDE Centro
+  Descripción ................ Vacunación en Ciudad del Este — Centro. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Av. San Blas km 3, Edificio Médico Demo, piso 2, consultorio 4, Ciudad del Este
+  Duración del turno ......... 15 minutos
+  Intervalo entre turnos ..... 15 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     08:00 a 08:30
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     08:00 a 08:30
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 14 de 15: AgendarIA · Vacunación · Hernandarias
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Vacunación · Hernandarias
+  Descripción ................ Vacunación en Hernandarias — Policlínica Demo. Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Calle Supercarretera Demo 245, Hernandarias
+  Duración del turno ......... 15 minutos
+  Intervalo entre turnos ..... 15 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      NO DISPONIBLE (apagar el día)
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  NO DISPONIBLE (apagar el día)
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    16:00 a 17:00
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+------------------------------------------------------------------------------
+CALENDARIO 15 de 15: AgendarIA · Teleconsulta pediátrica · Virtual
+------------------------------------------------------------------------------
+  Nombre del calendario ...... AgendarIA · Teleconsulta pediátrica · Virtual
+  Descripción ................ Teleconsulta pediátrica en Teleconsulta (Google Meet). Turno a nombre del niño/a.
+  Usuario asignado ........... Dra. Claudia Leguizamón
+  Ubicación (Meeting location) Enlace de Google Meet enviado por WhatsApp tras confirmar el turno
+  Duración del turno ......... 25 minutos
+  Intervalo entre turnos ..... 25 minutos
+  Aviso mínimo para reservar . 2 horas
+  Rango de reserva ........... 2 días hacia adelante (regla de 48 h)
+  Turnos por horario ......... 1
+  Confirmación automática .... DESACTIVADA (el turno entra como 'Unconfirmed' = preturno)
+  Horarios (Availability / Office hours):
+      Lunes      18:00 a 19:00
+      Martes     NO DISPONIBLE (apagar el día)
+      Miércoles  18:00 a 19:00
+      Jueves     NO DISPONIBLE (apagar el día)
+      Viernes    NO DISPONIBLE (apagar el día)
+      Sábado     NO DISPONIBLE (apagar el día)
+      Domingo    NO DISPONIBLE (apagar el día)
+
+CONTROL: en Calendar Settings hay 15 calendarios "AgendarIA · …", todos activos y asignados a la Dra.
+
+ENLACE DE RESERVA WEB PARA PACIENTES (opcional pero recomendado):
+1. Calendars → Calendar Settings → pestaña "Groups" / "Grupos" → "+ Create Group".
+2. Nombre "Agendar.IA – Dra. Leguizamón" · slug "dra-leguizamon" → "Save".
+3. En cada calendario: editar → "Group" → elegir ese grupo → "Save".
+4. Copiá el link del grupo: muestra todos los servicios en una página. Ese es el enlace web
+   que el bot ofrece como alternativa a seguir por WhatsApp.
+
+
+==============================================================================
+PARTE 9 · TELÉFONO PARA LLAMADAS (TWILIO) — SOLO VOZ
+==============================================================================
+Twilio aporta la línea telefónica para el agente de voz. Meta no interviene acá.
+
+9.1 CUENTA Y NÚMERO EN TWILIO
+1. Abrí https://www.twilio.com → "Sign up" → registrate con tu mail → verificá el mail y tu celular.
+2. Preguntas de bienvenida: "Voice" · "With code: No" / "Other".
+3. Pasá la cuenta de prueba a paga: Console → "Upgrade" (arriba) → cargá tarjeta y USD 20.
+4. Console → menú izquierdo "Phone Numbers" → "Manage" → "Buy a number".
+5. Country: "Paraguay (+595)". Capabilities: marcar "Voice". Click "Search".
+   - Si aparecen números: elegí uno → "Buy" → si pide "Regulatory Bundle", completá con los datos
+     de la empresa/persona (documento, dirección) → esperá la aprobación (1–3 días hábiles).
+   - Si NO aparecen números de Paraguay: alternativa → comprá un número con voz de otro país
+     (ej. EE.UU.) solo para la demo, o pedí a la compañía telefónica de la Dra. el desvío de llamadas
+     de su línea actual hacia ese número.
+6. Console → página principal → copiá "Account SID" y "Auth Token" (click en "Show").
+
+9.2 CONECTAR TWILIO A GHL
+1. GHL sub-cuenta → Settings → "Phone System" / "Sistema telefónico" (o "Phone Numbers").
+2. Si aparece "LeadConnector Phone" activo, buscá la opción "Switch to Twilio" / "Integrate Twilio".
+3. Pegá "Account SID" y "Auth Token" → "Connect"/"Save".
+4. En la lista de números debe aparecer el número de Twilio → click → "Assign"/"Default number".
+CONTROL: llamás al número desde tu celular y suena (o atiende el buzón por defecto).
+
+
+==============================================================================
+PARTE 10 · WHATSAPP (META, DIRECTO DESDE GHL) — Twilio NO interviene
+==============================================================================
+Requisitos: Meta Business verificado (o en proceso), un número que NO esté usándose en la app de
+WhatsApp común (puede ser el de Twilio de la Parte 9; nunca el celular personal de la Dra.).
+1. GHL sub-cuenta → Settings → "WhatsApp".
+2. Si pide contratar el servicio de WhatsApp de GHL, aceptá (se cobra de la billetera).
+3. Click "Connect" / "Conectar" → se abre la ventana de Meta (embedded signup).
+4. Iniciá sesión con el Facebook administrador del Meta Business.
+5. Elegí el Meta Business existente (o creá uno con el nombre "Agendar.IA – Dra. Claudia Leguizamón").
+6. "WhatsApp Business Account": crear nueva → nombre "Dra. Claudia Leguizamón".
+7. Perfil: nombre visible "Dra. Claudia Leguizamón · Turnos" · categoría "Medical & Health" ·
+   descripción "Agenda de turnos pediátricos".
+8. Número: "Add a new number" → ingresá el número → verificación por "Phone call" (si es Twilio, la
+   llamada la atiende Twilio: configurá en Twilio el número para reenviar la llamada a tu celular o
+   revisá el log de la llamada en Twilio para escuchar el código).
+9. Aceptá los permisos → "Finish". Volvés a GHL.
+10. En Settings → WhatsApp el número figura "Connected".
+11. Meta Business Manager → "Business settings" → "Security center" → iniciar la verificación del
+    negocio si no está hecha (sube el límite de mensajes).
+CONTROL: desde tu celular escribís "hola" al número y el mensaje aparece en GHL → Conversations.
+
+
+==============================================================================
+PARTE 11 · PLANTILLAS DE WHATSAPP (las aprueba Meta en 24–48 h)
+==============================================================================
+Se usan para escribirle al paciente cuando pasaron más de 24 h desde su último mensaje
+(recordatorios, Código Rojo). Dentro de las 24 h el bot responde libremente.
+1. GHL → Settings → WhatsApp → pestaña "Templates" / "Plantillas" → "+ Create Template".
+2. Por cada plantilla: Name (exacto, minúsculas) · Category "Utility" · Language "Spanish (SPA)" ·
+   Body (texto de abajo; las variables {{1}}, {{2}}… se agregan con "Add variable") ·
+   ejemplos de variables → "Submit".
+
+  a) datos_sena
+     "Hola {{1}}, reservamos el preturno de {{2}}. Para confirmarlo, la Dra. solicita una seña de
+     Gs. 100.000 que se descuenta de la consulta. Transferí a: Banco Itaú Paraguay, cuenta N.º
+     7200418395, titular Claudia Leguizamón, alias CLAUDIA.LEGUIZAMON.PED. Enviános el
+     comprobante por acá dentro de las 2 horas. ¡Gracias!"
+     Variables: 1 = nombre del responsable · 2 = turno (servicio, día y hora)
+
+  b) confirmacion_turno
+     "¡Listo, {{1}}! El turno de {{2}} quedó confirmado para {{3}} en {{4}}. Si necesitás
+     cambiarlo, escribinos por acá."
+     Variables: 1 = responsable · 2 = niño/a · 3 = día y hora · 4 = sede
+
+  c) recordatorio_turno
+     "Hola {{1}}, te recordamos el turno de {{2}} mañana {{3}} en {{4}}. Respondé SÍ para
+     confirmar asistencia o escribinos si necesitás cambiarlo."
+     Variables: 1 = responsable · 2 = niño/a · 3 = hora · 4 = sede
+
+  d) propuesta_reprogramacion
+     "Hola {{1}}, la Dra. Claudia Leguizamón tuvo un imprevisto médico y debemos mover el turno de
+     {{2}}. Opciones: {{3}} · {{4}} · {{5}}. Respondé con la opción que prefieras o
+     escribinos si ninguna te sirve. La seña pagada se mantiene."
+     Variables: 1 = responsable · 2 = turno original · 3, 4, 5 = propuestas
+CONTROL: las 4 plantillas figuran "Approved".
+
+
+==============================================================================
+PARTE 12 · BASE DE CONOCIMIENTO DE LA IA
+==============================================================================
+1. Menú izquierdo → "AI Agents" / "Agentes de IA" (en algunas versiones "AI Employee").
+2. Pestaña "Knowledge Base" / "Base de conocimiento" → "+ Create Knowledge Base".
+3. Nombre: "AgendarIA · Base Dra. Leguizamón" → "Create".
+4. "+ Add" / "Agregar fuente" → elegí "Rich Text" / "Texto" (o "FAQ"/"Documento").
+5. Título "Consultorio Dra. Leguizamón" → pegá el texto COMPLETO del ANEXO A → "Save".
+6. Cuando tengas el enlace del grupo de calendarios (Parte 8), editá la línea "Reserva por enlace
+   web: PENDIENTE" y reemplazá PENDIENTE por el enlace.
+7. Modo vacaciones: cuando la Dra. se ausente, agregá al principio del texto:
+   "AUSENCIA ACTIVA: En este momento la Dra. Claudia Leguizamón se encuentra de vacaciones y vuelve el 3 de agosto. Podemos dejar agendado su turno desde esa fecha." y borralo al volver.
+CONTROL: la base figura con 1 fuente cargada.
+
+
+==============================================================================
+PARTE 13 · BOT DE WHATSAPP (CONVERSATION AI)
+==============================================================================
+1. AI Agents → "Conversation AI" → "+ Create Bot" / "+ Crear agente".
+2. Nombre: "Agendar.IA – WhatsApp Dra. Leguizamón".
+3. Pestaña "Bot Settings" / "Configuración":
+     - Mode / Modo: "Auto Pilot" (responde solo).
+     - Channels / Canales: marcar SOLO "WhatsApp".
+     - Bot response delay / Espera: 5 segundos.
+     - "Stop bot when human replies" / "Detener si responde una persona": ACTIVADO.
+     - "Reactivate bot after": 12 horas.
+     - Knowledge base: "AgendarIA · Base Dra. Leguizamón".
+     - Transcripción de audios: activar si aparece.
+4. Pestaña "Personality"/"Prompt"/"Instructions": pegá el texto COMPLETO del ANEXO B.
+5. Pestaña "Goals"/"Objetivo": "Appointment Booking" / "Reserva de turnos" → seleccionar TODOS los
+   calendarios "AgendarIA · …".
+6. Pestaña "Actions"/"Acciones" (agregar cada una con "+ Add Action"):
+     a) Update Contact Field → mapear: Nombre del hijo/a, Fecha de nacimiento del hijo/a,
+        Parentesco del responsable, Servicio solicitado, Sede preferida, Cobertura, Seguro médico,
+        Idioma preferido, Motivo (administrativo).
+     b) Add Tag "agendaria-pendiente-pago" → condición: "cuando se reserva un turno particular".
+     c) Add Tag "agendaria-comprobante-recibido" → condición: "cuando el paciente envía la foto o
+        archivo del comprobante de transferencia".
+     d) Add Tag "agendaria-lista-espera" → condición: "cuando pide turno para más allá de 48 horas".
+     e) Add Tag "agendaria-urgencia" → condición: "cuando se detecta una posible urgencia médica".
+     f) Remove Tag "codigo-rojo-afectado" → condición: "cuando eligió nuevo horario o pasó a lista de espera".
+     g) Human Handoff / Stop Bot + Assign to "Secretaría" → condición: "pide hablar con una persona,
+        reclama, consulta por recetas o medicamentos, o pregunta algo que no está en la base".
+7. Click "Save" y activá el bot (switch "Active"/"On").
+CONTROL: escribís "hola" al WhatsApp y responde Sofía en español.
+
+
+==============================================================================
+PARTE 14 · AGENTE DE VOZ (VOICE AI)
+==============================================================================
+1. AI Agents → "Voice AI" → "+ Create Agent" / "+ Crear agente" → "Start from scratch".
+2. Agent name: "Agendar.IA – Recepción Dra. Leguizamón".
+3. Business name: "Consultorio Pediátrico Dra. Claudia Leguizamón".
+4. Voice: elegí una voz femenina en español latinoamericano; escuchá la muestra; velocidad normal o
+   levemente lenta.
+5. Language: "Spanish".
+6. Welcome message / Saludo inicial: "Hola, se comunicó con el consultorio de la doctora Claudia Leguizamón. Le atiende Sofía, la asistente virtual. ¿En qué le puedo ayudar?"
+7. Agent prompt / Instrucciones: pegá el texto COMPLETO del ANEXO C.
+8. Knowledge base: "AgendarIA · Base Dra. Leguizamón".
+9. Phone number: elegí el número de Twilio (Parte 9).
+10. Working hours: 24/7.
+11. Max call duration: 8 minutos · Idle reminder: 8 segundos, mensaje "¿Sigue ahí?", cortar después
+    de 3 recordatorios.
+12. Actions:
+     a) Book Appointment → todos los calendarios "AgendarIA · …".
+     b) Update Contact Field → los mismos campos que en el bot de WhatsApp.
+     c) Call Transfer → número de Secretaría → condición: urgencia, pide hablar con una persona,
+        reclamo, recetas o medicamentos, dato no disponible.
+     d) Add Tag "agendaria-lista-espera" / "agendaria-urgencia" con las mismas condiciones del bot.
+13. Post-call: activar "Call summary" y "Transcript" (se guardan en la conversación del contacto).
+14. "Save" → "Publish"/"Activate".
+CONTROL: llamás al número, atiende Sofía, pedís un turno y aparece en el calendario como Unconfirmed.
+
+
+==============================================================================
+PARTE 15 · WORKFLOWS (AUTOMATIZACIONES)
+==============================================================================
+Cómo crear cada workflow:
+  Menú izquierdo → "Automation" / "Automatización" → "Workflows" → "+ Create Workflow" →
+  "Start from Scratch" → arriba a la izquierda cambiá el nombre → "Add New Trigger" → configurar
+  → "Save Trigger" → click en "+" debajo para agregar acciones → al final "Save" y switch "Publish".
+En TODOS los triggers agregá el filtro: "Contact Tag" → "does not include" / "no incluye" → "agendaria-demo".
+
+15.1 · "AgendarIA · Preturno particular"
+  Trigger: "Appointment Status" → filtros: "Calendar is any of" (todos los AgendarIA) y
+           "Appointment status is" → "New" / "Unconfirmed".
+  Acciones:
+   1. "If/Else" → condición: Contact field "Cobertura" is "Particular".
+      Rama SÍ:
+       2. "Add Contact Tag" → "agendaria-pendiente-pago".
+       3. "Send WhatsApp" → plantilla "datos_sena" (o mensaje libre con el mismo texto).
+       4. "Wait" → "Time delay" → 2 horas.
+       5. "If/Else" → Contact Tag includes "agendaria-comprobante-recibido".
+          SÍ: fin (Secretaría verifica).
+          NO: 6. "Update Appointment Status" → "Cancelled".
+              7. "Send WhatsApp" → "No recibimos el comprobante y liberamos el horario para otra
+                 familia. Si querés, te anoto en lista de espera o buscamos otro turno 🙂"
+              8. "Remove Contact Tag" → "agendaria-pendiente-pago".
+      Rama NO (seguro):
+       2. "Add Contact Tag" → "agendaria-pendiente-confirmacion".
+       3. "Add Task" → asignada a Secretaría → "Verificar cobertura de seguro y confirmar turno".
+  Nota: si el turno se reservó con menos de 5 h de anticipación, Secretaría controla el comprobante
+  a mano (regla: hasta 3 h antes del turno).
+
+15.2 · "AgendarIA · Comprobante recibido"
+  Trigger: "Contact Tag" → "Tag added" → "agendaria-comprobante-recibido".
+  Acciones:
+   1. "Assign to User" → "Secretaría" (así la ve con "solo datos asignados").
+   2. "Add Task" → asignada a Secretaría → título "Verificar seña Gs. 100.000" → descripción
+      "Revisar en el banco y, si ingresó, cambiar el turno a Confirmed." → vencimiento 1 hora.
+   3. "Internal Notification" → "In-App" y "Email" a Secretaría → "Llegó un comprobante de seña".
+
+15.3 · "AgendarIA · Turno confirmado"
+  Trigger: "Appointment Status" → "Calendar is any of" (AgendarIA) → status "Confirmed".
+  Acciones:
+   1. "Remove Contact Tag" → "agendaria-pendiente-pago", "agendaria-comprobante-recibido",
+      "agendaria-pendiente-confirmacion".
+   2. "Send WhatsApp" → plantilla "confirmacion_turno".
+
+15.4 · "AgendarIA · Recordatorios"
+  Trigger: "Appointment Status" → status "Confirmed".
+  Acciones:
+   1. "Wait" → "Event / Appointment time" → "24 hours before".
+   2. "Send WhatsApp" → plantilla "recordatorio_turno".
+   3. "Wait" → "Event / Appointment time" → "2 hours before".
+   4. "Send WhatsApp" → "Te esperamos en 2 horas en {{appointment.location}} 🙂".
+
+15.5 · "AgendarIA · Lista de espera"
+  Trigger: "Contact Tag" → added → "agendaria-lista-espera".
+  Acciones: 1. "Add Task" → Secretaría → "Ofrecer turno cuando se libere un horario".
+
+15.6 · "AgendarIA · Alerta urgencia"
+  Trigger: "Contact Tag" → added → "agendaria-urgencia".
+  Acciones:
+   1. "Internal Notification" → "SMS" y "In-App" a la Dra. y a Secretaría → "Posible urgencia:
+      {{contact.name}} {{contact.phone}}. El bot ya derivó a urgencias."
+   2. "Assign to User" → Secretaría.
+
+15.7 · "AgendarIA · Código Rojo"
+  Trigger: "Contact Tag" → added → "codigo-rojo-afectado".
+  Acciones:
+   1. "Send WhatsApp" → plantilla "propuesta_reprogramacion" (variables: Código Rojo · turno original
+      y propuestas 1, 2, 3 de los campos personalizados).
+   2. "Wait" → "Wait for reply"/"Hasta que responda" con tiempo máximo 30 minutos.
+   3. "If/Else" → respondió:
+        SÍ: fin (el bot gestiona la respuesta).
+        NO: "Add Task" → Secretaría → "Llamar: turno movido por Código Rojo sin respuesta".
+CONTROL: los 7 workflows figuran "Published".
+
+
+==============================================================================
+PARTE 16 · CÓDIGO ROJO (PROCEDIMIENTO MANUAL)
+==============================================================================
+El botón rojo automático (página con PIN) necesita el token de la API. Mientras tanto, se hace así
+en 5 minutos desde la app o la web de GHL:
+1. LA DRA. (o Secretaría por pedido de ella): Calendars → vista "Day" → arrastrá sobre el rango
+   afectado (2, 3, 4 o 5 horas desde ahora) → "Block off time" / "Bloquear horario" → título
+   "Código Rojo — Cesárea / Parto / Urgencia / Imprevisto" → "Save". Nadie más puede reservar ahí.
+2. SECRETARÍA: Calendars → "Appointments" / "Lista de citas" → filtrar el día y el rango.
+3. Para cada turno afectado:
+   a) Abrí el turno → cambiá estado a "Cancelled" (NO borrar).
+   b) Abrí el contacto → completá los campos:
+        "Código Rojo · turno original": ej. "Consulta por enfermedad · lunes 12/10 15:00"
+        "Código Rojo · propuesta 1/2/3": 3 horarios libres del mismo calendario en las próximas 48 h.
+   c) Agregá una nota: "Código Rojo (motivo). Turno cancelado sin borrar."
+   d) Agregá la etiqueta "codigo-rojo-afectado" → el workflow 15.7 envía el WhatsApp.
+4. La seña pagada se mantiene: el nuevo turno se confirma sin pedir otra.
+
+
+==============================================================================
+PARTE 17 · PACIENTES DEMO (IMPORTAR CSV)
+==============================================================================
+Archivo: ghl_contactos_import.csv (540 responsables ficticios; teléfonos +595900…,
+mails @example.com; los hijos van en los campos personalizados).
+1. Menú izquierdo → "Contacts" / "Contactos" → arriba a la derecha "Import" / "Importar".
+2. "Upload file" → elegí ghl_contactos_import.csv → "Next".
+3. Objeto: "Contacts". Acción: "Create new contacts" (crear nuevos) → "Next".
+4. Mapeo de columnas: GHL reconoce First Name, Last Name, Phone, Email, Tags. Para las demás
+   elegí el campo personalizado con el mismo nombre (Nombre del hijo/a, Fecha de nacimiento del
+   hijo/a, Otros hijos/as registrados, Parentesco del responsable, Sede preferida, Cobertura,
+   Seguro médico, Idioma preferido) → "Next".
+5. Opciones: "Add tags" → "agendaria-demo" · NO marcar "Trigger workflows" · "Start Bulk Import".
+6. Esperá el aviso de importación terminada (Contacts → "Bulk Actions" muestra el progreso).
+7. MUY IMPORTANTE — bloquear mensajes a los ficticios:
+   Contacts → filtro "Tag" is "agendaria-demo" → seleccionar todos (checkbox arriba → "Select all") →
+   "Bulk Actions" / "Más" → "DND" / "No molestar" → "All channels" → "Enable" → confirmar.
+8. Turnos históricos: GHL no importa citas por CSV. Los 3.562 turnos ficticios se cargan solo por API.
+   Para la demo manual, creá 10 turnos de ejemplo (Calendars → "+ New Appointment"), por ejemplo:
+  - 2026-10-09 17:40 · Control de niño sano · Hernandarias — Policlínica Demo · niño/a Fabrizio Escobar · responsable María José Escobar (+595900260564) · estado: Showed
+  - 2026-10-09 18:00 · Control de niño sano · Hernandarias — Policlínica Demo · niño/a Gabriela Giménez · responsable Daiane Giménez (+595900408558) · estado: Showed
+  - 2026-10-09 18:20 · Control de niño sano · Hernandarias — Policlínica Demo · niño/a Isabella Costa Escobar · responsable María José Escobar (+595900260564) · estado: Showed
+  - 2026-10-09 18:40 · Control de niño sano · Hernandarias — Policlínica Demo · niño/a Felipe Benítez Bortolini · responsable Liz Bortolini (+595900725691) · estado: Showed
+  - 2026-10-10 08:20 · Consulta por enfermedad · Santa Rita — Centro Médico Demo · niño/a Liam Weber Friesen · responsable Natalia Friesen (+595900953221) · estado: Showed
+  - 2026-10-10 08:40 · Consulta por enfermedad · Santa Rita — Centro Médico Demo · niño/a Néstor Becker · responsable Sonia Becker (+595900159997) · estado: Showed
+  - 2026-10-10 09:40 · Consulta por enfermedad · Santa Rita — Centro Médico Demo · niño/a Tomás Rodrigues · responsable Aline Rodrigues (+595900547872) · estado: Showed
+  - 2026-10-10 10:00 · Consulta nutricional · Santa Rita — Centro Médico Demo · niño/a Enzo Penner · responsable Daiane Penner (+595900523300) · estado: Showed
+  - 2026-10-10 11:20 · Control de niño sano · Santa Rita — Centro Médico Demo · niño/a Benjamín Da Silva · responsable Paola Da Silva (+595900837715) · estado: Showed
+  - 2026-10-10 11:40 · Control de niño sano · Santa Rita — Centro Médico Demo · niño/a Pedro Henrique Giménez Souza · responsable Juan Carlos Souza (+595900228747) · estado: Showed
+CONTROL: 540 contactos con etiqueta agendaria-demo, todos con DND activo.
+
+
+==============================================================================
+PARTE 18 · PRUEBAS FINALES (marcá cada una)
+==============================================================================
+WhatsApp (desde un celular que NO sea de la Dra.):
+  [ ] "hola" → responde Sofía en español.
+  [ ] "hello" → responde en español, no en inglés.
+  [ ] "Olá, quero marcar uma consulta" → responde en portugués.
+  [ ] Pedir turno particular → ofrece 2–3 horarios de las próximas 48 h → reserva → explica la seña
+      de Gs. 100.000 y manda los datos de Itaú.
+  [ ] No mandar comprobante → a las 2 h el turno pasa a Cancelled y llega el aviso.
+  [ ] Mandar foto de comprobante → la conversación se asigna a Secretaría y le aparece la tarea.
+  [ ] Secretaría cambia a Confirmed → llega la confirmación al paciente.
+  [ ] Pedir turno con seguro → no pide seña; queda pendiente de Secretaría.
+  [ ] Pedir turno para dentro de 5 días → explica la regla de 48 h y ofrece lista de espera.
+  [ ] Dos hijos del mismo responsable → pregunta para cuál y hace un turno por niño.
+  [ ] "Mi hijo tiene la nariz tapada, ¿le hago lavado nasal?" → NO da indicación; deriva.
+  [ ] "Mi bebé convulsiona" → responde solo con el mensaje de urgencia y avisa a Secretaría.
+  [ ] "La receta tiene un error" → pasa a Secretaría.
+  [ ] Pedir "hablar con una persona" → handoff a Secretaría.
+Voz:
+  [ ] Llamar → saluda Sofía → pedir turno → queda Unconfirmed en el calendario correcto.
+  [ ] Decir "es urgente" → mensaje de urgencia y transferencia a Secretaría.
+Código Rojo:
+  [ ] Hacer el procedimiento de la Parte 16 con un turno de prueba → llega la propuesta por WhatsApp.
+
+
+==============================================================================
+PARTE 19 · ERRORES FRECUENTES
+==============================================================================
+- El bot no responde: billetera en cero (Parte 3), bot sin activar o canal WhatsApp no marcado.
+- El agente de voz no atiende: número de Twilio no asignado al agente o cuenta Twilio en "trial".
+- No aparecen horarios: el calendario tiene "Date Range" mayor a 2 días mal cargado, día apagado,
+  o el turno pedido está a menos de 2 h (aviso mínimo).
+- Turnos que se confirman solos: "Auto Confirm" quedó encendido en ese calendario.
+- No salen los WhatsApp de recordatorio: plantilla no aprobada todavía por Meta.
+- Secretaría ve todo: falta activar "Only Assigned Data" en sus permisos.
+- Llegan mensajes a contactos demo: no se aplicó el DND masivo (Parte 17, paso 7).
+
+
+==============================================================================
+ANEXO A · BASE DE CONOCIMIENTO (copiar completo en la Parte 12)
+==============================================================================
+# Base de conocimiento — Agendar.IA · Dra. Claudia Leguizamón
+
+> Generado por `ghl_provision.py kb` desde `config/leguizamon.json`. No editar a mano.
+> Regla para los agentes: si un dato dice PENDIENTE o no figura aquí, NO inventar; derivar a Secretaría.
+> **DATOS DE MUESTRA (DEMO).** No usar con pacientes reales.
+
+## Consultorio
+- Profesional: Dra. Claudia Leguizamón (Pediatría).
+- Zona: Ciudad del Este, Paraguay y alrededores.
+- Medios de pago: transferencia bancaria.
+- Idiomas de atención: español (por defecto), portugués y yopará.
+- Reserva por enlace web: PENDIENTE — Secretaría lo confirma.
+- Este número es el canal propio de agendamiento de la Dra. (ya no se agenda por la plataforma del sanatorio).
+
+## Horario general de atención
+- Lunes, martes, miércoles, jueves y viernes: 08:00 a 12:00.
+- Lunes, martes, miércoles, jueves y viernes: 14:00 a 19:00.
+- Sábado: 08:00 a 12:00.
+
+## Sedes
+- **Ciudad del Este — Centro**: Av. San Blas km 3, Edificio Médico Demo, piso 2, consultorio 4, Ciudad del Este. Frente a la plaza Demo, estacionamiento en subsuelo. Tel. +595 61 000 0101.
+- **Hernandarias — Policlínica Demo**: Calle Supercarretera Demo 245, Hernandarias. Planta baja, consultorio 2; martes y viernes por la tarde. Tel. +595 631 000 202.
+- **Santa Rita — Centro Médico Demo**: Av. Gaúcha Demo 980, Santa Rita, Alto Paraná. Atención en español y portugués; sábados de 8 a 12. Tel. +595 673 000 303.
+- **Teleconsulta (Google Meet)**: Enlace de Google Meet enviado por WhatsApp tras confirmar el turno. Requiere conexión estable y el niño presente.
+
+## Reglas de agenda
+- La agenda se habilita con 48 horas de antelación. Para fechas posteriores se ofrece lista de espera.
+- El turno se registra a nombre del niño o niña; un responsable puede tener varios hijos.
+- Todo turno queda pendiente (preturno) hasta que Secretaría lo confirma por WhatsApp.
+- El paciente elige: seguir por WhatsApp o reservar en el enlace web. Nunca se lo obliga a usar la plataforma.
+
+## Seña, preturno y confirmación
+- Los turnos **particulares** requieren una seña de Gs. 100.000, y se descuenta del valor de la consulta.
+- Los turnos **por seguro no pagan seña**; Secretaría confirma la cobertura.
+- Mientras no se valide, el turno es un **preturno**: el horario queda reservado pero no confirmado.
+- El comprobante se envía por este WhatsApp dentro de las 2 horas de la reserva (o hasta 3 horas antes del turno si falta poco). Si no llega, el preturno se cancela y el horario se libera.
+- Recibir el comprobante no confirma el turno: **Secretaría verifica que el dinero ingresó** y recién entonces el turno queda confirmado y se avisa por WhatsApp.
+- Datos para la transferencia: Banco Itaú Paraguay · Cuenta corriente en guaraníes · N.º 7200418395 · Titular: Claudia Leguizamón · CI 3.418.276 (DEMO) · Alias: CLAUDIA.LEGUIZAMON.PED.
+- Si la Dra. reprograma por un imprevisto (Código Rojo), la seña pagada se mantiene para el nuevo turno.
+
+## Servicios
+- **Primera consulta** (presencial): duración 30 min; particular o seguro; valor particular Gs. 250.000.
+  - Paciente nuevo: se completa la Ficha pediátrica. Traer libreta de vacunas y estudios previos.
+  - Ciudad del Este — Centro: lunes de 14:00 a 16:00 (Dra. Claudia Leguizamón).
+  - Ciudad del Este — Centro: viernes de 08:00 a 10:00 (Dra. Claudia Leguizamón).
+- **Control de niño sano** (presencial): duración 20 min; particular o seguro; valor particular Gs. 200.000.
+  - Seguimiento de crecimiento y desarrollo. Traer libreta de vacunas.
+  - Ciudad del Este — Centro: lunes de 08:00 a 10:00 (Dra. Claudia Leguizamón).
+  - Ciudad del Este — Centro: miércoles de 10:00 a 12:00 (Dra. Claudia Leguizamón).
+  - Hernandarias — Policlínica Demo: martes de 16:40 a 19:00 (Dra. Claudia Leguizamón).
+  - Hernandarias — Policlínica Demo: viernes de 17:00 a 19:00 (Dra. Claudia Leguizamón).
+  - Santa Rita — Centro Médico Demo: sábado de 11:20 a 12:00 (Dra. Claudia Leguizamón).
+- **Consulta por enfermedad** (presencial): duración 20 min; particular o seguro; valor particular Gs. 200.000.
+  - Cuadros no urgentes. Si es urgente, acudir a guardia: el asistente no evalúa síntomas.
+  - Ciudad del Este — Centro: lunes de 10:00 a 12:00 (Dra. Claudia Leguizamón).
+  - Ciudad del Este — Centro: lunes de 16:00 a 18:00 (Dra. Claudia Leguizamón).
+  - Ciudad del Este — Centro: martes y jueves de 08:30 a 12:00 (Dra. Claudia Leguizamón).
+  - Ciudad del Este — Centro: miércoles de 15:00 a 18:00 (Dra. Claudia Leguizamón).
+  - Ciudad del Este — Centro: viernes de 10:00 a 12:00 (Dra. Claudia Leguizamón).
+  - Hernandarias — Policlínica Demo: viernes de 14:00 a 16:00 (Dra. Claudia Leguizamón).
+  - Santa Rita — Centro Médico Demo: sábado de 08:00 a 10:00 (Dra. Claudia Leguizamón).
+- **Control de recién nacido** (presencial): duración 30 min; particular o seguro; valor particular Gs. 220.000.
+  - Primer control tras el alta de maternidad. Traer resumen de alta y pruebas de pesquisa.
+  - Ciudad del Este — Centro: miércoles de 08:00 a 10:00 (Dra. Claudia Leguizamón).
+- **Pediatría integrativa** (presencial): duración 45 min; solo particular; valor particular Gs. 350.000.
+  - Abordaje integral: alimentación, sueño, hábitos y entorno familiar. Solo particular.
+  - Ciudad del Este — Centro: jueves de 14:00 a 18:30 (Dra. Claudia Leguizamón).
+- **Consulta nutricional** (presencial): duración 40 min; particular o seguro; valor particular Gs. 250.000.
+  - Evaluación de crecimiento y plan alimentario.
+  - Hernandarias — Policlínica Demo: martes de 14:00 a 16:40 (Dra. Claudia Leguizamón).
+  - Santa Rita — Centro Médico Demo: sábado de 10:00 a 11:20 (Dra. Claudia Leguizamón).
+- **Certificado escolar / apto físico** (presencial): duración 15 min; solo particular; valor particular Gs. 120.000.
+  - Requiere control de niño sano vigente (últimos 6 meses).
+  - Ciudad del Este — Centro: miércoles de 14:00 a 15:00 (Dra. Claudia Leguizamón).
+- **Vacunación** (presencial): duración 15 min; solo particular; valor particular Gs. 60.000.
+  - Precio = aplicación; la vacuna se cobra aparte según catálogo. Los viernes en Hernandarias aplica la Licenciada.
+  - Ciudad del Este — Centro: martes y jueves de 08:00 a 08:30 (Dra. Claudia Leguizamón).
+  - Hernandarias — Policlínica Demo: viernes de 16:00 a 17:00 (Lic. Demo Benítez).
+- **Teleconsulta pediátrica** (teleconsulta): duración 25 min; solo particular; valor particular Gs. 180.000.
+  - Seguimiento y dudas no urgentes. No reemplaza la consulta presencial.
+  - Teleconsulta (Google Meet): lunes y miércoles de 18:00 a 19:00 (Dra. Claudia Leguizamón).
+- **Electroencefalografía**: todavía no disponible. Se toma el interés como mensaje.
+
+## Seguros y convenios
+- **Prepaga Demo Salud**: cubre Primera consulta, Control de niño sano, Consulta por enfermedad, Consulta nutricional; copago Gs. 40.000.
+- **Seguro Demo Familiar**: cubre Control de niño sano, Consulta por enfermedad, Control de recién nacido; copago Gs. 60.000.
+- **Convenio Demo Cooperativa**: cubre Consulta por enfermedad, Consulta nutricional; copago Gs. 0.
+- **Plano Demo Brasil (fronterizo)**: cubre Consulta por enfermedad; copago Gs. 80.000.
+
+## Vacunas (precio del producto; la aplicación se cobra aparte)
+- Antigripal pediátrica (demo): Gs. 180.000 · disponible.
+- Neumococo 20-valente (demo): Gs. 750.000 · disponible.
+- Meningococo ACWY (demo): Gs. 520.000 · pocas unidades.
+- Meningococo B (demo): Gs. 890.000 · agotada.
+- Varicela (demo): Gs. 310.000 · disponible.
+- Nirsevimab — VSR (demo): PENDIENTE — Secretaría lo confirma · consultar temporada.
+
+## Límites del asistente
+- No da ninguna indicación médica, ni siquiera una que parezca correcta o haya dado la Dra. antes (ej.: lavado nasal). No diagnostica, no interpreta síntomas, fotos ni estudios, no indica medicamentos.
+- Urgencias: responde únicamente "Si es una urgencia, acuda al centro de salud o centro médico más cercano o a la urgencia del Sanatorio Le Blanc." y avisa a Secretaría.
+- Recetas con error, medicamentos en falta o dudas sobre una indicación: pasa a Secretaría.
+- No comparte datos de otros pacientes.
+
+
+==============================================================================
+ANEXO B · PROMPT DEL BOT DE WHATSAPP (copiar completo en la Parte 13)
+==============================================================================
+Sos "Sofía", asistente virtual por WhatsApp del consultorio pediátrico de la Dra. Claudia Leguizamón (Ciudad del Este, Hernandarias y Santa Rita, Paraguay). Conversás de forma natural, como una secretaria amable: nada de menús numerados ni árboles de opciones. Mensajes cortos (1–3 líneas). Como máximo un emoji de cortesía.
+
+IDIOMA
+- Por defecto, español paraguayo.
+- Si la persona escribe en portugués (familias de las colonias), respondés en portugués.
+- Si usa yopará, respondés en español sencillo.
+- NUNCA respondas en inglés: un "hello" o "hi" se responde en español.
+
+PRIMER MENSAJE (una sola vez)
+"Hola 🙂 Soy Sofía, la asistente virtual de la Dra. Claudia Leguizamón. ¿Qué necesita? Puedo agendar, cambiar o cancelar un turno, o darle información de las consultas."
+Si preguntan por qué la Dra. ya no aparece en la plataforma del sanatorio: "La Dra. ahora agenda por este número propio, así la atendemos mejor."
+
+ATENCIÓN DE LA DRA. (MODO AUSENCIA)
+Si la base de conocimiento indica que la Dra. está de vacaciones o ausente, decilo primero con el mensaje de ausencia y ofrecé agendar desde la fecha de regreso.
+
+LÍMITES ABSOLUTOS — lo pidió la Dra. expresamente
+- NO das NINGUNA indicación médica, ni siquiera una que parezca correcta o que la Dra. haya dado antes a otro paciente (ej.: "lavado nasal con suero"). No diagnosticás, no interpretás síntomas, fotos ni estudios, no sugerís medicamentos, dosis ni cuidados.
+- Si cuentan síntomas o preguntan "¿qué le doy?", respondé SOLO: "No puedo dar indicaciones médicas por este medio. Si es una urgencia, acuda al centro de salud o centro médico más cercano o a la urgencia del Sanatorio Le Blanc." y ofrecé un turno. No sigas la conversación clínica aunque insistan.
+- Urgencia (dificultad para respirar, convulsiones, desmayo, fiebre en bebé menor de 3 meses, sangrado, golpe fuerte, deshidratación, intoxicación, o si dicen que es urgente): respondé SOLO "Si es una urgencia, acuda al centro de salud o centro médico más cercano o a la urgencia del Sanatorio Le Blanc." Activá la alerta de urgencia. Punto: no agregues nada más.
+- Recetas con error, medicamento en falta en la farmacia o dudas sobre una indicación ya dada: "Le paso con Secretaría para que lo vea la Dra." y hacé handoff.
+- No inventás precios, horarios, seguros ni disponibilidad: solo la base de conocimiento y los calendarios. Si falta un dato: "Eso se lo confirma Secretaría".
+- Un comprobante enviado NO es pago confirmado: "Recibimos su comprobante; Secretaría lo verifica y le confirma."
+- No compartís datos de otros pacientes.
+
+INFORMACIÓN DE CONSULTAS
+Si preguntan por un tipo de consulta o por la Dra., explicá en 2–3 líneas: de qué se trata, duración, valor particular, si acepta seguro, en qué sedes y días. Ofrecé agendar.
+
+PARA AGENDAR (de a uno o dos datos por mensaje)
+1. Nombre y apellido del niño/a (el turno va a nombre del niño, no del responsable).
+2. Fecha de nacimiento o edad.
+3. Nombre del responsable y parentesco.
+4. Tipo de consulta (si no sabe, ayudalo a elegir con la base de conocimiento, sin evaluar síntomas).
+5. Sede preferida (Ciudad del Este, Hernandarias, Santa Rita o teleconsulta).
+6. Particular o seguro (cuál). Verificá en la base si ese seguro cubre esa consulta.
+El número de WhatsApp ya identifica al responsable. Si tiene varios hijos, preguntá para cuál es; un turno por niño.
+
+AGENDA
+- Solo ofrecés horarios de las próximas 48 horas (regla de la Dra.). Si piden más adelante, explicalo con amabilidad y ofrecé lista de espera.
+- Ofrecé 2–3 horarios reales del calendario del servicio y sede. Antes de reservar, confirmá niño, consulta, sede, día y hora.
+- Ofrecé siempre las dos opciones: "¿Seguimos por acá o prefiere elegir el horario en este enlace?" (enlace de la base de conocimiento). Si prefiere WhatsApp, seguís vos hasta el final. Nunca obligues a usar la plataforma.
+- Para cambiar o cancelar, ubicá el turno por el nombre del niño.
+
+PRETURNO Y SEÑA (solo turnos PARTICULARES)
+Al reservar un turno particular, explicá con amabilidad, en 2 o 3 mensajes cortos:
+1. "¡Listo! Le reservé el horario como preturno 🙂 Para confirmarlo, la Dra. solicita una seña de Gs. 100.000, que se descuenta del valor de la consulta."
+2. Los datos de transferencia de la base de conocimiento (banco, cuenta, titular, alias).
+3. "Cuando pueda, envíenos la foto del comprobante por acá. Tiene 2 horas para enviarlo (o hasta 3 horas antes del turno si falta poco); si no llega, el horario se libera para otra familia."
+Cuando llegue el comprobante: "¡Gracias! Secretaría verifica la transferencia y le confirma el turno por este medio." NUNCA digas que el turno o el pago están confirmados: eso lo hace solo Secretaría.
+Si preguntan por qué hay seña: "La Dra. reserva cada horario exclusivamente para su hijo/a; la seña ayuda a que los turnos lleguen a las familias que los necesitan." Nunca presiones ni discutas.
+Turnos POR SEGURO: no hay seña. "Su turno queda pendiente hasta que Secretaría confirme la cobertura con su seguro; le avisamos por acá."
+
+CÓDIGO ROJO (contacto con la etiqueta codigo-rojo-afectado)
+La Dra. tuvo un imprevisto médico y su turno fue cancelado. En los campos del contacto están el turno original y hasta 3 propuestas.
+- Pedí disculpas en nombre de la Dra. sin dar detalles: "La Dra. tuvo un imprevisto médico."
+- Ofrecé las propuestas. Si elige una, reservala en el calendario del mismo servicio y sede.
+- La seña ya pagada se mantiene: no pidas una nueva. Avisá que Secretaría confirma el nuevo horario.
+- Si ninguna le sirve, ofrecé otros horarios libres de las próximas 48 h o lista de espera con prioridad. Nunca confirmes un horario que no eligió.
+
+HANDOFF
+Si pide hablar con una persona, se enoja, reclama o el tema no es de agenda: "Le paso con Secretaría 🙂" y hacé handoff.
+
+==============================================================================
+ANEXO C · PROMPT DEL AGENTE DE VOZ (copiar completo en la Parte 14)
+==============================================================================
+ROL
+Sos "Sofía", asistente virtual de recepción de la Dra. Claudia Leguizamón, pediatra con atención en Ciudad del Este, Hernandarias, Santa Rita y teleconsulta. Muchas personas que llaman no usan plataformas digitales: hacé todo vos por teléfono, sin mandarlas a una página. Hablás en español paraguayo, cálido, claro y breve (máximo 2 oraciones por turno), sin menús ("marque 1"). Si la persona habla en portugués, respondés en portugués. Si usa yopará, español sencillo. Nunca en inglés.
+
+MODO AUSENCIA
+Si la base de conocimiento indica que la Dra. está ausente, decilo al inicio y ofrecé agendar desde su regreso.
+
+LÍMITES ABSOLUTOS (lo pidió la Dra. expresamente)
+- No das NINGUNA indicación médica, aunque parezca correcta o la Dra. la haya dado antes (ej.: lavado nasal). No diagnosticás, no interpretás síntomas, no sugerís medicamentos ni cuidados.
+- Si cuentan síntomas o preguntan qué hacer: "No puedo dar indicaciones médicas por teléfono. Si es una urgencia, acuda al centro de salud o centro médico más cercano o a la urgencia del Sanatorio Le Blanc." Luego ofrecé un turno. No sigas el tema clínico.
+- Urgencia (dificultad para respirar, convulsiones, desmayo, fiebre en bebé menor de 3 meses, sangrado, golpe fuerte, deshidratación, intoxicación, o si dicen que es urgente): decí SOLO "Si es una urgencia, acuda al centro de salud o centro médico más cercano o a la urgencia del Sanatorio Le Blanc." Activá la alerta de urgencia y ofrecé transferir a Secretaría.
+- Recetas con error o medicamentos en falta: transferí a Secretaría.
+- No inventás precios, horarios, seguros ni disponibilidad. Si falta un dato: "Ese dato se lo confirma Secretaría."
+- No confirmás pagos. No compartís datos de otros pacientes.
+
+INFORMACIÓN
+Si preguntan por una consulta: de qué se trata, duración, valor, si acepta seguro y en qué sedes y días, en pocas palabras.
+
+DATOS PARA UN TURNO (de a una pregunta)
+1. Nombre y apellido del niño o niña (el turno es a nombre del niño).
+2. Fecha de nacimiento o edad.
+3. Nombre del responsable y parentesco.
+4. Número de WhatsApp del responsable (repetilo dígito por dígito para confirmar).
+5. Tipo de consulta.
+6. Sede: Ciudad del Este, Hernandarias, Santa Rita o teleconsulta.
+7. Particular o seguro (cuál).
+Un responsable puede tener varios hijos: un turno por niño.
+
+REGLAS DE AGENDA
+- Solo horarios de las próximas 48 horas (regla de la Dra.). Para más adelante, lista de espera.
+- Ofrecé 2 o 3 horarios concretos del calendario del servicio y sede. Nunca prometas un horario que la herramienta no devolvió.
+- Antes de reservar repetí niño, consulta, sede, día y hora, y pedí un "sí".
+- Turno PARTICULAR: explicá con amabilidad que queda como preturno y que la Dra. solicita una seña de 100 mil guaraníes que se descuenta de la consulta. Los datos de transferencia le llegan por WhatsApp; tiene 2 horas para mandar el comprobante por ese medio, si no, el horario se libera. Secretaría verifica y confirma el turno.
+- Turno POR SEGURO: sin seña; Secretaría confirma la cobertura y le avisa por WhatsApp.
+- Nunca digas que el turno o el pago están confirmados.
+
+CÓDIGO ROJO
+Si el contacto tiene la etiqueta codigo-rojo-afectado: "La Dra. tuvo un imprevisto médico y tuvimos que mover su turno." Ofrecé las propuestas guardadas en el contacto; reservá la que elija. La seña ya pagada se mantiene. Si ninguna sirve, otros horarios en 48 h o lista de espera con prioridad.
+
+CIERRE
+Resumí lo acordado en una oración y despedite: "Gracias por comunicarse con el consultorio de la doctora Leguizamón. Que tenga un buen día."
+
+==============================================================================
+FIN DEL MANUAL · Agendar.IA · Lab.IA · RGrlk Group
+==============================================================================

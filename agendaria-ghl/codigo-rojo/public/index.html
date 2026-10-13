@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Código Rojo</title>
+<style>
+  :root { --bg:#f6f4f2; --card:#fff; --ink:#1d1b1a; --muted:#6b6560; --red:#c62828; --red-dark:#8e1b1b; --line:#e4dfda; --ok:#2e7d32; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141212; --card:#1f1c1b; --ink:#f2eeea; --muted:#a39c96; --line:#34302d; } }
+  :root[data-theme="dark"] { --bg:#141212; --card:#1f1c1b; --ink:#f2eeea; --muted:#a39c96; --line:#34302d; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:440px; margin:0 auto; padding:24px 16px 40px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  p.sub { color:var(--muted); margin:0 0 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:16px; }
+  label { display:block; font-weight:600; margin:12px 0 6px; }
+  select, input { width:100%; font:inherit; padding:12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); }
+  .seg { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .seg button { padding:12px 0; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; font-weight:600; }
+  .seg button[aria-pressed="true"] { background:var(--ink); color:var(--card); }
+  .big { width:100%; margin-top:18px; padding:20px; border:0; border-radius:999px; font-size:1.15rem; font-weight:800; letter-spacing:.04em; color:#fff; background:var(--red); box-shadow:0 8px 24px rgb(198 40 40 / .35); }
+  .big:active { background:var(--red-dark); }
+  .big[disabled] { opacity:.5; }
+  .secondary { width:100%; margin-top:10px; padding:14px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--ink); font:inherit; font-weight:600; }
+  ul { padding-left:18px; margin:8px 0 0; }
+  li { margin:6px 0; }
+  .msg { font-weight:600; }
+  .msg.err { color:var(--red); }
+  .msg.ok { color:var(--ok); }
+  .hidden { display:none; }
+  small { color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>🔴 Código Rojo</h1>
+  <p class="sub">Dra. Claudia Leguizamón · bloquea la agenda y propone nuevos horarios a los pacientes afectados.</p>
+
+  <section class="card" id="form">
+    <label for="motivo">Motivo (interno, no se envía al paciente)</label>
+    <select id="motivo">
+      <option>Cesárea de urgencia</option>
+      <option>Parto</option>
+      <option>Urgencia médica</option>
+      <option>Imprevisto personal</option>
+    </select>
+    <label>Desde ahora, durante</label>
+    <div class="seg" id="horas">
+      <button type="button" data-h="2" aria-pressed="true">2 h</button>
+      <button type="button" data-h="3" aria-pressed="false">3 h</button>
+      <button type="button" data-h="4" aria-pressed="false">4 h</button>
+      <button type="button" data-h="5" aria-pressed="false">5 h</button>
+    </div>
+    <label for="pin">PIN</label>
+    <input id="pin" type="password" inputmode="numeric" autocomplete="current-password">
+    <button class="big" id="ver">VER TURNOS AFECTADOS</button>
+  </section>
+
+  <section class="card hidden" id="preview">
+    <div id="previewBody"></div>
+    <button class="big" id="confirmar">ACTIVAR CÓDIGO ROJO</button>
+    <button class="secondary" id="volver">Cancelar</button>
+  </section>
+
+  <p class="msg" id="msg" role="status"></p>
+  <small>Los turnos no se borran: quedan cancelados con motivo. Cada familia recibe por WhatsApp hasta 3 horarios dentro de las próximas 48 h y elige. La seña pagada se mantiene.</small>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let horas = 2;
+  document.querySelectorAll("#horas button").forEach((b) => b.addEventListener("click", () => {
+    horas = Number(b.dataset.h);
+    document.querySelectorAll("#horas button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  }));
+
+  function setMsg(text, kind) { $("msg").textContent = text; $("msg").className = "msg " + (kind || ""); }
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+  async function call(confirmar) {
+    const res = await fetch("/api/codigo-rojo", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: $("pin").value, motivo: $("motivo").value, horas, confirmar }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error");
+    return data;
+  }
+
+  $("ver").addEventListener("click", async () => {
+    setMsg("Buscando turnos…"); $("ver").disabled = true;
+    try {
+      const data = await call(false);
+      const items = data.afectados.map((a) => `<li>${esc(a.inicio)} — ${esc(a.titulo)}</li>`).join("");
+      $("previewBody").innerHTML = data.afectados.length
+        ? `<strong>${data.afectados.length} turno(s) en las próximas ${horas} h:</strong><ul>${items}</ul>`
+        : `<strong>No hay turnos en las próximas ${horas} h.</strong><p>Igual se bloqueará la agenda para que no entren nuevos.</p>`;
+      $("form").classList.add("hidden"); $("preview").classList.remove("hidden"); setMsg("");
+    } catch (e) { setMsg(e.message, "err"); }
+    $("ver").disabled = false;
+  });
+
+  $("volver").addEventListener("click", () => { $("preview").classList.add("hidden"); $("form").classList.remove("hidden"); });
+
+  $("confirmar").addEventListener("click", async () => {
+    setMsg("Activando…"); $("confirmar").disabled = true;
+    try {
+      const data = await call(true);
+      const items = data.afectados.map((a) =>
+        `<li>${esc(a.inicio)} — ${esc(a.titulo)}<br><small>Propuestas: ${esc(a.propuestas.join(" · ") || "lista de espera")}</small></li>`).join("");
+      $("previewBody").innerHTML = `<strong>Agenda bloqueada ${esc(data.bloqueo.desde)} → ${esc(data.bloqueo.hasta)}</strong><ul>${items}</ul>`;
+      $("confirmar").classList.add("hidden"); $("volver").textContent = "Listo";
+      setMsg("Código Rojo activado. Las familias reciben sus opciones por WhatsApp.", "ok");
+    } catch (e) { setMsg(e.message, "err"); $("confirmar").disabled = false; }
+  });
+</script>
+</body>
+</html>
